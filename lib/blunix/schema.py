@@ -226,6 +226,11 @@ def expand_build_host(typed):
     build host."""
     if not isinstance(typed, str):
         raise BlunixError("refused hostname")
+    if typed.startswith("https://"):
+        # No paths, query strings, credentials, ports, or fragments.
+        typed = typed[len("https://"):]
+        if typed.endswith("/"):
+            typed = typed[:-1]
     if "." not in typed:
         return check_label(typed) + _BUILD_SUFFIX
     return require_build_host(typed)

@@ -4,5 +4,6 @@
 set -eu
 set -o pipefail
 cd "$(dirname "$0")/.."
+python3 image/prepare-secrets.py
 docker run --rm -v "$PWD":/src -w /src debian:trixie-slim \
   bash -lc 'apt-get update -qq && apt-get install -y -qq python3 python3-yaml age zstd e2fsprogs >/dev/null && PYTHONPATH=lib python3 -m unittest discover -s tests -v'

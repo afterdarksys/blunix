@@ -8,6 +8,7 @@
 // portal's cookie (CORS names one origin, and writes need the CSRF header and Origin),
 // and an internal error that leaks detail (it becomes a fixed 500).
 
+import { listConfigurations, showConfiguration, createConfiguration, reviseConfiguration, publishConfiguration, deleteConfiguration, reportConfiguration } from "./configurations";
 import { authenticate, csrfFailure, type Principal } from "./auth";
 import { API_HOST, BUILD_APEX, BUILD_SUFFIX, devOrigins, trustedOrigin, type Env } from "./env";
 import { list, me, removeBuild, removeHost, reserve, show, upload } from "./hosts";
@@ -46,6 +47,17 @@ interface Route {
 const SEG = "([^/]+)";
 
 const routes: Route[] = [
+  { pattern: /^\/v1\/configurations$/, methods: {
+    GET: (req, env, p) => listConfigurations(req, env, p),
+    POST: createConfiguration,
+  } },
+  { pattern: new RegExp(`^/v1/configurations/${SEG}$`), methods: {
+    GET: (_req, env, p, [id]) => showConfiguration(env, id, p),
+    DELETE: (_req, env, p, [id]) => deleteConfiguration(env, p, id),
+  } },
+  { pattern: new RegExp(`^/v1/configurations/${SEG}/revisions$`), methods: { POST: (req, env, p, [id]) => reviseConfiguration(req, env, p, id) } },
+  { pattern: new RegExp(`^/v1/configurations/${SEG}/publication$`), methods: { POST: (req, env, p, [id]) => publishConfiguration(req, env, p, id) } },
+  { pattern: new RegExp(`^/v1/community/${SEG}/reports$`), methods: { POST: (req, env, p, [id]) => reportConfiguration(req, env, p, id) } },
   { pattern: /^\/v1\/auth\/login$/, methods: { GET: "public" } },
   { pattern: /^\/v1\/auth\/callback$/, methods: { GET: "public" } },
   {
@@ -126,6 +138,13 @@ async function api(req: Request, env: Env): Promise<Response> {
   }
 
   let res: Response;
+  const publicConfig = /^\/v1\/community(?:\/([a-f0-9-]{36}))?$/.exec(url.pathname);
+  if (publicConfig && req.method === "GET") {
+    res = publicConfig[1] ? await showConfiguration(env, publicConfig[1]) : await listConfigurations(req, env);
+    const out = new Response(res.body, res);
+    for (const [k, v] of Object.entries(cors)) out.headers.set(k, v);
+    return out;
+  }
   const route = routes.find((r) => r.pattern.test(url.pathname));
   if (!route) {
     res = error(404, "not found");

@@ -16,7 +16,21 @@ Build scripts for the Blunix spike. Each one runs itself inside `docker run --pr
 
 One flow runs from every medium: `blunix install`. It says each step as one sentence on tty1 and on the first serial port. Keys 1 to 5 at the boot menu pick full speech, console speech, large print, regular, or advanced, the same as the disk. The menu beeps when it is ready.
 
-The installer asks for the build hostname (`ada.blnx.io`, `v3.ada.blnx.io`, or just `ada`), reads it back, and waits for yes. It then asks for the key with echo off. It fetches the document, decrypts it on the machine, picks the disk, writes the image, checks the image's sha256, applies the document, and installs the bootloader. A wrong key, a refused document, or a digest mismatch applies nothing. A disk that already holds anything needs a typed yes. Silence is no.
+New portal builds use two inputs: the build address (HTTPS URL, hostname, or label)
+and the generated build password with echo off. The portal records the exact target
+disk/serial, erase consent, and reboot preference in the encrypted document.
+After DHCP, the installer validates the document, selects only that disk, writes and
+verifies the released image, installs selected Debian packages, creates the SSH
+administrator, applies networking/access settings, and installs the bootloader.
+A missing/ambiguous target, boot medium, mounted disk, invalid document, or wrong key
+stops installation. DHCP failure stops with retry guidance rather than extra prompts.
+Legacy documents without `install` retain disk/reboot confirmations.
+
+This release path uses the mutable ext4 image. The portal does not offer the planned
+verity/TPM disk layouts. Packages require internet during installation and are
+resolved against configured Debian repositories; actual installed versions are
+recorded at `/var/lib/blunix/packages.lock`. See `docs/personal-builds.md`.
+
 
 ### USB stick
 
