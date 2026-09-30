@@ -1,0 +1,212 @@
+{
+  "version": 6,
+  "_comment": "The one identity lock for the Blunix cat. Every scene prompt = scene text + identity + style_lock. Edit here, bump version, delete raw files to re-roll. Dated notes record drift.",
+  "model": "fal-ai/recraft/v3/text-to-image",
+  "style": "vector_illustration/segmented_colors",
+  "colors": [
+    "#12161a",
+    "#1b2127",
+    "#8e9aa8",
+    "#6f7c8b",
+    "#56626f",
+    "#3a434d",
+    "#d2ee9a"
+  ],
+  "identity": "The cat is a slender adult Russian Blue, a real cat on four legs, never posed like a person. Soft, short, plush fur in one solid, even silver-blue-grey: no white patches, no stripes, not a tabby, not black, not a hairless Sphynx. Almond eyes filled with vivid lime-green irises and thin dark pupils, never white or grey eyes. Large, wide-set pointed ears, dark slate-grey nose. Calm, faintly amused, elegant, not cartoon-cute. No collar, no clothing.",
+  "style_lock": "Flat editorial geometric vector illustration: flat colour shapes, fine minimal linework, slate blue-greys on deep charcoal, lime green only for the eyes and tiny indicator lights, generous negative space, calm and quiet. Plain dark charcoal background. No text, no letters, no numbers, no logos, no writing anywhere.",
+  "scenes": {
+    "hero": {
+      "prompt": "A single cat sitting upright and calm on top of a small stack of three server rack units with tiny status lights, watching over them. Wide composition with the cat and servers to one side and open space.",
+      "n": 3,
+      "image_size": "landscape_4_3"
+    },
+    "quiet": {
+      "prompt": "A single cat curled up asleep on top of one flat server unit, eyes closed, tail wrapped around, peaceful and warm.",
+      "n": 2,
+      "image_size": "square_hd"
+    },
+    "held-still": {
+      "prompt": "A single cat sitting perfectly still and balanced on a narrow ledge, symmetrical, poised, tail curled around its paws.",
+      "n": 4,
+      "image_size": "square_hd"
+    },
+    "shell": {
+      "prompt": "A single cat sitting beside a simple blank terminal window with only a small blinking block cursor on it, looking at the screen.",
+      "n": 2,
+      "image_size": "square_hd"
+    },
+    "speech": {
+      "prompt": "A single cat in profile with soft concentric sound wave arcs near its ear, listening calmly. Minimal and tasteful.",
+      "n": 3,
+      "image_size": "square_hd"
+    },
+    "lands-on-feet": {
+      "prompt": "A single cat in mid-air twisting gracefully to land on its feet, legs reaching down toward the ground, elegant motion.",
+      "n": 3,
+      "image_size": "square_hd"
+    },
+    "install": {
+      "prompt": "A single cat crouched playfully, reaching one front paw toward a small USB flash drive lying on the floor in front of it.",
+      "n": 4,
+      "image_size": "square_hd"
+    },
+    "key": {
+      "prompt": "A single cat sitting upright; in front of its front paws lies one small simple metal door key with a round bow and a toothed blade.",
+      "n": 4,
+      "image_size": "square_hd"
+    },
+    "log": {
+      "prompt": "A single cat sitting beside a neat unrolled paper scroll with blank horizontal lines, one paw on its edge, keeping a record.",
+      "n": 2,
+      "image_size": "square_hd"
+    },
+    "proxy": {
+      "prompt": "A single cat carrying a small parcel box in its mouth, walking along a thick network cable that runs between two small server boxes.",
+      "n": 4,
+      "image_size": "landscape_4_3"
+    },
+    "404": {
+      "prompt": "A single cat peeking out from inside an open cardboard box, only its head and front paws visible over the edge, curious.",
+      "n": 4,
+      "image_size": "square_hd"
+    },
+    "empty-basket": {
+      "prompt": "An empty round woven cat basket with a soft cushion on the right, nothing inside it; a single cat walks toward it from the left, still outside the basket.",
+      "n": 4,
+      "image_size": "square_hd"
+    },
+    "sticker-sit": {
+      "prompt": "A single cat sitting upright, facing forward, centered, small spot illustration, lots of empty space.",
+      "n": 2,
+      "image_size": "square_hd"
+    },
+    "sticker-loaf": {
+      "prompt": "A single cat lying in a compact bread-loaf pose on the floor, all four paws tucked out of sight under its body, facing forward, centered, small spot illustration.",
+      "n": 4,
+      "image_size": "square_hd"
+    },
+    "sticker-stretch": {
+      "prompt": "A single cat doing a long front stretch with its back arched low, centered, small spot illustration.",
+      "n": 2,
+      "image_size": "square_hd"
+    },
+    "sticker-paw": {
+      "prompt": "A single cat sitting upright and raising one front paw, pawing at the air, solid grey tail, centered, small spot illustration.",
+      "n": 4,
+      "image_size": "square_hd"
+    },
+    "sticker-peek": {
+      "prompt": "A single cat with bright lime-green eyes peeking over a low flat ledge; only its ears, eyes and two front paws show above the edge. Centered, small spot illustration.",
+      "n": 6,
+      "image_size": "square_hd"
+    },
+    "sticker-sleep": {
+      "prompt": "A single cat curled in a round ball asleep, tail over its nose, centered, small spot illustration.",
+      "n": 2,
+      "image_size": "square_hd"
+    },
+    "at-computer": {
+      "prompt": "A single cat sitting on a desk beside an open laptop, one front paw resting on the laptop keyboard, the blank screen glowing softly.",
+      "n": 4,
+      "image_size": "square_hd"
+    },
+    "reading-docs": {
+      "prompt": "Three-quarter side view of a single cat with bright lime-green eyes lying on the floor beside a large open book, full body visible, one front paw on the blank page, reading attentively.",
+      "n": 8,
+      "image_size": "square_hd"
+    },
+    "debugging": {
+      "prompt": "A single cat on a desk in front of a computer monitor, leaning close to a large round magnifying glass on a stand, peering at the blank screen through it.",
+      "n": 4,
+      "image_size": "square_hd"
+    },
+    "coffee-no": {
+      "prompt": "A single cat with bright lime-green eyes sitting on a desk late at night beside a plain unbranded slim drink can with no label, under a small glowing desk lamp.",
+      "n": 6,
+      "image_size": "square_hd"
+    },
+    "braille": {
+      "prompt": "Three-quarter side view of a single cat with bright lime-green eyes sitting on a desk, full body visible, one front paw resting on a long slim braille display bar with rows of small raised dots.",
+      "n": 8,
+      "image_size": "square_hd"
+    },
+    "cloud": {
+      "prompt": "A single cat sitting on a small soft stylized cloud floating above three tiny server boxes on the ground.",
+      "n": 2,
+      "image_size": "square_hd"
+    },
+    "packing": {
+      "prompt": "A single cat sitting inside an open cardboard shipping box marked only with a simple circle shape, ready to ship.",
+      "n": 2,
+      "image_size": "square_hd"
+    },
+    "stargazing": {
+      "prompt": "A single cat sitting on top of a server rack at night looking up at a sky of small stars, seen from behind, calm and watchful.",
+      "n": 2,
+      "image_size": "square_hd"
+    },
+    "probe-editorial": {
+      "note": "style probe",
+      "style": "vector_illustration/editorial",
+      "n": 1,
+      "image_size": "landscape_4_3",
+      "prompt": "A single cat sitting upright and calm on top of a small stack of two server rack units with tiny status lights, watching over them."
+    },
+    "probe-flat": {
+      "note": "style probe",
+      "style": "vector_illustration/roundish_flat",
+      "n": 1,
+      "image_size": "landscape_4_3",
+      "prompt": "A single cat sitting upright and calm on top of a small stack of two server rack units with tiny status lights, watching over them."
+    },
+    "probe-base": {
+      "note": "style probe",
+      "n": 1,
+      "image_size": "landscape_4_3",
+      "prompt": "A single cat sitting upright and calm on top of a small stack of two server rack units with tiny status lights, watching over them."
+    },
+    "probe2-cutout": {
+      "note": "style probe v2",
+      "style": "vector_illustration/cutout",
+      "n": 1,
+      "image_size": "landscape_4_3",
+      "prompt": "A single cat sitting upright and calm on top of a small stack of two server rack units with tiny status lights, watching over them."
+    },
+    "probe2-segmentedcolors": {
+      "note": "style probe v2",
+      "style": "vector_illustration/segmented_colors",
+      "n": 1,
+      "image_size": "landscape_4_3",
+      "prompt": "A single cat sitting upright and calm on top of a small stack of two server rack units with tiny status lights, watching over them."
+    },
+    "probe2-vividshapes": {
+      "note": "style probe v2",
+      "style": "vector_illustration/vivid_shapes",
+      "n": 1,
+      "image_size": "landscape_4_3",
+      "prompt": "A single cat sitting upright and calm on top of a small stack of two server rack units with tiny status lights, watching over them."
+    },
+    "probe2-emotionalflat": {
+      "note": "style probe v2",
+      "style": "vector_illustration/emotional_flat",
+      "n": 1,
+      "image_size": "landscape_4_3",
+      "prompt": "A single cat sitting upright and calm on top of a small stack of two server rack units with tiny status lights, watching over them."
+    },
+    "probe2-coloredstencil": {
+      "note": "style probe v2",
+      "style": "vector_illustration/colored_stencil",
+      "n": 1,
+      "image_size": "landscape_4_3",
+      "prompt": "A single cat sitting upright and calm on top of a small stack of two server rack units with tiny status lights, watching over them."
+    }
+  },
+  "_log": [
+    "2026-09-30 v1 probes: base style drew black outlines and a beige coat (muted cream in colors pulled the coat warm); editorial substyle put a yellow backdrop in; roundish_flat gave a striped tabby with a white bib and a white background. Dropped cream from colors, banned outlines, pushed the flat charcoal ground.",
+    "2026-09-30 v2 probes: cutout and segmented_colors held the cat best (slender, solid slate coat, lime eyes, no tabby). Backgrounds are ignored by every substyle (red, blue, purple, pale green), so finish.py drops the full-canvas background path and snaps all colours to the Blunix ramp. Locked vector_illustration/segmented_colors. v1/v2 prompts were silently over the 1000-char limit; shortened identity and style_lock, and generate.py now refuses long prompts.",
+    "2026-09-30 v3 review (56 candidates): about half drew white or grey eyes (reject), several drifted toward a hairless Sphynx with bat ears and skin creases, two dressed the cat as a person (proxy-1 standing figures, 404-2 in a suit, at-computer-1 in a shirt), and some added a collar (log-1, held-still-1) or white patches (hero-3 bib, packing-1 blaze, sticker-paw-1 tail). Empty-basket put the cat inside the basket both times. v4 identity: eye colour stated as irises + 'never white or grey', plush fur + 'not a hairless Sphynx', 'real cat on four legs, never posed like a person'. finish.py now also removes large backdrop panels touching three canvas edges, and caps Ink to glints.",
+    "2026-09-30 v4 review (27 rerolls): eyes held green on most full-body poses; close front-facing faces (reading-docs, braille, coffee-no, sticker-peek) still drew white or grey eyes, braille-4 added a collar, empty-basket-3 added colour swatches. sticker-loaf never produced a loaf (tunnels, frames) and is dropped from the set. Final round: those four scenes repeat the eye colour inside the scene text.",
+    "2026-09-30 v5 review: coffee-no-5 passed. braille-5 dressed the cat in a suit with human hands; braille-6, reading-docs-5 and both sticker-peek rolls still drew grey eyes on a front-facing close face; reading-docs-6 gave the cat human hands. sticker-peek dropped (Watchful uses the key scene). Last roll for braille and reading-docs: three-quarter side view, full body, so the face is small and the eyes read as lime.",
+    "2026-09-30 finish.py bug found and fixed: once the Ink cap was tightened to 0.2% of the canvas, it overrode the green pool, so any eye larger than that snapped to light grey. Close-up faces looked grey-eyed in review and were rejected for it (braille, reading-docs, sticker-peek, coffee-no and 404 rerolls were partly spent on this). The raw files had lime eyes all along. Green is now gated on shape instead: eye-like bounding boxes (0.9 to 2.0 wide per tall, under 2% of the canvas) or tiny dots keep green; inner ears (about 0.55) and ruled lines go to slate. All 99 candidates were re-reviewed after the fix."
+  ]
+}

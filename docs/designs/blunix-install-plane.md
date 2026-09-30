@@ -147,8 +147,9 @@ The live installer runs `blunix install`:
 1. Boot menu keys 1 to 5, exactly as today.
 2. **Network.**
    - Try DHCP on every wired interface for 30 s.
-   - If there is no lease, and the kernel command line has `blunix.proxy=HOST:PORT`, use that proxy.
-   - Otherwise ask: `blunix: no network. Type an address like 10.0.0.5/24, or press enter to try again.` Then ask for the gateway and the DNS server.
+   - With no lease, ask: `blunix: no network. Type an address like 10.0.0.5/24, or press enter to try again.` Then ask for the gateway and the DNS server. Repeat until one works.
+   - On a netboot LAN, the build-proxy's dnsmasq reservation supplies the lease.
+   - `blunix.proxy=HOST:PORT` on the kernel command line changes only where the document is fetched from. It never supplies an address.
    - Speech rules apply.
 3. **Hostname.** `blunix: build hostname.` The operator types `ada.blnx.io` or `v3.ada.blnx.io`. A bare `ada` expands to `ada.blnx.io`. The installer reads it back and waits for yes.
 4. **Key.** `blunix: key. Type it. It will not be spoken.` Echo is off.

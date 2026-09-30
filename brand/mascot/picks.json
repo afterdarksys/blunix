@@ -1,0 +1,113 @@
+{
+  "_comment": "Final picks: final name -> raw candidate. fit: square|tight trims the empty margin. dir: gallery puts it in final/gallery. portal: also copy to portal/assets/cat.",
+  "hero": {
+    "raw": "hero-2.svg",
+    "fit": "tight"
+  },
+  "quiet": {
+    "raw": "quiet-1.svg",
+    "fit": "square"
+  },
+  "held-still": {
+    "raw": "held-still-3.svg",
+    "fit": "square"
+  },
+  "shell": {
+    "raw": "shell-2.svg",
+    "fit": "square"
+  },
+  "speech": {
+    "raw": "speech-3.svg",
+    "fit": "square"
+  },
+  "lands-on-feet": {
+    "raw": "lands-on-feet-2.svg",
+    "fit": "square"
+  },
+  "install": {
+    "raw": "install-3.svg",
+    "fit": "square"
+  },
+  "key": {
+    "raw": "key-4.svg",
+    "fit": "square"
+  },
+  "log": {
+    "raw": "log-2.svg",
+    "fit": "square"
+  },
+  "proxy": {
+    "raw": "proxy-3.svg",
+    "fit": "square"
+  },
+  "404": {
+    "raw": "404-1.svg",
+    "fit": "square",
+    "portal": true
+  },
+  "empty-basket": {
+    "raw": "empty-basket-4.svg",
+    "fit": "square",
+    "portal": true
+  },
+  "sticker-sit": {
+    "raw": "sticker-sit-1.svg",
+    "fit": "square"
+  },
+  "sticker-paw": {
+    "raw": "sticker-paw-3.svg",
+    "fit": "square"
+  },
+  "sticker-stretch": {
+    "raw": "sticker-stretch-2.svg",
+    "fit": "square"
+  },
+  "sticker-sleep": {
+    "raw": "sticker-sleep-1.svg",
+    "fit": "square"
+  },
+  "at-computer": {
+    "raw": "at-computer-4.svg",
+    "fit": "square",
+    "dir": "gallery"
+  },
+  "debugging": {
+    "raw": "debugging-3.svg",
+    "fit": "square",
+    "dir": "gallery"
+  },
+  "cloud": {
+    "raw": "cloud-2.svg",
+    "fit": "square",
+    "dir": "gallery"
+  },
+  "packing": {
+    "raw": "packing-2.svg",
+    "fit": "square",
+    "dir": "gallery"
+  },
+  "stargazing": {
+    "raw": "stargazing-2.svg",
+    "fit": "square",
+    "dir": "gallery"
+  },
+  "sticker-peek": {
+    "raw": "sticker-peek-5.svg",
+    "fit": "square"
+  },
+  "reading-docs": {
+    "raw": "reading-docs-4.svg",
+    "fit": "square",
+    "dir": "gallery"
+  },
+  "braille": {
+    "raw": "braille-8.svg",
+    "fit": "square",
+    "dir": "gallery"
+  },
+  "coffee-no": {
+    "raw": "coffee-no-2.svg",
+    "fit": "square",
+    "dir": "gallery"
+  }
+}

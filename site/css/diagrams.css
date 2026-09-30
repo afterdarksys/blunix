@@ -1,0 +1,131 @@
+/* Architecture page (architecture.html) only. site.css stays untouched.
+   Tokens come from site.css :root. The diagrams draw at 1080 px or wider so no
+   label falls under 14.5 px; on narrow screens the figure scrolls, the page does not. */
+
+.arch-hero {
+  padding: 6vh 0 3rem;
+}
+
+.arch-hero > * { max-width: var(--measure); }
+
+.arch-hero h1 {
+  margin: 0 0 1.2rem;
+  font-family: Fraunces, serif;
+  font-weight: 500;
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  line-height: 1.05;
+  letter-spacing: -0.012em;
+}
+
+.arch-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+
+.arch-legend li {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+  max-width: 80ch;
+}
+
+.arch-legend span { color: var(--muted); }
+
+.arch-legend strong { color: var(--ink); }
+
+.swatch {
+  display: block;
+  margin-top: 0.15rem;
+}
+
+.key-pill {
+  display: inline-block;
+  justify-self: start;
+  padding: 0.1rem 0.6rem;
+  border: 2.5px solid var(--green);
+  border-radius: 999px;
+  color: var(--green);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.diagram {
+  margin: 0 0 2rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.diagram svg {
+  display: block;
+  width: 100%;
+  min-width: 1080px;
+  height: auto;
+}
+
+.diagram figcaption {
+  position: sticky;
+  left: 0;
+  padding: 0.8rem 1rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 1rem;
+  max-width: calc(100vw - 2.5rem);
+}
+
+.walk {
+  max-width: 72ch;
+  overflow-wrap: anywhere;
+}
+
+.walk h3 {
+  margin: 2rem 0 0.6rem;
+  font-size: 1.2rem;
+}
+
+.walk p { color: var(--muted); }
+
+.walk ol,
+.walk ul {
+  margin: 0;
+  padding-left: 1.6rem;
+}
+
+.walk li {
+  margin: 0 0 0.75rem;
+  padding-left: 0.3rem;
+  color: var(--muted);
+}
+
+.walk li::marker {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.walk strong { color: var(--ink); }
+
+.walk code,
+.arch-legend code {
+  font-family: Atkinson, sans-serif;
+  font-size: 1em;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--raise);
+  padding: 0.02em 0.3em;
+  border-radius: 3px;
+}
+
+@media (max-width: 800px) {
+  .arch-legend li { grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+  .swatch { width: 48px; height: auto; }
+}

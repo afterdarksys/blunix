@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Blunix README banner</title><style>
+@font-face { font-family: Fraunces; src: url("fonts/fraunces-latin.woff2") format("woff2"); font-weight: 100 900; font-style: normal; }
+@font-face { font-family: Fraunces; src: url("fonts/fraunces-italic.woff2") format("woff2"); font-weight: 100 900; font-style: italic; }
+@font-face { font-family: Atkinson; src: url("fonts/atkinson-400.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: Atkinson; src: url("fonts/atkinson-700.woff2") format("woff2"); font-weight: 700; }
+:root {
+  --bg: #12161a; --raise: #1b2127; --ink: #f3efe6; --muted: #c9c3b6;
+  --line: #3a434d; --slate: #8e9aa8; --slate-text: #a9b4c1; --slate-2: #6f7c8b; --green: #d2ee9a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+@page { size: 8.5in 11in; margin: 0; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+html, body { width: 1280px; height: 400px; overflow: hidden; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: Atkinson, sans-serif; -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+.display { font-family: Fraunces, serif; font-weight: 500; letter-spacing: -0.012em; color: var(--ink); }
+.muted { color: var(--muted); }
+.abs { position: absolute; }
+.console {
+  font-family: Atkinson, sans-serif; color: var(--muted);
+  background: var(--raise); border-left: 4px solid var(--slate-2);
+  display: inline-block; white-space: nowrap;
+}
+.console b { color: var(--ink); font-weight: 700; }
+.glow { position: absolute; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(120, 140, 162, 0.16), rgba(120, 140, 162, 0.05) 55%, transparent); }
+.num { font-family: Fraunces, serif; font-weight: 500; color: var(--slate-text); font-variant-numeric: lining-nums; }
+
+.art { position: absolute; display: block; }</style></head><body>
+<div class="glow" style="left:720px;top:-160px;width:640px;height:640px"></div>
+<img class="art" src="../mascot/final/hero.svg" alt="" style="right:60px;top:20px;width:480px;height:360px">
+<img class="abs" src="../wordmark.svg" alt="blunix" style="left:72px;top:74px;height:58px">
+<p class="display abs" style="left:72px;top:176px;font-size:40px;line-height:1.12;width:760px">A quiet Debian host for cloud nodes.</p>
+<p class="abs muted" style="left:72px;top:250px;font-size:23px;line-height:1.4;width:620px">With Blubie, the Blunix cat, keeping watch.</p>
+</body></html>

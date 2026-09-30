@@ -10,7 +10,7 @@
 # checks an image only with imgverify, which needs a signature and a trusted
 # certificate built into iPXE, and live-boot fetches the squashfs itself.
 # Their sha256 values are in the release's SHA256SUMS.
-isset ${proxy} || set proxy ${next-server}:8080
+isset ${proxy} || set proxy ${next-server}:8750
 echo blunix: netboot from ${proxy}
 kernel http://${proxy}/media/vmlinuz initrd=initrd.img boot=live noeject fetch=http://${proxy}/media/blunix.squashfs blunix.proxy=${proxy} blunix.access=regular console=tty0 console=ttyS0,115200
 initrd http://${proxy}/media/initrd.img

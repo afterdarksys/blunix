@@ -536,3 +536,86 @@ pre code { font-size: 0.95rem; }
   height: auto;
   margin-bottom: 2rem;
 }
+
+/* Blubie, the Blunix cat. Flat SVG scenes with a transparent ground, so they
+   sit on Night with no box. Art never carries words; the text around it keeps
+   the contrast rules above. */
+
+.scene { margin: 0; }
+
+.scene img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.mark.scene { width: min(100%, 400px); }
+.mark.scene img { max-width: none; filter: none; }
+.mark-small.scene img { max-width: 300px; margin-inline: auto; }
+
+.traits li {
+  min-height: 5.6rem;
+  padding-left: 5.4rem;
+  max-width: calc(70ch + 5.4rem);
+}
+
+.traits li::before { display: none; }
+
+.traits .spot {
+  position: absolute;
+  left: 0;
+  top: 0.7rem;
+  width: 4.2rem;
+  height: 4.2rem;
+}
+
+.pillars article .scene img {
+  max-width: 260px;
+  margin-bottom: 0.8rem;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2rem 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gallery figure { margin: 0; }
+
+.gallery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.gallery figcaption {
+  margin-top: 0.4rem;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.empty-state .scene-art {
+  flex: none;
+  width: 128px;
+  height: 128px;
+}
+
+.lost .scene-art {
+  width: min(100%, 300px);
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 800px) {
+  .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 1rem; }
+  .mark.scene { width: min(100%, 300px); }
+  .traits li { padding-left: 4rem; min-height: 4.2rem; }
+  .traits .spot { width: 3rem; height: 3rem; top: 0.9rem; }
+  .mark.scene img { max-width: 100%; }
+  .mark-small.scene img { max-width: 240px; margin-inline: 0; }
+  .empty-state { align-items: flex-start; }
+  .empty-state .scene-art { width: 96px; height: 96px; }
+}

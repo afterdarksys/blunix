@@ -41,6 +41,7 @@
       <a href="service.html">Service</a>
       <a href="platform.html">Platform</a>
       <a href="api.html">API</a>
+      <a href="architecture.html">Architecture</a>
       <a href="https://build.blunix.io/">Portal</a>
     </nav>
   </header>
@@ -53,8 +54,8 @@
         <p class="lede">The installer is built and boots in a VM. The portal, the API, and the build hosts are built and tested, not deployed yet.</p>
         <p class="portal-status" data-portal-status aria-live="polite"><span data-portal-words>The portal is not open yet.</span> Its address is <a href="https://build.blunix.io/">build.blunix.io</a>.</p>
       </div>
-      <figure class="mark mark-small">
-        <img src="assets/logo-mark.svg" width="372" height="446" alt="">
+      <figure class="mark mark-small scene">
+        <img src="assets/cat/install.svg" width="1024" height="1024" alt="Blubie, the Blunix cat, crouches playfully and reaches a paw toward a USB stick on the floor." decoding="async">
         <figcaption>A label, such as <span class="host">ada</span>, becomes <span class="host">https://ada.blnx.io/</span></figcaption>
       </figure>
     </section>
@@ -96,7 +97,7 @@
         </li>
         <li>
           <h3>The network comes up</h3>
-          <p>Every wired interface tries DHCP for 30 seconds. With no lease, a build-proxy on the LAN named on the kernel line supplies the network. Otherwise the console asks for an address, a gateway, and a DNS server. The static address in the document applies after install.</p>
+          <p>Every wired interface tries DHCP for 30 seconds. With no lease, the console asks for an address, a gateway, and a DNS server, and tries again until one works. On a netboot LAN, the build-proxy's dnsmasq reservation hands out the address. A proxy named on the kernel line changes only where the document is fetched from. The static address in the document applies after install.</p>
         </li>
         <li>
           <h3>Say the build hostname</h3>

@@ -41,6 +41,7 @@
       <a href="service.html">Service</a>
       <a href="platform.html">Platform</a>
       <a href="api.html">API</a>
+      <a href="architecture.html">Architecture</a>
       <a href="https://build.blunix.io/">Portal</a>
     </nav>
   </header>
@@ -50,9 +51,9 @@
         <h1>blunix<em>.</em></h1>
         <p class="lede">A quiet Debian host for cloud nodes, named for the Russian Blue. Small by default. Watchful about what it is handed. Able to speak, if you ask it to, before it asks you anything.</p>
       </div>
-      <figure class="mark">
-        <img src="assets/logo-mark.svg" width="372" height="446" alt="The blunix mark: a slate-grey cat's head with two green eyes.">
-        <figcaption>A grey head, two green eyes, and nothing loud.</figcaption>
+      <figure class="mark scene">
+        <img src="assets/cat/hero.svg" width="1295" height="1525" alt="Blubie, the Blunix cat, a slender silver-blue Russian Blue with green eyes, sits upright on a small stack of rack servers and watches over them." decoding="async">
+        <figcaption>A grey cat, two green eyes, and nothing loud.</figcaption>
       </figure>
     </section>
 
@@ -64,14 +65,41 @@
         </div>
         <p>Blunix is named for the Russian Blue. It is a famously quiet breed. It is small, it watches a room before it walks in, and when it falls it lands on its feet. The people who build this keep cats. We wanted a host that behaves the same way: says nothing until it is asked, carries little, checks what it is handed, and gets back up when something goes wrong. Each trait below says whether it is in the code today.</p>
       </div>
-      <ul class="paws">
-        <li><strong>Quiet by default.</strong> The regular boot starts none of the access programs, and the unit list fits on one screen. <span class="state">In the test image</span></li>
-        <li><strong>Small footprint.</strong> Debian stable packages and a short default set: ssh, network, time, containers. Root stays available for the person who has to see why a node failed. <span class="state">In the test image</span></li>
-        <li><strong>Speaks when you ask.</strong> The boot menu beeps when it is ready. Key 1 or key 2 starts speech and braille after the kernel, so a blind operator can answer the install prompts. <span class="state">In the test image and the installer</span></li>
-        <li><strong>Watchful.</strong> The installer checks the image's sha256 before it writes a disk, and a mismatch writes nothing. A signed boot, where the machine refuses a boot file it cannot verify, is designed. <span class="state">Digest check built. Signing designed, not built</span></li>
-        <li><strong>Lands on its feet.</strong> An update installs beside the running image, and the previous one still boots. That is rollback. <span class="state">Designed, not built</span></li>
-        <li><strong>Nine lives, within reason.</strong> We will not promise nine. The plan is two: root slots A and B, so there is always one to fall back to. <span class="state">Planned</span></li>
+      <ul class="paws traits">
+        <li><img src="assets/cat/quiet.svg" width="96" height="96" alt="" class="spot" loading="lazy" decoding="async"><strong>Quiet by default.</strong> The regular boot starts none of the access programs, and the unit list fits on one screen. <span class="state">In the test image</span></li>
+        <li><img src="assets/cat/sticker-sit.svg" width="96" height="96" alt="" class="spot" loading="lazy" decoding="async"><strong>Small footprint.</strong> Debian stable packages and a short default set: ssh, network, time, containers. Root stays available for the person who has to see why a node failed. <span class="state">In the test image</span></li>
+        <li><img src="assets/cat/sticker-paw.svg" width="96" height="96" alt="" class="spot" loading="lazy" decoding="async"><strong>Speaks when you ask.</strong> The boot menu beeps when it is ready. Key 1 or key 2 starts speech and braille after the kernel, so a blind operator can answer the install prompts. <span class="state">In the test image and the installer</span></li>
+        <li><img src="assets/cat/sticker-peek.svg" width="96" height="96" alt="" class="spot" loading="lazy" decoding="async"><strong>Watchful.</strong> The installer checks the image's sha256 before it writes a disk, and a mismatch writes nothing. A signed boot, where the machine refuses a boot file it cannot verify, is designed. <span class="state">Digest check built. Signing designed, not built</span></li>
+        <li><img src="assets/cat/lands-on-feet.svg" width="96" height="96" alt="" class="spot" loading="lazy" decoding="async"><strong>Lands on its feet.</strong> An update installs beside the running image, and the previous one still boots. That is rollback. <span class="state">Designed, not built</span></li>
+        <li><img src="assets/cat/sticker-stretch.svg" width="96" height="96" alt="" class="spot" loading="lazy" decoding="async"><strong>Nine lives, within reason.</strong> We will not promise nine. The plan is two: root slots A and B, so there is always one to fall back to. <span class="state">Planned</span></li>
       </ul>
+    </section>
+
+    <section class="wrap band" aria-labelledby="rules-h">
+      <div class="band-head">
+        <div>
+          <span class="kicker">The short version</span>
+          <h2 id="rules-h">Three rules</h2>
+        </div>
+        <p>A quiet Debian host, in three rules. Each one is a promise about how the machine behaves, and the pages linked here say how much of it is built.</p>
+      </div>
+      <div class="facts pillars">
+        <article>
+          <figure class="scene"><img src="assets/cat/held-still.svg" width="1024" height="1024" alt="Blubie sits perfectly still and upright on a ledge, tail curled around its paws." loading="lazy" decoding="async"></figure>
+          <h3>Debian, held still</h3>
+          <p>Packages come from Debian stable. An update is a new signed image, and the previous one still boots. Signing and rollback are designed, not built.</p>
+        </article>
+        <article>
+          <figure class="scene"><img src="assets/cat/shell.svg" width="1024" height="1024" alt="Blubie sits beside a blank terminal window, looking at it." loading="lazy" decoding="async"></figure>
+          <h3>A shell when it is sick</h3>
+          <p>A default set small enough to read on one screen. Root stays available for a person who has to see why a node failed.</p>
+        </article>
+        <article>
+          <figure class="scene"><img src="assets/cat/speech.svg" width="1024" height="1024" alt="Blubie sits calmly in front of large, soft sound-wave rings." loading="lazy" decoding="async"></figure>
+          <h3>Speech before questions</h3>
+          <p>Five numbered boot entries. Speech starts after the kernel, so a blind operator can answer the install prompts. <a href="access.html">Read the boot entries</a>.</p>
+        </article>
+      </div>
     </section>
 
     <section class="wrap band" aria-labelledby="latest-h">
@@ -102,7 +130,26 @@
         <li><strong>Designed, not built</strong><span>Image signing. sysupdate updates and rollback. The image log. Enrolled machines. The service client on each machine. The troubleshoot collector. Google and GitHub sign-in.</span></li>
       </ul>
       <p class="portal-status" data-portal-status aria-live="polite"><span data-portal-words>The portal is not open yet.</span> Its address is <a href="https://build.blunix.io/">build.blunix.io</a>.</p>
-      <p class="note"><a href="install.html">Read the install sequence</a>. <a href="access.html">Read the five boot entries</a>. <a href="log.html">Read the release log</a>. <a href="account.html">Read the account</a>. <a href="api.html">Read the API</a>. <a href="service.html">Read the service design</a>. <a href="platform.html">Read the platform design</a>.</p>
+      <p class="note"><a href="install.html">Read the install sequence</a>. <a href="access.html">Read the five boot entries</a>. <a href="log.html">Read the release log</a>. <a href="account.html">Read the account</a>. <a href="api.html">Read the API</a>. <a href="service.html">Read the service design</a>. <a href="platform.html">Read the platform design</a>. <a href="architecture.html">See how it fits together</a>.</p>
+    </section>
+    <section class="wrap band" aria-labelledby="cat-h">
+      <div class="band-head">
+        <div>
+          <span class="kicker">The Blunix cat</span>
+          <h2 id="cat-h">Blubie at work</h2>
+        </div>
+        <p>Blubie, the Blunix cat, is a Russian Blue: one even silver-blue coat, green eyes, and a habit of sitting on warm hardware. These are the drawings we use around the site.</p>
+      </div>
+      <ul class="gallery">
+        <li><figure><img src="assets/cat/at-computer.svg" width="1024" height="1024" alt="Blubie sits beside an open laptop whose blank screen glows." loading="lazy" decoding="async"><figcaption>At the keyboard.</figcaption></figure></li>
+        <li><figure><img src="assets/cat/reading-docs.svg" width="1024" height="1024" alt="Blubie lies behind a large open book, reading it." loading="lazy" decoding="async"><figcaption>Reading the manual.</figcaption></figure></li>
+        <li><figure><img src="assets/cat/debugging.svg" width="1024" height="1024" alt="Blubie sits by a monitor, next to a big magnifying glass on a stand." loading="lazy" decoding="async"><figcaption>Looking closer.</figcaption></figure></li>
+        <li><figure><img src="assets/cat/coffee-no.svg" width="1024" height="1024" alt="Blubie sits on a desk at night beside a plain, unlabelled can and a desk lamp." loading="lazy" decoding="async"><figcaption>Late, with a can. Not coffee.</figcaption></figure></li>
+        <li><figure><img src="assets/cat/braille.svg" width="1024" height="1024" alt="Blubie sits behind a slim braille display with a row of raised dots." loading="lazy" decoding="async"><figcaption>Reading by touch.</figcaption></figure></li>
+        <li><figure><img src="assets/cat/cloud.svg" width="1024" height="1024" alt="Blubie sits in front of a small soft cloud, above three tiny servers." loading="lazy" decoding="async"><figcaption>Up in the cloud.</figcaption></figure></li>
+        <li><figure><img src="assets/cat/packing.svg" width="1024" height="1024" alt="Blubie sits in an open cardboard shipping box." loading="lazy" decoding="async"><figcaption>Shipping a release.</figcaption></figure></li>
+        <li><figure><img src="assets/cat/stargazing.svg" width="1024" height="1024" alt="Blubie sits on top of a server rack under a sky of small stars." loading="lazy" decoding="async"><figcaption>On watch at night.</figcaption></figure></li>
+      </ul>
     </section>
   </main>
   <footer class="wrap site-footer">

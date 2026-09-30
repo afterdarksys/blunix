@@ -58,6 +58,68 @@ Do: put the mark on Night, Raise, or Ink. Use the mono files for one-colour prin
 
 Don't: recolour the head, or add gradients, glows, strokes, or shadows to the mark. Don't put green anywhere else in the mark. Don't set text over the mark or over images. Don't overdo the cat: no emoji walls, no paw-print clutter, no puns in status sentences. Don't stretch, rotate, or re-space the wordmark.
 
+## Mascot: Blubie, the Blunix cat
+
+Blubie is the Blunix cat, a Russian Blue, drawn in Blunix's own flat editorial vector style. It is the same cat as the mark's head: slate coat, green eyes, nothing loud. In alt text, say "Blubie, the Blunix cat" the first time on a page and "Blubie" after that.
+
+### Identity lock
+
+The one source of truth is `mascot/prompts.json` (versioned, with a dated drift log). Every scene prompt is the scene text plus the same `identity` and `style_lock`.
+
+- A Russian Blue. One solid, even silver-blue-grey coat. No white patches, no bib, no stripes, not a tabby, not black, not a hairless Sphynx.
+- Lime-green almond eyes with thin dark pupils. Never white or grey eyes.
+- Slender, upright, elegant. Large wide-set pointed ears. Dark slate nose. Calm and faintly amused.
+- A real cat on four legs. No clothing, no collar, no accessories.
+- Style: Recraft V3 `vector_illustration/segmented_colors`, true SVG output. Flat colour fields and fine linework.
+- `mascot/finish.py` locks the palette after generation. It drops the background and any backdrop panel touching three canvas edges (so the art sits on Night with no box), then snaps every colour to the slate ramp (`#12161a` to `#c9d0d8`, the mark's own `#8e9aa8` / `#6f7c8b` / `#56626f` in the middle). Green (`#d2ee9a`, `#8fae5c`) survives only on small shapes: eyes and indicator lights. Ink survives only on glints.
+
+### Do / don't
+
+Do: use one scene per page, next to the text it illustrates. Keep art on Night or Raise. Give every meaningful image real alt text; spot art beside a labelled list item is decorative (`alt=""`). Set `width`, `height`, and `decoding="async"`; use `loading="lazy"` below the fold.
+
+Don't: put words, numbers, or UI text inside an illustration (screens and scrolls stay blank). Don't recolour the cat, add green outside the eyes and small lights, or add glows and drop shadows. Don't use the art in place of the logo mark: the mark stays in the header. Don't stack several cats on one screen outside the gallery. No speech bubbles, no puns in status text.
+
+### Pipeline
+
+1. `python3 mascot/generate.py [ids]`: reads `prompts.json`, writes candidates to `mascot/raw/<id>-<n>.svg`, and records model, style, prompt and time in `mascot/provenance.json` (no key; Recraft returns no seed). It skips files that exist: delete a file to re-roll it, or raise the scene's `n`. The fal.ai key is read at run time from the env file in `$BLUNIX_FAL_ENV`, and only ever sent as the `Authorization` header.
+2. Review every candidate on Night, then record the pick in `mascot/picks.json`.
+3. `mascot/export.sh`: runs `finish.py` on each pick, optimises with svgo, writes `mascot/final/` and copies the files to `site/assets/cat/` (and the portal's two to `portal/assets/cat/`).
+4. `mascot/sheet.sh`: renders `mascot/mascot-sheet.png`.
+
+### File index
+
+| File | Source | Size | Used on |
+|---|---|---|---|
+| `mascot/final/hero.svg` | `raw/hero-2.svg` | 33 KB | Home hero, beside the headline (the header keeps the logo mark) |
+| `mascot/final/quiet.svg` | `raw/quiet-1.svg` | 20 KB | Home, "Quiet by default" trait spot |
+| `mascot/final/held-still.svg` | `raw/held-still-3.svg` | 12 KB | Home, "Debian, held still" rule |
+| `mascot/final/shell.svg` | `raw/shell-2.svg` | 12 KB | Home, "A shell when it is sick" rule; Service hero |
+| `mascot/final/speech.svg` | `raw/speech-3.svg` | 12 KB | Home, "Speech before questions" rule; Access hero |
+| `mascot/final/lands-on-feet.svg` | `raw/lands-on-feet-2.svg` | 11 KB | Home, "Lands on its feet" trait spot |
+| `mascot/final/install.svg` | `raw/install-3.svg` | 16 KB | Install hero |
+| `mascot/final/key.svg` | `raw/key-4.svg` | 15 KB | Account hero |
+| `mascot/final/log.svg` | `raw/log-2.svg` | 18 KB | Log hero |
+| `mascot/final/proxy.svg` | `raw/proxy-3.svg` | 21 KB | Platform hero |
+| `mascot/final/404.svg` | `raw/404-1.svg` | 12 KB | Site 404 and portal 404 |
+| `mascot/final/empty-basket.svg` | `raw/empty-basket-4.svg` | 61 KB | Portal, empty hostnames state |
+| `mascot/final/sticker-sit.svg` | `raw/sticker-sit-1.svg` | 22 KB | Home, "Small footprint" trait spot |
+| `mascot/final/sticker-paw.svg` | `raw/sticker-paw-3.svg` | 16 KB | Home, "Speaks when you ask" trait spot |
+| `mascot/final/sticker-stretch.svg` | `raw/sticker-stretch-2.svg` | 14 KB | Home, "Nine lives" trait spot |
+| `mascot/final/sticker-sleep.svg` | `raw/sticker-sleep-1.svg` | 10 KB | Spare spot (empty states, social) |
+| `mascot/final/gallery/at-computer.svg` | `raw/at-computer-4.svg` | 13 KB | Home, "Blubie at work" gallery |
+| `mascot/final/gallery/debugging.svg` | `raw/debugging-3.svg` | 11 KB | Home, "Blubie at work" gallery |
+| `mascot/final/gallery/cloud.svg` | `raw/cloud-2.svg` | 18 KB | Home, "Blubie at work" gallery |
+| `mascot/final/gallery/packing.svg` | `raw/packing-2.svg` | 9 KB | Home, "Blubie at work" gallery |
+| `mascot/final/gallery/stargazing.svg` | `raw/stargazing-2.svg` | 33 KB | Home, "Blubie at work" gallery |
+| `mascot/final/sticker-peek.svg` | `raw/sticker-peek-5.svg` | 12 KB | Home, "Watchful" trait spot |
+| `mascot/final/gallery/reading-docs.svg` | `raw/reading-docs-4.svg` | 14 KB | Home, "Blubie at work" gallery |
+| `mascot/final/gallery/braille.svg` | `raw/braille-8.svg` | 41 KB | Home, "Blubie at work" gallery |
+| `mascot/final/gallery/coffee-no.svg` | `raw/coffee-no-2.svg` | 13 KB | Home, "Blubie at work" gallery |
+
+Also: `mascot/prompts.json` (identity lock and drift log), `mascot/picks.json`, `mascot/provenance.json`, `mascot/raw/` (every candidate, kept as the record of what was rejected), `mascot/mascot-sheet.png` (contact sheet). The site copies live in `site/assets/cat/`; the portal carries `404.svg` and `empty-basket.svg` in `portal/assets/cat/`.
+
+Promo: `promo/mascot-social-1200x630.png` (sources `src/mascot-social-1200x630.html`) and `promo/readme-banner-1280x400.png` (`src/readme-banner-1280x400.html`). Render with `src/tools/render.sh`; set `CH` to a headless Chromium.
+
 ## File index
 
 Logo (SVG, outlined, no font dependency):

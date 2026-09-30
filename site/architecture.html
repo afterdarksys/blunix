@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.blunix.io; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Architecture, blunix</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="assets/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#12161a">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="blunix">
+  <meta property="og:title" content="Architecture, blunix">
+  <meta property="og:description" content="How the blunix install plane fits together, drawn from the code as it stands: what is deployed, what is built, and what is only designed.">
+  <meta property="og:url" content="https://blunix.io/architecture.html">
+  <meta property="og:image" content="https://blunix.io/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="blunix: a quiet Debian host for cloud nodes.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="description" content="How the blunix install plane fits together, drawn from the code as it stands: what is deployed, what is built, and what is only designed.">
+  <link rel="stylesheet" href="css/site.css">
+  <link rel="stylesheet" href="css/diagrams.css">
+  <script type="module" src="js/live.js"></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="wrap site-header">
+    <a class="brand" href="index.html">
+      <img src="assets/logo-mark.svg" width="40" height="48" alt="">
+      <span>blunix</span>
+    </a>
+    <nav aria-label="Primary">
+      <a href="index.html">Host</a>
+      <a href="install.html">Install</a>
+      <a href="access.html">Access</a>
+      <a href="log.html">Log</a>
+      <a href="account.html">Account</a>
+      <a href="service.html">Service</a>
+      <a href="platform.html">Platform</a>
+      <a href="api.html">API</a>
+      <a href="architecture.html" aria-current="page">Architecture</a>
+      <a href="https://build.blunix.io/">Portal</a>
+    </nav>
+  </header>
+  <main id="content" tabindex="-1">
+    <section class="wrap arch-hero">
+      <p class="kicker">Architecture</p>
+      <h1>How it fits together</h1>
+      <p class="lede">Six drawings of the install plane, made from the code as it stands on 30 September 2026, not from the plan. Where the code and the plan disagree, the drawing follows the code.</p>
+      <p class="lede">Each drawing has a numbered walk-through under it that says everything the drawing says. The text is the full account; the drawing illustrates it. On a narrow screen, a drawing scrolls sideways inside its frame.</p>
+    </section>
+
+    <section class="wrap band" aria-labelledby="h-status">
+      <div class="band-head">
+        <h2 id="h-status">What is real today</h2>
+        <p>Three states, told apart by shape and line style and always written in words on each box, never by colour alone.</p>
+      </div>
+      <ul class="arch-legend">
+        <li>
+          <svg class="swatch" viewBox="0 0 56 32" width="56" height="32" aria-hidden="true" focusable="false"><rect x="2" y="2" width="52" height="28" rx="6" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/><circle cx="14" cy="16" r="5" fill="#a9b4c1"/></svg>
+          <span><strong>Deployed, live today.</strong> A heavy solid border and a filled dot. Live: the blunix.io website and its <code>/releases.json</code> function (no release is published yet), the GitHub repo, and Authentik at adsas.id.</span>
+        </li>
+        <li>
+          <svg class="swatch" viewBox="0 0 56 32" width="56" height="32" aria-hidden="true" focusable="false"><rect x="2" y="2" width="52" height="28" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/><rect x="9" y="11" width="10" height="10" fill="none" stroke="#a9b4c1" stroke-width="2"/></svg>
+          <span><strong>Built and tested in the repo.</strong> A thin solid border and a hollow square. The portal, the API Worker and the <code>{label}.blnx.io</code> build hosts are built and not deployed: build.blunix.io and api.blunix.io answer placeholders, and blnx.io has no DNS yet. The installer, the first-boot bootstrap, the build scripts and <code>blunix proxy</code> are built; the installer boots in a VM.</span>
+        </li>
+        <li>
+          <svg class="swatch" viewBox="0 0 56 32" width="56" height="32" aria-hidden="true" focusable="false"><rect x="2" y="2" width="52" height="28" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="8 5"/><rect x="9" y="11" width="10" height="10" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/></svg>
+          <span><strong>Designed, not built.</strong> A dashed border and a dashed square. The offline image signing key, enrolled machines and blunixservice, the Blunix Log, sysupdate from the log, and troubleshoot collect.</span>
+        </li>
+        <li>
+          <svg class="swatch" viewBox="0 0 56 32" width="56" height="32" aria-hidden="true" focusable="false"><path d="M4 16 H52" stroke="#8e9aa8" stroke-width="9"/><path d="M3 16 H53" stroke="#12161a" stroke-width="3.5"/></svg>
+          <span><strong>A double line carries only ciphertext.</strong> A single solid line is any other call or data. A dashed line is a designed path.</span>
+        </li>
+        <li>
+          <svg class="swatch" viewBox="0 0 56 32" width="56" height="32" aria-hidden="true" focusable="false"><polygon points="12,3 44,3 53,12 53,20 44,29 12,29 3,20 3,12" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/></svg>
+          <span><strong>An octagon is a gate or a stop.</strong> The build, the deploy or the install stops there and says why.</span>
+        </li>
+        <li>
+          <span class="key-pill" aria-hidden="true">KEY HERE</span>
+          <span><strong>Where the key exists.</strong> The browser that made it, the install card, <code>keys.txt</code> on the proxy's computer, and the machine at the console. Never a server.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="wrap band" id="ecosystem" aria-labelledby="h-eco">
+      <div class="band-head">
+        <h2 id="h-eco">1. Who talks to whom</h2>
+        <p>Every place Blunix runs, what each one holds, and the fifteen connections between them.</p>
+      </div>
+      <figure class="diagram" tabindex="0" aria-label="Diagram 1, the ecosystem. It scrolls sideways on a narrow screen. The walk-through follows.">
+<!-- diagram:01-ecosystem -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 1200" width="1120" height="1200" role="img" aria-labelledby="eco-title eco-desc" font-family="Atkinson, &#x27;Atkinson Hyperlegible&#x27;, &#x27;Helvetica Neue&#x27;, Arial, sans-serif">
+<title id="eco-title">Blunix ecosystem: who talks to whom</title>
+<desc id="eco-desc">Zones for the operator&#x27;s browser, adsas.id, Cloudflare, GitHub, our servers, the offline signing key, the customer LAN and the machine at the console, joined by 15 numbered connections. Only blunix.io, its releases function, the GitHub repo and Authentik run today; the portal, API, build hosts, installer and proxy are built and tested; the signing key is designed, not built. The numbered walk-through after this figure says everything the diagram shows.</desc>
+<defs><marker id="eco-head" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
+<defs><marker id="eco-bighead" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="22" markerHeight="22" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
+<rect width="1120" height="1200" fill="#12161a"/>
+<rect x="20" y="100" width="300" height="240" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="34.0" y="126.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">OPERATOR&#x27;S DEVICE</text>
+<rect x="20" y="380" width="300" height="200" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="34.0" y="406.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">ADSAS.ID</text>
+<rect x="340" y="100" width="430" height="720" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="354.0" y="126.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">CLOUDFLARE</text>
+<text x="354.0" y="147.0" font-size="15" fill="#c9c3b6">Holds records and ciphertext. Never a key.</text>
+<rect x="790" y="100" width="290" height="330" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="804.0" y="126.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">GITHUB</text>
+<rect x="790" y="470" width="290" height="175" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="804.0" y="496.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">OUR SERVERS</text>
+<rect x="790" y="685" width="290" height="175" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="804.0" y="711.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">OFFLINE</text>
+<rect x="20" y="880" width="520" height="205" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="34.0" y="906.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">CUSTOMER LAN</text>
+<rect x="560" y="880" width="520" height="205" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="1066.0" y="906.0" font-size="15" fill="#a9b4c1" font-weight="700" text-anchor="end" letter-spacing="1.20">THE MACHINE AT THE CONSOLE</text>
+<path d="M304.0 300.0 L356.0 300.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
+<path d="M284.0 309.0 L284.0 362.0 L330.0 362.0 L330.0 452.0 L356.0 452.0" fill="none" stroke="#8e9aa8" stroke-width="9" stroke-linejoin="round"/>
+<path d="M284.0 309.0 L284.0 362.0 L330.0 362.0 L330.0 452.0 L356.0 452.0" fill="none" stroke="#12161a" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M284.0 309.0 L284.0 362.0 L330.0 362.0 L330.0 452.0 L356.0 452.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#eco-bighead)"/>
+<path d="M190.0 309.0 L190.0 425.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)" marker-start="url(#eco-head)"/>
+<path d="M356.0 495.0 L304.0 495.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)" marker-start="url(#eco-head)"/>
+<path d="M452.0 535.0 L452.0 570.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
+<path d="M657.0 535.0 L657.0 570.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
+<path d="M452.0 705.0 L452.0 716.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
+<path d="M657.0 705.0 L657.0 716.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
+<path d="M700.0 809.0 L700.0 925.0" fill="none" stroke="#8e9aa8" stroke-width="9" stroke-linejoin="round"/>
+<path d="M700.0 809.0 L700.0 925.0" fill="none" stroke="#12161a" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M700.0 809.0 L700.0 925.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#eco-bighead)"/>
+<path d="M440.0 809.0 L440.0 925.0" fill="none" stroke="#8e9aa8" stroke-width="9" stroke-linejoin="round"/>
+<path d="M440.0 809.0 L440.0 925.0" fill="none" stroke="#12161a" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M440.0 809.0 L440.0 925.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#eco-bighead)"/>
+<path d="M524.0 1040.0 L576.0 1040.0" fill="none" stroke="#8e9aa8" stroke-width="9" stroke-linejoin="round"/>
+<path d="M524.0 1040.0 L576.0 1040.0" fill="none" stroke="#12161a" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M524.0 1040.0 L576.0 1040.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#eco-bighead)"/>
+<path d="M250.0 925.0 L250.0 860.0 L330.0 860.0 L330.0 530.0 L356.0 530.0" fill="none" stroke="#8e9aa8" stroke-width="9" stroke-linejoin="round"/>
+<path d="M250.0 925.0 L250.0 860.0 L330.0 860.0 L330.0 530.0 L356.0 530.0" fill="none" stroke="#12161a" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M250.0 925.0 L250.0 860.0 L330.0 860.0 L330.0 530.0 L356.0 530.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#eco-bighead)"/>
+<path d="M754.0 235.0 L780.0 235.0 L780.0 360.0 L806.0 360.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
+<path d="M806.0 190.0 L754.0 190.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
+<path d="M1000.0 512.0 L1000.0 415.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
+<path d="M1064.0 1000.0 L1100.0 1000.0 L1100.0 360.0 L1064.0 360.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
+<path d="M1000.0 727.0 L1000.0 627.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#eco-head)"/>
+<text x="28.0" y="44.0" font-size="26" fill="#f3efe6" font-weight="700">Blunix ecosystem: who talks to whom</text>
+<text x="28.0" y="72.0" font-size="16" fill="#c9c3b6">As the code stands on 2026-09-30. Numbers match the walk-through.</text>
+<rect x="36" y="150" width="268" height="159" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="50.5" y="167.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<rect x="188.9" y="160.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="201.9" y="178.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="67.0" y="179.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="50.0" y="205.0" font-size="18" fill="#f3efe6" font-weight="700">Operator&#x27;s browser</text>
+<text x="50.0" y="228.0" font-size="16" fill="#c9c3b6">Runs the portal&#x27;s JavaScript.</text>
+<text x="50.0" y="250.0" font-size="16" fill="#c9c3b6">Composes the node document,</text>
+<text x="50.0" y="272.0" font-size="16" fill="#c9c3b6">makes the key, encrypts with</text>
+<text x="50.0" y="294.0" font-size="16" fill="#c9c3b6">age. Sends only ciphertext.</text>
+<rect x="36" y="425" width="268" height="137" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="55.5" cy="448.0" r="5.5" fill="#a9b4c1"/>
+<text x="67.0" y="454.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">RUNS TODAY</text>
+<text x="50.0" y="480.0" font-size="18" fill="#f3efe6" font-weight="700">Authentik (OIDC)</text>
+<text x="50.0" y="503.0" font-size="16" fill="#c9c3b6">Signs the operator in.</text>
+<text x="50.0" y="525.0" font-size="16" fill="#c9c3b6">Blunix client not set up yet:</text>
+<text x="50.0" y="547.0" font-size="16" fill="#c9c3b6">OIDC_ISSUER is empty.</text>
+<rect x="356" y="160" width="398" height="115" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="375.5" cy="183.0" r="5.5" fill="#a9b4c1"/>
+<text x="387.0" y="189.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DEPLOYED</text>
+<text x="370.0" y="215.0" font-size="18" fill="#f3efe6" font-weight="700">blunix.io website (Pages)</text>
+<text x="370.0" y="238.0" font-size="16" fill="#c9c3b6">Function /releases.json reads GitHub.</text>
+<text x="370.0" y="260.0" font-size="16" fill="#c9c3b6">Its page asks api.blunix.io/v1/health.</text>
+<rect x="356" y="290" width="398" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="370.5" y="307.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="387.0" y="319.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<text x="370.0" y="345.0" font-size="18" fill="#f3efe6" font-weight="700">build.blunix.io portal (Pages)</text>
+<text x="370.0" y="368.0" font-size="16" fill="#c9c3b6">A separate Pages project. Same-site</text>
+<text x="370.0" y="390.0" font-size="16" fill="#c9c3b6">with the API, so the cookie rides fetch.</text>
+<rect x="356" y="420" width="398" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="370.5" y="437.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="387.0" y="449.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<text x="370.0" y="475.0" font-size="18" fill="#f3efe6" font-weight="700">api.blunix.io Worker (/v1)</text>
+<text x="370.0" y="498.0" font-size="16" fill="#c9c3b6">Sign-in, labels, builds, API keys.</text>
+<text x="370.0" y="520.0" font-size="16" fill="#c9c3b6">Checks the age header. Never decrypts.</text>
+<rect x="356" y="570" width="193" height="135" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="370.0" y="601.0" font-size="18" fill="#f3efe6" font-weight="700">D1 records</text>
+<text x="370.0" y="624.0" font-size="16" fill="#c9c3b6">accounts, labels,</text>
+<text x="370.0" y="646.0" font-size="16" fill="#c9c3b6">versions, hashed</text>
+<text x="370.0" y="668.0" font-size="16" fill="#c9c3b6">sessions and keys,</text>
+<text x="370.0" y="690.0" font-size="16" fill="#c9c3b6">audit rows</text>
+<rect x="561" y="570" width="193" height="135" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="575.0" y="601.0" font-size="18" fill="#f3efe6" font-weight="700">R2 ciphertext</text>
+<text x="575.0" y="624.0" font-size="16" fill="#c9c3b6">builds/{id}/{n}:</text>
+<text x="575.0" y="646.0" font-size="16" fill="#c9c3b6">the age binary,</text>
+<text x="575.0" y="668.0" font-size="16" fill="#c9c3b6">sha256 checked</text>
+<text x="575.0" y="690.0" font-size="16" fill="#c9c3b6">before serving</text>
+<rect x="356" y="716" width="398" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="370.5" y="733.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="387.0" y="745.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED: NO DNS YET</text>
+<text x="370.0" y="771.0" font-size="18" fill="#f3efe6" font-weight="700">{label}.blnx.io (the same Worker)</text>
+<text x="370.0" y="794.0" font-size="16" fill="#c9c3b6">GET / only. A separate registrable domain.</text>
+<rect x="806" y="150" width="258" height="137" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="825.5" cy="173.0" r="5.5" fill="#a9b4c1"/>
+<text x="837.0" y="179.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">REPO IS LIVE</text>
+<text x="820.0" y="205.0" font-size="18" fill="#f3efe6" font-weight="700">afterdarksys/blunix</text>
+<text x="820.0" y="228.0" font-size="16" fill="#c9c3b6">Actions job in the</text>
+<text x="820.0" y="250.0" font-size="16" fill="#c9c3b6">production environment</text>
+<text x="820.0" y="272.0" font-size="16" fill="#c9c3b6">deploys site/ and portal/.</text>
+<rect x="806" y="300" width="258" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="820.5" y="317.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="837.0" y="329.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">v0.1.0 PUBLISHED</text>
+<text x="820.0" y="355.0" font-size="18" fill="#f3efe6" font-weight="700">Releases</text>
+<text x="820.0" y="378.0" font-size="16" fill="#c9c3b6">ISO, blunix.raw.zst, netboot</text>
+<text x="820.0" y="400.0" font-size="16" fill="#c9c3b6">media, SHA256SUMS.</text>
+<rect x="806" y="512" width="258" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="820.5" y="529.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="837.0" y="541.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SCRIPTS BUILT</text>
+<text x="820.0" y="567.0" font-size="18" fill="#f3efe6" font-weight="700">Image builder</text>
+<text x="820.0" y="590.0" font-size="16" fill="#c9c3b6">Privileged Docker scripts.</text>
+<text x="820.0" y="612.0" font-size="16" fill="#c9c3b6">No builder host set up yet.</text>
+<rect x="806" y="727" width="258" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="820.5" y="744.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="837.0" y="756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="820.0" y="782.0" font-size="18" fill="#f3efe6" font-weight="700">Image signing key</text>
+<text x="820.0" y="805.0" font-size="16" fill="#c9c3b6">Never on the builder or on</text>
+<text x="820.0" y="827.0" font-size="16" fill="#c9c3b6">Cloudflare. Nothing is signed.</text>
+<rect x="36" y="925" width="488" height="137" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="50.5" y="942.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<rect x="408.9" y="935.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="421.9" y="953.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="67.0" y="954.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<text x="50.0" y="980.0" font-size="18" fill="#f3efe6" font-weight="700">blunix proxy (operator&#x27;s Linux or Mac)</text>
+<text x="50.0" y="1003.0" font-size="16" fill="#c9c3b6">publish: encrypts per machine, uploads ciphertext.</text>
+<text x="50.0" y="1025.0" font-size="16" fill="#c9c3b6">serve: relays *.blnx.io, netboot media, boot.ipxe.</text>
+<text x="50.0" y="1047.0" font-size="16" fill="#c9c3b6">keys.txt (mode 0600) stays on this computer.</text>
+<rect x="576" y="925" width="488" height="137" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="590.5" y="942.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<rect x="948.9" y="935.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="961.9" y="953.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="607.0" y="954.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, BOOTS IN A VM</text>
+<text x="590.0" y="980.0" font-size="18" fill="#f3efe6" font-weight="700">Installer, or first-boot bootstrap</text>
+<text x="590.0" y="1003.0" font-size="16" fill="#c9c3b6">Installer: ISO, USB or netboot. Bootstrap: raw</text>
+<text x="590.0" y="1025.0" font-size="16" fill="#c9c3b6">image. Asks the hostname, then the key, echo</text>
+<text x="590.0" y="1047.0" font-size="16" fill="#c9c3b6">off. Fetches, decrypts on the machine, applies.</text>
+<rect x="20" y="1090" width="1080" height="96" rx="10" fill="#1b2127" stroke="#3a434d" stroke-width="2"/>
+<text x="36.0" y="1117.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">LEGEND</text>
+<rect x="130" y="1100" width="40" height="24" rx="5" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<text x="182.0" y="1118.0" font-size="16" fill="#f3efe6">Deployed, live today</text>
+<rect x="356" y="1100" width="40" height="24" rx="5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="408.1" y="1118.0" font-size="16" fill="#f3efe6">Built and tested in the repo</text>
+<rect x="634" y="1100" width="40" height="24" rx="5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="7 5"/>
+<text x="686.5" y="1118.0" font-size="16" fill="#f3efe6">Designed, not built</text>
+<path d="M130 1154 L174 1154" stroke="#8e9aa8" stroke-width="2.5"/>
+<text x="184.0" y="1160.0" font-size="16" fill="#f3efe6">Call or data</text>
+<path d="M294 1154 L338 1154" stroke="#8e9aa8" stroke-width="9"/>
+<path d="M293 1154 L339 1154" stroke="#1b2127" stroke-width="3.5"/>
+<text x="348.8" y="1160.0" font-size="16" fill="#f3efe6">Ciphertext only</text>
+<path d="M484 1154 L528 1154" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7"/>
+<text x="538.7" y="1160.0" font-size="16" fill="#f3efe6">Designed path</text>
+<rect x="671.3" y="1141.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="684.3" y="1159.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="786.4" y="1160.0" font-size="16" fill="#f3efe6">The key exists here</text>
+<circle cx="330.0" cy="300.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="330.0" y="305.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">1</text>
+<circle cx="330.0" cy="405.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="330.0" y="410.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">2</text>
+<circle cx="190.0" cy="380.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="190.0" y="385.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">3</text>
+<circle cx="330.0" cy="495.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="330.0" y="500.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">4</text>
+<circle cx="555.0" cy="540.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="555.0" y="545.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">5</text>
+<circle cx="555.0" cy="700.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="555.0" y="705.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">6</text>
+<circle cx="700.0" cy="850.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="700.0" y="855.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">7</text>
+<circle cx="440.0" cy="850.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="440.0" y="855.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">8</text>
+<circle cx="550.0" cy="1040.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="550.0" y="1045.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">9</text>
+<circle cx="330.0" cy="700.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="330.0" y="705.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">10</text>
+<circle cx="780.0" cy="300.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="780.0" y="305.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">11</text>
+<circle cx="780.0" cy="190.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="780.0" y="195.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">12</text>
+<circle cx="1000.0" cy="450.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="1000.0" y="455.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">13</text>
+<circle cx="1100.0" cy="680.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="1100.0" y="685.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">14</text>
+<circle cx="1000.0" cy="665.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="1000.0" y="670.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">15</text>
+</svg>
+<!-- /diagram:01-ecosystem -->
+        <figcaption>Diagram 1. <a href="assets/diagrams/01-ecosystem.png">Open it as a large image</a>.</figcaption>
+      </figure>
+      <div class="walk">
+<!-- walk:01-ecosystem -->
+<h3>What each zone holds</h3>
+<ul>
+  <li><strong>Operator&#x27;s device.</strong> The operator&#x27;s browser runs the portal&#x27;s JavaScript (built). It composes the node document, makes the key, and encrypts with age. The key exists here. The browser sends only ciphertext.</li>
+  <li><strong>adsas.id.</strong> Authentik, the OIDC issuer, runs today. The Blunix client is not set up yet: <code>OIDC_ISSUER</code> is empty in <code>platform/api/wrangler.jsonc</code>, so sign-in answers 503 until it is.</li>
+  <li><strong>Cloudflare</strong> holds records and ciphertext, never a key. The blunix.io website on Pages is deployed. Its function <code>/releases.json</code> reads GitHub, and its page asks <code>api.blunix.io/v1/health</code> whether the API is up.</li>
+  <li><strong>Cloudflare, continued.</strong> The build.blunix.io portal is a separate Pages project, built and not deployed; today that name answers a placeholder. It is same-site with the API, so the session cookie rides the portal&#x27;s <code>fetch</code> calls.</li>
+  <li><strong>Cloudflare, continued.</strong> The api.blunix.io Worker (<code>/v1</code>) is built and not deployed; today that name answers a placeholder. It handles sign-in, labels, builds and API keys. It checks the age header and never decrypts. D1 holds accounts, labels, versions, hashed sessions and hashed API keys, audit rows and rate limits. R2 holds each build at <code>builds/{label id}/{version}</code> as the binary age file, and its sha256 is checked before it is served.</li>
+  <li><strong>Cloudflare, continued.</strong> <code>{label}.blnx.io</code> is the same Worker: <code>GET</code> and <code>HEAD</code> on <code>/</code> only. blnx.io is a separate registrable domain, so build hosts never share cookies with the site, the portal or the API. Built, not deployed: blnx.io has no DNS yet.</li>
+  <li><strong>GitHub.</strong> The repo <code>afterdarksys/blunix</code> is live. Its Actions job, in the <code>production</code> environment, deploys <code>site/</code> and <code>portal/</code>. Releases will hold the ISO, <code>blunix.raw.zst</code>, the netboot media and <code>SHA256SUMS</code>; none is published yet.</li>
+  <li><strong>Our servers.</strong> The image builder. The build scripts are built and run in privileged Docker. No builder host is set up in the tree yet.</li>
+  <li><strong>Offline.</strong> The image signing key: designed, not built. It is never on the builder and never on Cloudflare. Nothing is signed today.</li>
+  <li><strong>Customer LAN.</strong> <code>blunix proxy</code> on the operator&#x27;s Linux or Mac, built. <code>publish</code> encrypts per machine and uploads ciphertext. <code>serve</code> relays <code>*.blnx.io</code> and serves netboot media and <code>boot.ipxe</code>. The keys are in <code>keys.txt</code>, mode 0600, on this computer. The key exists here.</li>
+  <li><strong>The machine at the console.</strong> The installer (ISO, USB or netboot) or the first-boot bootstrap (raw image), built and booting in a VM. It asks the hostname, then the key with echo off, fetches, decrypts on the machine, and applies. The key exists here while it is typed.</li>
+</ul>
+<h3>The numbered connections</h3>
+<ol>
+  <li>The browser loads the portal page from build.blunix.io.</li>
+  <li>The browser calls api.blunix.io with the session cookie (<code>credentials: &#x27;include&#x27;</code>). The build upload on this path is ciphertext only.</li>
+  <li>The browser and Authentik: the OIDC sign-in redirects, both ways.</li>
+  <li>The Worker and Authentik: the Worker trades the code and the PKCE verifier for an ID token, and fetches the JWKS to check it.</li>
+  <li>The Worker reads and writes D1 and R2.</li>
+  <li>The build hosts read D1 and R2.</li>
+  <li><code>{label}.blnx.io</code> to the machine: HTTPS <code>GET /</code> over verified TLS. Ciphertext only.</li>
+  <li><code>{label}.blnx.io</code> to the proxy: the proxy fetches over verified TLS. Ciphertext only.</li>
+  <li>The proxy to the machine: plain http on the LAN. Ciphertext only. It is safe because age is authenticated; through a proxy the installer also says the full sha256 to compare with the install card.</li>
+  <li>The proxy to the Worker: <code>publish</code> reserves labels and uploads ciphertext with a <code>blx_</code> API key.</li>
+  <li>The site&#x27;s <code>/releases.json</code> function reads the GitHub Releases API and each release&#x27;s <code>SHA256SUMS</code>.</li>
+  <li>GitHub Actions deploys the site and the portal to Cloudflare Pages.</li>
+  <li>The builder&#x27;s assets reach Releases only when a person runs <code>gh release upload</code>. The build does not upload.</li>
+  <li>The installer streams the image from a GitHub release when its medium carries only a release pin. The stream&#x27;s sha256 must match the pin.</li>
+  <li>Designed, not built: the offline key signs the builder&#x27;s digests.</li>
+</ol>
+<!-- /walk:01-ecosystem -->
+      </div>
+    </section>
+
+    <section class="wrap band" id="web-bootstrap" aria-labelledby="h-seq">
+      <div class="band-head">
+        <h2 id="h-seq">2. From sign-in to an applied document</h2>
+        <p>The web half and the machine half, step by step, with the three places the key exists.</p>
+      </div>
+      <figure class="diagram" tabindex="0" aria-label="Diagram 2, the web bootstrapping sequence. It scrolls sideways on a narrow screen. The walk-through follows.">
+<!-- diagram:02-web-bootstrap -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 2372" width="1120" height="2372" role="img" aria-labelledby="seq-title seq-desc" font-family="Atkinson, &#x27;Atkinson Hyperlegible&#x27;, &#x27;Helvetica Neue&#x27;, Arial, sans-serif">
+<title id="seq-title">Web bootstrapping: from sign-in to an applied node document</title>
+<desc id="seq-desc">A sequence diagram across six participants: the operator, the browser running the portal, Authentik at adsas.id, the api.blunix.io Worker, the {label}.blnx.io build host, and the machine at the console. A green bar marks where the key exists: the browser from the moment it is made until the install card closes, the operator&#x27;s install card, and the machine from typing until decryption. The server side never holds it. The numbered walk-through after this figure lists every step.</desc>
+<defs><marker id="seq-head" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
+<defs><marker id="seq-bighead" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="22" markerHeight="22" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
+<rect width="1120" height="2372" fill="#12161a"/>
+<path d="M90 164 L90 2272" stroke="#3a434d" stroke-width="2"/>
+<path d="M270 164 L270 2272" stroke="#3a434d" stroke-width="2"/>
+<path d="M450 164 L450 2272" stroke="#3a434d" stroke-width="2"/>
+<path d="M630 164 L630 2272" stroke="#3a434d" stroke-width="2"/>
+<path d="M815 164 L815 2272" stroke="#3a434d" stroke-width="2"/>
+<path d="M1025 164 L1025 2272" stroke="#3a434d" stroke-width="2"/>
+<path d="M90.0 255.0 L270.0 255.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#seq-head)"/>
+<path d="M270.0 317.0 L630.0 317.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#seq-head)"/>
+<path d="M630.0 358.0 L270.0 358.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#seq-head)"/>
+<path d="M270.0 399.0 L450.0 399.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#seq-head)"/>
+<path d="M450.0 461.0 L270.0 461.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#seq-head)"/>
+<path d="M270.0 502.0 L630.0 502.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#seq-head)"/>
+<path d="M630.0 564.0 L450.0 564.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#seq-head)"/>
+<path d="M630.0 721.0 L270.0 721.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#seq-head)"/>
+<path d="M90.0 762.0 L270.0 762.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#seq-head)"/>
+<path d="M270.0 824.0 L630.0 824.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#seq-head)"/>
+<path d="M630.0 886.0 L270.0 886.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#seq-head)"/>
+<path d="M270.0 1191.0 L630.0 1191.0" fill="none" stroke="#8e9aa8" stroke-width="9" stroke-linejoin="round"/>
+<path d="M270.0 1191.0 L630.0 1191.0" fill="none" stroke="#12161a" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M270.0 1191.0 L630.0 1191.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#seq-bighead)"/>
+<path d="M630.0 1348.0 L270.0 1348.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#seq-head)"/>
+<path d="M270.0 1463.0 L90.0 1463.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#seq-head)"/>
+<path d="M1025.0 1872.0 L815.0 1872.0" fill="none" stroke="#8e9aa8" stroke-width="9" stroke-linejoin="round"/>
+<path d="M1025.0 1872.0 L815.0 1872.0" fill="none" stroke="#12161a" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M1025.0 1872.0 L815.0 1872.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#seq-bighead)"/>
+<path d="M815.0 2050.0 L1025.0 2050.0" fill="none" stroke="#8e9aa8" stroke-width="9" stroke-linejoin="round"/>
+<path d="M815.0 2050.0 L1025.0 2050.0" fill="none" stroke="#12161a" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M815.0 2050.0 L1025.0 2050.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#seq-bighead)"/>
+<rect x="265.0" y="986.0" width="10" height="582.0" rx="3" fill="#d2ee9a"/>
+<rect x="85.0" y="1448.0" width="10" height="120.0" rx="3" fill="#d2ee9a"/>
+<rect x="1020.0" y="1741.0" width="10" height="410.0" rx="3" fill="#d2ee9a"/>
+<text x="28.0" y="44.0" font-size="26" fill="#f3efe6" font-weight="700">Web bootstrapping: sign-in to an applied document</text>
+<text x="28.0" y="72.0" font-size="16" fill="#c9c3b6">Green bars: where the key exists. It never exists on a server. Double lines carry only ciphertext.</text>
+<rect x="8" y="100" width="164" height="64" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="90.0" y="127.0" font-size="17" fill="#f3efe6" font-weight="700" text-anchor="middle">Operator</text>
+<text x="90.0" y="150.0" font-size="16" fill="#c9c3b6" text-anchor="middle">a person</text>
+<rect x="188" y="100" width="164" height="64" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="270.0" y="127.0" font-size="17" fill="#f3efe6" font-weight="700" text-anchor="middle">Browser</text>
+<text x="270.0" y="150.0" font-size="16" fill="#c9c3b6" text-anchor="middle">portal JS</text>
+<rect x="368" y="100" width="164" height="64" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="450.0" y="127.0" font-size="17" fill="#f3efe6" font-weight="700" text-anchor="middle">Authentik</text>
+<text x="450.0" y="150.0" font-size="16" fill="#c9c3b6" text-anchor="middle">adsas.id</text>
+<rect x="548" y="100" width="164" height="64" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="630.0" y="127.0" font-size="17" fill="#f3efe6" font-weight="700" text-anchor="middle">api.blunix.io</text>
+<text x="630.0" y="150.0" font-size="16" fill="#c9c3b6" text-anchor="middle">Worker, D1, R2</text>
+<rect x="733" y="100" width="164" height="64" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="815.0" y="127.0" font-size="17" fill="#f3efe6" font-weight="700" text-anchor="middle">{label}.blnx.io</text>
+<text x="815.0" y="150.0" font-size="16" fill="#c9c3b6" text-anchor="middle">same Worker</text>
+<rect x="943" y="100" width="164" height="64" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="1025.0" y="127.0" font-size="17" fill="#f3efe6" font-weight="700" text-anchor="middle">Machine</text>
+<text x="1025.0" y="150.0" font-size="16" fill="#c9c3b6" text-anchor="middle">at the console</text>
+<rect x="20" y="203" width="342.5" height="26" fill="#12161a"/>
+<text x="28.0" y="222.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">IN THE BROWSER, AT BUILD.BLUNIX.IO</text>
+<path d="M370 217 L1092 217" stroke="#3a434d" stroke-width="2"/>
+<rect x="138.0" y="226.0" width="61.3" height="25.0" rx="4" fill="#12161a"/>
+<text x="144.0" y="245.0" font-size="16" fill="#c9c3b6">Sign in</text>
+<rect x="318.0" y="267.0" width="286.2" height="47.0" rx="4" fill="#12161a"/>
+<text x="324.0" y="286.0" font-size="16" fill="#c9c3b6">GET /v1/auth/login. Stores state, nonce</text>
+<text x="324.0" y="308.0" font-size="16" fill="#c9c3b6">and PKCE verifier for 10 minutes.</text>
+<rect x="318.0" y="329.0" width="288.7" height="25.0" rx="4" fill="#12161a"/>
+<text x="324.0" y="348.0" font-size="16" fill="#c9c3b6">302 to Authentik, code_challenge S256</text>
+<rect x="318.0" y="370.0" width="141.6" height="25.0" rx="4" fill="#12161a"/>
+<text x="324.0" y="389.0" font-size="16" fill="#c9c3b6">Sign in at adsas.id</text>
+<rect x="318.0" y="411.0" width="183.2" height="47.0" rx="4" fill="#12161a"/>
+<text x="324.0" y="430.0" font-size="16" fill="#c9c3b6">302 to /v1/auth/callback</text>
+<text x="324.0" y="452.0" font-size="16" fill="#c9c3b6">with code and state</text>
+<rect x="318.0" y="473.0" width="165.7" height="25.0" rx="4" fill="#12161a"/>
+<text x="324.0" y="492.0" font-size="16" fill="#c9c3b6">GET /v1/auth/callback</text>
+<rect x="498.0" y="514.0" width="156.9" height="47.0" rx="4" fill="#12161a"/>
+<text x="504.0" y="533.0" font-size="16" fill="#c9c3b6">Code and verifier for</text>
+<text x="504.0" y="555.0" font-size="16" fill="#c9c3b6">the ID token; JWKS</text>
+<rect x="480" y="586" width="330" height="83" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="518.0" y="612.0" font-size="16" fill="#c9c3b6">Check the ID token: RS256, ES256</text>
+<text x="518.0" y="633.0" font-size="16" fill="#c9c3b6">or EdDSA; iss, aud, exp, nonce.</text>
+<text x="518.0" y="654.0" font-size="16" fill="#c9c3b6">Upsert the account by (iss, sub).</text>
+<rect x="318.0" y="671.0" width="236.0" height="47.0" rx="4" fill="#12161a"/>
+<text x="324.0" y="690.0" font-size="16" fill="#c9c3b6">Cookie __Host-blx_session, 12 h,</text>
+<text x="324.0" y="712.0" font-size="16" fill="#c9c3b6">HttpOnly; 302 to build.blunix.io</text>
+<rect x="138.0" y="733.0" width="48.5" height="25.0" rx="4" fill="#12161a"/>
+<text x="144.0" y="752.0" font-size="16" fill="#c9c3b6">Form</text>
+<rect x="318.0" y="774.0" width="264.4" height="47.0" rx="4" fill="#12161a"/>
+<text x="324.0" y="793.0" font-size="16" fill="#c9c3b6">POST /v1/hosts {label}, with</text>
+<text x="324.0" y="815.0" font-size="16" fill="#c9c3b6">x-blunix-csrf: 1 and the portal Origin</text>
+<rect x="318.0" y="836.0" width="228.7" height="47.0" rx="4" fill="#12161a"/>
+<text x="324.0" y="855.0" font-size="16" fill="#c9c3b6">201. Or 409 taken, 400 invalid</text>
+<text x="324.0" y="877.0" font-size="16" fill="#c9c3b6">or reserved, 429 rate limited.</text>
+<rect x="300" y="908" width="320" height="62" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="338.0" y="934.0" font-size="16" fill="#c9c3b6">Compose the node document</text>
+<text x="338.0" y="955.0" font-size="16" fill="#c9c3b6">and check every field.</text>
+<rect x="300" y="982" width="320" height="83" rx="6" fill="#1b2127" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="338.0" y="1008.0" font-size="16" fill="#f3efe6">Make the key: 100 bits from</text>
+<text x="338.0" y="1029.0" font-size="16" fill="#f3efe6">crypto.getRandomValues, 20</text>
+<text x="338.0" y="1050.0" font-size="16" fill="#f3efe6">Crockford base32 characters.</text>
+<rect x="300" y="1077" width="320" height="62" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="338.0" y="1103.0" font-size="16" fill="#c9c3b6">Encrypt with age, scrypt</text>
+<text x="338.0" y="1124.0" font-size="16" fill="#c9c3b6">passphrase mode.</text>
+<rect x="318.0" y="1141.0" width="221.3" height="47.0" rx="4" fill="#12161a"/>
+<text x="324.0" y="1160.0" font-size="16" fill="#c9c3b6">POST /v1/hosts/{label}/builds:</text>
+<text x="324.0" y="1182.0" font-size="16" fill="#c9c3b6">ciphertext only, up to 256 KiB</text>
+<rect x="480" y="1213" width="330" height="83" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="518.0" y="1239.0" font-size="16" fill="#c9c3b6">Refuse all but one scrypt stanza.</text>
+<text x="518.0" y="1260.0" font-size="16" fill="#c9c3b6">Body to R2; version, sha256 and</text>
+<text x="518.0" y="1281.0" font-size="16" fill="#c9c3b6">an audit row to D1.</text>
+<rect x="318.0" y="1298.0" width="222.6" height="47.0" rx="4" fill="#12161a"/>
+<text x="324.0" y="1317.0" font-size="16" fill="#c9c3b6">201 {version, sha256, size, url,</text>
+<text x="324.0" y="1339.0" font-size="16" fill="#c9c3b6">pinnedUrl or null}</text>
+<rect x="300" y="1370" width="320" height="62" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="338.0" y="1396.0" font-size="16" fill="#c9c3b6">The sha256 must match what</text>
+<text x="338.0" y="1417.0" font-size="16" fill="#c9c3b6">this browser sent, or no card.</text>
+<rect x="138.0" y="1434.0" width="45.4" height="25.0" rx="4" fill="#12161a"/>
+<text x="144.0" y="1453.0" font-size="16" fill="#c9c3b6">Card</text>
+<rect x="300" y="1485" width="320" height="83" rx="6" fill="#1b2127" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="338.0" y="1511.0" font-size="16" fill="#f3efe6">Install card, shown once: URL, key,</text>
+<text x="338.0" y="1532.0" font-size="16" fill="#f3efe6">sha256. Download .txt and .json.</text>
+<text x="338.0" y="1553.0" font-size="16" fill="#f3efe6">Closing it wipes the key.</text>
+<rect x="20" y="1609" width="507.1" height="26" fill="#12161a"/>
+<text x="28.0" y="1628.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">AT THE MACHINE: INSTALLER OR FIRST-BOOT BOOTSTRAP</text>
+<path d="M535 1623 L1092 1623" stroke="#3a434d" stroke-width="2"/>
+<rect x="660" y="1642" width="330" height="83" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="698.0" y="1668.0" font-size="16" fill="#c9c3b6">The operator types the hostname:</text>
+<text x="698.0" y="1689.0" font-size="16" fill="#c9c3b6">ada becomes ada.blnx.io. It is</text>
+<text x="698.0" y="1710.0" font-size="16" fill="#c9c3b6">read back; the operator says yes.</text>
+<rect x="660" y="1737" width="330" height="62" rx="6" fill="#1b2127" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="698.0" y="1763.0" font-size="16" fill="#f3efe6">The operator types the key from</text>
+<text x="698.0" y="1784.0" font-size="16" fill="#f3efe6">the card. Echo off. Never spoken.</text>
+<rect x="863.0" y="1801.0" width="128.8" height="69.0" rx="4" fill="#12161a"/>
+<text x="869.0" y="1820.0" font-size="16" fill="#c9c3b6">GET https://</text>
+<text x="869.0" y="1842.0" font-size="16" fill="#c9c3b6">ada.blnx.io/,</text>
+<text x="869.0" y="1864.0" font-size="16" fill="#c9c3b6">verified TLS 1.2+</text>
+<rect x="580" y="1894" width="340" height="83" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="618.0" y="1920.0" font-size="16" fill="#c9c3b6">Latest version from D1 and R2.</text>
+<text x="618.0" y="1941.0" font-size="16" fill="#c9c3b6">The body&#x27;s sha256 is checked</text>
+<text x="618.0" y="1962.0" font-size="16" fill="#c9c3b6">before it leaves.</text>
+<rect x="863.0" y="1979.0" width="125.5" height="69.0" rx="4" fill="#12161a"/>
+<text x="869.0" y="1998.0" font-size="16" fill="#c9c3b6">200, the</text>
+<text x="869.0" y="2020.0" font-size="16" fill="#c9c3b6">ciphertext and</text>
+<text x="869.0" y="2042.0" font-size="16" fill="#c9c3b6">x-blunix-sha256</text>
+<rect x="660" y="2072" width="330" height="83" rx="6" fill="#1b2127" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="698.0" y="2098.0" font-size="16" fill="#f3efe6">Decrypt on the machine. Then</text>
+<text x="698.0" y="2119.0" font-size="16" fill="#f3efe6">check the schema. A wrong key</text>
+<text x="698.0" y="2140.0" font-size="16" fill="#f3efe6">or a refusal applies nothing.</text>
+<rect x="660" y="2167" width="330" height="83" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="698.0" y="2193.0" font-size="16" fill="#c9c3b6">Apply. The installer writes the disk</text>
+<text x="698.0" y="2214.0" font-size="16" fill="#c9c3b6">first; the bootstrap applies the</text>
+<text x="698.0" y="2235.0" font-size="16" fill="#c9c3b6">document to the running disk.</text>
+<rect x="104.0" y="1538.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="117.0" y="1556.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<rect x="390" y="2282" width="485" height="60" rx="8" fill="#12161a" stroke="#8e9aa8" stroke-width="2"/>
+<text x="632.5" y="2307.0" font-size="16" fill="#f3efe6" font-weight="700" text-anchor="middle">No key on this side: not sent, stored or logged.</text>
+<text x="632.5" y="2329.0" font-size="16" fill="#c9c3b6" text-anchor="middle">The Worker holds only ciphertext and its sha256.</text>
+<circle cx="122.0" cy="255.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="122.0" y="260.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">1</text>
+<circle cx="302.0" cy="317.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="302.0" y="322.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">2</text>
+<circle cx="302.0" cy="358.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="302.0" y="363.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">3</text>
+<circle cx="302.0" cy="399.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="302.0" y="404.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">4</text>
+<circle cx="302.0" cy="461.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="302.0" y="466.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">5</text>
+<circle cx="302.0" cy="502.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="302.0" y="507.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">6</text>
+<circle cx="482.0" cy="564.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="482.0" y="569.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">7</text>
+<circle cx="480.0" cy="627.5" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="480.0" y="633.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">8</text>
+<circle cx="302.0" cy="721.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="302.0" y="726.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">9</text>
+<circle cx="122.0" cy="762.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="122.0" y="767.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">10</text>
+<circle cx="302.0" cy="824.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="302.0" y="829.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">11</text>
+<circle cx="302.0" cy="886.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="302.0" y="891.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">12</text>
+<circle cx="300.0" cy="939.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="300.0" y="944.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">13</text>
+<circle cx="300.0" cy="1023.5" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="300.0" y="1029.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">14</text>
+<circle cx="300.0" cy="1108.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="300.0" y="1113.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">15</text>
+<circle cx="302.0" cy="1191.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="302.0" y="1196.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">16</text>
+<circle cx="480.0" cy="1254.5" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="480.0" y="1260.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">17</text>
+<circle cx="302.0" cy="1348.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="302.0" y="1353.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">18</text>
+<circle cx="300.0" cy="1401.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="300.0" y="1406.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">19</text>
+<circle cx="122.0" cy="1463.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="122.0" y="1468.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">20</text>
+<circle cx="300.0" cy="1526.5" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="300.0" y="1532.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">21</text>
+<circle cx="660.0" cy="1683.5" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="660.0" y="1689.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">22</text>
+<circle cx="660.0" cy="1768.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="660.0" y="1773.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">23</text>
+<circle cx="847.0" cy="1872.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="847.0" y="1877.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">24</text>
+<circle cx="580.0" cy="1935.5" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="580.0" y="1941.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">25</text>
+<circle cx="847.0" cy="2050.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="847.0" y="2055.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">26</text>
+<circle cx="660.0" cy="2113.5" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="660.0" y="2119.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">27</text>
+<circle cx="660.0" cy="2208.5" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="660.0" y="2214.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">28</text>
+</svg>
+<!-- /diagram:02-web-bootstrap -->
+        <figcaption>Diagram 2. <a href="assets/diagrams/02-web-bootstrap.png">Open it as a large image</a>.</figcaption>
+      </figure>
+      <div class="walk">
+<!-- walk:02-web-bootstrap -->
+<p>Six participants: the operator, the browser running the portal, Authentik at adsas.id, the api.blunix.io Worker (with D1 and R2), the <code>{label}.blnx.io</code> build host (the same Worker), and the machine at the console. The key exists in three places only: the browser, from step 14 until the install card closes in step 21; the operator&#x27;s install card, from step 20; and the machine, from step 23 until it decrypts in step 27. It is never on a server.</p>
+<h3>In the browser, at build.blunix.io</h3>
+<ol>
+  <li>The operator asks the browser to sign in.</li>
+  <li>The browser calls <code>GET /v1/auth/login</code>. The Worker stores the state, the nonce and the PKCE verifier for 10 minutes.</li>
+  <li>The Worker answers 302 to Authentik, with <code>code_challenge</code> and method <code>S256</code>.</li>
+  <li>The operator signs in at adsas.id.</li>
+  <li>Authentik answers 302 to <code>/v1/auth/callback</code> with the code and the state.</li>
+  <li>The browser calls <code>GET /v1/auth/callback</code>.</li>
+  <li>The Worker sends Authentik the code and the verifier for the ID token, and fetches the JWKS.</li>
+  <li>The Worker checks the ID token: algorithm RS256, ES256 or EdDSA only; <code>iss</code>, <code>aud</code>, <code>exp</code> and <code>nonce</code>. It upserts the account by <code>(iss, sub)</code>.</li>
+  <li>The Worker sets the cookie <code>__Host-blx_session</code> (12 hours, <code>HttpOnly</code>) and answers 302 to build.blunix.io.</li>
+  <li>The operator fills in the form: a label and the node document fields.</li>
+  <li>The browser calls <code>POST /v1/hosts {label}</code> with <code>x-blunix-csrf: 1</code> and the portal&#x27;s <code>Origin</code>.</li>
+  <li>The Worker answers 201. Or 409 if the label is taken, 400 if it is invalid or reserved, 429 if rate limited.</li>
+  <li>The browser composes the node document and checks every field.</li>
+  <li>The browser makes the key: 100 bits from <code>crypto.getRandomValues</code>, 20 Crockford base32 characters. The key now exists in the browser.</li>
+  <li>The browser encrypts the document with age, scrypt passphrase mode.</li>
+  <li>The browser calls <code>POST /v1/hosts/{label}/builds</code> with ciphertext only, up to 256 KiB.</li>
+  <li>The Worker refuses anything but an age file with one scrypt stanza. It stores the body in R2, and the version, the sha256 and an audit row in D1.</li>
+  <li>The Worker answers 201 with the version, sha256, size, URL, and a pinned URL, or null while pinned hosts have no certificates.</li>
+  <li>The browser checks that the sha256 matches what it sent. If not, no card is shown.</li>
+  <li>The browser hands the operator the install card. The key now exists on the card.</li>
+  <li>The card is shown once: the URL, the key and the sha256, with .txt and .json downloads. Closing it wipes the key from the page.</li>
+</ol>
+<h3>At the machine: the installer or the first-boot bootstrap</h3>
+<ol start="22">
+  <li>The operator types the hostname. <code>ada</code> becomes <code>ada.blnx.io</code>. It is read back, and the operator says yes.</li>
+  <li>The operator types the key from the card. Echo is off and it is never spoken. The key now exists on the machine.</li>
+  <li>The machine calls <code>GET https://ada.blnx.io/</code> over verified TLS 1.2 or higher, capped at 256 KiB.</li>
+  <li>The build host takes the latest version from D1 and R2, and checks the body&#x27;s sha256 before it leaves.</li>
+  <li>The build host answers 200 with the ciphertext and <code>x-blunix-sha256</code>.</li>
+  <li>The machine decrypts on the machine, then checks the schema. A wrong key or a refusal applies nothing. The key is dropped after decryption.</li>
+  <li>The machine applies. The installer writes the disk first; the bootstrap applies the document to the disk it is running on.</li>
+</ol>
+<p>The note at the bottom of the diagram says it plainly: no key on the server side. It is not sent, stored or logged. The Worker holds only ciphertext and its sha256.</p>
+<!-- /walk:02-web-bootstrap -->
+      </div>
+    </section>
+
+    <section class="wrap band" id="build-release" aria-labelledby="h-pipe">
+      <div class="band-head">
+        <h2 id="h-pipe">3. Build and release</h2>
+        <p>From Debian packages to a GitHub release, every gate where the build fails closed, and how the site and API deploy.</p>
+      </div>
+      <figure class="diagram" tabindex="0" aria-label="Diagram 3, the build and release pipeline. It scrolls sideways on a narrow screen. The walk-through follows.">
+<!-- diagram:03-build-release -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 2225" width="1120" height="2225" role="img" aria-labelledby="pipe-title pipe-desc" font-family="Atkinson, &#x27;Atkinson Hyperlegible&#x27;, &#x27;Helvetica Neue&#x27;, Arial, sans-serif">
+<title id="pipe-title">Build and release pipeline</title>
+<desc id="pipe-desc">Two build scripts run in privileged Docker. build-test-disk.sh --release turns Debian 13 packages into build/blunix-release.raw through mmdebstrap, a strip step, a GPT disk, a root scan, zerofree and a raw byte scan. build-installer.sh --release scans that disk again, compresses it, pins its digest, and makes the ISO, netboot media and SHA256SUMS. Seven gates stop the build. A person uploads the assets to a GitHub release; offline signing is designed, not built. Below, the site and portal deploy through the GitHub Actions production environment to Cloudflare Pages, and the API deploys from a laptop script. The numbered walk-through after this figure says everything the diagram shows.</desc>
+<defs><marker id="pipe-head" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
+<defs><marker id="pipe-bighead" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="22" markerHeight="22" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
+<rect width="1120" height="2225" fill="#12161a"/>
+<rect x="20" y="100" width="520" height="1226" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="34.0" y="126.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">IMAGE/BUILD-TEST-DISK.SH --RELEASE</text>
+<text x="34.0" y="147.0" font-size="15" fill="#c9c3b6">Privileged Docker, debian:trixie-slim.</text>
+<rect x="580" y="100" width="520" height="1226" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="594.0" y="126.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">IMAGE/BUILD-INSTALLER.SH --RELEASE</text>
+<text x="594.0" y="147.0" font-size="15" fill="#c9c3b6">Same Docker. Needs BLUNIX_RELEASE_VERSION.</text>
+<rect x="20" y="1386" width="1080" height="200" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="34.0" y="1412.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">PUBLISH</text>
+<rect x="20" y="1626" width="520" height="453" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="34.0" y="1652.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">SITE AND PORTAL</text>
+<text x="34.0" y="1673.0" font-size="15" fill="#c9c3b6">Push to main in site/, portal/ or brand/, or a manual run.</text>
+<rect x="580" y="1626" width="520" height="453" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="594.0" y="1652.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">API WORKER</text>
+<text x="594.0" y="1673.0" font-size="15" fill="#c9c3b6">scripts/deploy-api.sh, a laptop only. Refuses in CI.</text>
+<path d="M280.0 263.0 L280.0 297.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M280.0 390.0 L280.0 424.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M280.0 539.0 L280.0 573.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M280.0 688.0 L280.0 722.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M280.0 859.0 L280.0 893.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M280.0 986.0 L280.0 1020.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M280.0 1135.0 L280.0 1169.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M840.0 285.0 L840.0 319.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M840.0 434.0 L840.0 468.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M840.0 583.0 L840.0 617.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M840.0 732.0 L840.0 766.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M840.0 859.0 L840.0 893.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M840.0 1030.0 L840.0 1064.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M840.0 1157.0 L840.0 1191.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M524.0 1215.5 L560.0 1215.5 L560.0 227.5 L596.0 227.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M840.0 1306.0 L840.0 1356.0 L560.0 1356.0 L560.0 1436.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M200.0 1356.0 L200.0 1436.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#pipe-head)"/>
+<path d="M200 1356 L560 1356" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" fill="none"/>
+<path d="M366.0 1493.5 L395.0 1493.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#pipe-head)"/>
+<path d="M725.0 1493.5 L754.0 1493.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M280.0 1817.0 L280.0 1845.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M280.0 1938.0 L280.0 1966.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M840.0 1817.0 L840.0 1845.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M840.0 1938.0 L840.0 1966.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<text x="28.0" y="44.0" font-size="26" fill="#f3efe6" font-weight="700">Build and release pipeline</text>
+<text x="28.0" y="72.0" font-size="16" fill="#c9c3b6">Octagons are gates: the build stops there and writes no release.</text>
+<rect x="36" y="170" width="488" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="50.5" y="187.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="67.0" y="199.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="50.0" y="225.0" font-size="18" fill="#f3efe6" font-weight="700">1. Debian 13 packages</text>
+<text x="50.0" y="248.0" font-size="16" fill="#c9c3b6">Official packages, listed in image/packages.txt.</text>
+<rect x="36" y="297" width="488" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="50.5" y="314.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="67.0" y="326.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="50.0" y="352.0" font-size="18" fill="#f3efe6" font-weight="700">2. mmdebstrap root filesystem</text>
+<text x="50.0" y="375.0" font-size="16" fill="#c9c3b6">amd64, variant apt, cached by a stamp.</text>
+<polygon points="50.0,424.0 510.0,424.0 524.0,438.0 524.0,525.0 510.0,539.0 50.0,539.0 36.0,525.0 36.0,438.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="453.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">GATE: STOPS THE BUILD</text>
+<text x="50.0" y="479.0" font-size="18" fill="#f3efe6" font-weight="700">3. Strip host keys and secrets</text>
+<text x="50.0" y="502.0" font-size="16" fill="#c9c3b6">SSH host keys, random-seed, credential.secret;</text>
+<text x="50.0" y="524.0" font-size="16" fill="#c9c3b6">machine-id emptied. A host key left: stop.</text>
+<rect x="36" y="573" width="488" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="50.5" y="590.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="67.0" y="602.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="50.0" y="628.0" font-size="18" fill="#f3efe6" font-weight="700">4. GPT disk: ESP and ext4 blunix-root</text>
+<text x="50.0" y="651.0" font-size="16" fill="#c9c3b6">Copy root, overlay and tools; grub-install.</text>
+<text x="50.0" y="673.0" font-size="16" fill="#c9c3b6">Release: root locked, fixture removed.</text>
+<polygon points="50.0,722.0 510.0,722.0 524.0,736.0 524.0,845.0 510.0,859.0 50.0,859.0 36.0,845.0 36.0,736.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="751.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">GATE: STOPS THE BUILD</text>
+<text x="50.0" y="777.0" font-size="18" fill="#f3efe6" font-weight="700">5. scan-root.py --release</text>
+<text x="50.0" y="800.0" font-size="16" fill="#c9c3b6">Refuses test secrets, the fixture, an unlocked</text>
+<text x="50.0" y="822.0" font-size="16" fill="#c9c3b6">account, root or password SSH, a shipped host</text>
+<text x="50.0" y="844.0" font-size="16" fill="#c9c3b6">key, and vendor binaries.</text>
+<rect x="36" y="893" width="488" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="50.5" y="910.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="67.0" y="922.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="50.0" y="948.0" font-size="18" fill="#f3efe6" font-weight="700">6. zerofree</text>
+<text x="50.0" y="971.0" font-size="16" fill="#c9c3b6">Zeroes the free blocks of blunix-root.</text>
+<polygon points="50.0,1020.0 510.0,1020.0 524.0,1034.0 524.0,1121.0 510.0,1135.0 50.0,1135.0 36.0,1121.0 36.0,1034.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="1049.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">GATE: STOPS THE BUILD</text>
+<text x="50.0" y="1075.0" font-size="18" fill="#f3efe6" font-weight="700">7. scan-raw.py over every byte</text>
+<text x="50.0" y="1098.0" font-size="16" fill="#c9c3b6">Private keys, age secret keys, the fixture&#x27;s</text>
+<text x="50.0" y="1120.0" font-size="16" fill="#c9c3b6">age header, the two test secrets.</text>
+<rect x="36" y="1169" width="488" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="50.5" y="1186.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="67.0" y="1198.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="50.0" y="1224.0" font-size="18" fill="#f3efe6" font-weight="700">8. build/blunix-release.raw</text>
+<text x="50.0" y="1247.0" font-size="16" fill="#c9c3b6">The release disk.</text>
+<polygon points="610.0,170.0 1070.0,170.0 1084.0,184.0 1084.0,271.0 1070.0,285.0 610.0,285.0 596.0,271.0 596.0,184.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="610.0" y="199.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">GATE: STOPS THE BUILD</text>
+<text x="610.0" y="225.0" font-size="18" fill="#f3efe6" font-weight="700">9. Version and disk present</text>
+<text x="610.0" y="248.0" font-size="16" fill="#c9c3b6">No version, the word latest, or no release</text>
+<text x="610.0" y="270.0" font-size="16" fill="#c9c3b6">disk: stop.</text>
+<polygon points="610.0,319.0 1070.0,319.0 1084.0,333.0 1084.0,420.0 1070.0,434.0 610.0,434.0 596.0,420.0 596.0,333.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="610.0" y="348.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">GATE: STOPS THE BUILD</text>
+<text x="610.0" y="374.0" font-size="18" fill="#f3efe6" font-weight="700">10. Scan the release disk again</text>
+<text x="610.0" y="397.0" font-size="16" fill="#c9c3b6">Mounted read-only: scan-root.py --release.</text>
+<text x="610.0" y="419.0" font-size="16" fill="#c9c3b6">Then scan-raw.py over the raw file.</text>
+<polygon points="610.0,468.0 1070.0,468.0 1084.0,482.0 1084.0,569.0 1070.0,583.0 610.0,583.0 596.0,569.0 596.0,482.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="610.0" y="497.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">GATE: STOPS THE BUILD</text>
+<text x="610.0" y="523.0" font-size="18" fill="#f3efe6" font-weight="700">11. zstd, then scan-raw.py on it</text>
+<text x="610.0" y="546.0" font-size="16" fill="#c9c3b6">blunix.raw.zst. Its decompressed stream</text>
+<text x="610.0" y="568.0" font-size="16" fill="#c9c3b6">is scanned byte by byte.</text>
+<rect x="596" y="617" width="488" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="610.5" y="634.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="627.0" y="646.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="610.0" y="672.0" font-size="18" fill="#f3efe6" font-weight="700">12. Digest and release pin</text>
+<text x="610.0" y="695.0" font-size="16" fill="#c9c3b6">blunix.raw.zst.sha256, and blunix.release</text>
+<text x="610.0" y="717.0" font-size="16" fill="#c9c3b6">(version, sha256, size) in the live root.</text>
+<polygon points="610.0,766.0 1070.0,766.0 1084.0,780.0 1084.0,845.0 1070.0,859.0 610.0,859.0 596.0,845.0 596.0,780.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="610.0" y="795.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">GATE: STOPS THE BUILD</text>
+<text x="610.0" y="821.0" font-size="18" fill="#f3efe6" font-weight="700">13. scan-root.py on the live root</text>
+<text x="610.0" y="844.0" font-size="16" fill="#c9c3b6">The installer&#x27;s own filesystem.</text>
+<rect x="596" y="893" width="488" height="137" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="610.5" y="910.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="627.0" y="922.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="610.0" y="948.0" font-size="18" fill="#f3efe6" font-weight="700">14. ISO and netboot media</text>
+<text x="610.0" y="971.0" font-size="16" fill="#c9c3b6">squashfs; boot menu keys 1 to 5; hybrid ISO,</text>
+<text x="610.0" y="993.0" font-size="16" fill="#c9c3b6">volume BLUNIX_INSTALL; vmlinuz, initrd.img,</text>
+<text x="610.0" y="1015.0" font-size="16" fill="#c9c3b6">blunix.squashfs, blunix.ipxe.</text>
+<polygon points="610.0,1064.0 1070.0,1064.0 1084.0,1078.0 1084.0,1143.0 1070.0,1157.0 610.0,1157.0 596.0,1143.0 596.0,1078.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="610.0" y="1093.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">GATE: STOPS THE BUILD</text>
+<text x="610.0" y="1119.0" font-size="18" fill="#f3efe6" font-weight="700">15. Every asset under 2 GiB</text>
+<text x="610.0" y="1142.0" font-size="16" fill="#c9c3b6">GitHub&#x27;s per-file limit.</text>
+<rect x="596" y="1191" width="488" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="610.5" y="1208.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="627.0" y="1220.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="610.0" y="1246.0" font-size="18" fill="#f3efe6" font-weight="700">16. SHA256SUMS, build/release/</text>
+<text x="610.0" y="1269.0" font-size="16" fill="#c9c3b6">ISO, blunix.raw.zst, vmlinuz, initrd.img,</text>
+<text x="610.0" y="1291.0" font-size="16" fill="#c9c3b6">blunix.squashfs. The build does not upload.</text>
+<rect x="36" y="1436" width="330" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="50.5" y="1453.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="67.0" y="1465.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="50.0" y="1491.0" font-size="18" fill="#f3efe6" font-weight="700">17. Sign the digests offline</text>
+<text x="50.0" y="1514.0" font-size="16" fill="#c9c3b6">The key never on the builder or</text>
+<text x="50.0" y="1536.0" font-size="16" fill="#c9c3b6">Cloudflare. Nothing signs today.</text>
+<rect x="395" y="1436" width="330" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="409.5" y="1453.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="426.0" y="1465.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">MANUAL STEP</text>
+<text x="409.0" y="1491.0" font-size="18" fill="#f3efe6" font-weight="700">18. A person uploads</text>
+<text x="409.0" y="1514.0" font-size="16" fill="#c9c3b6">gh release upload, by hand,</text>
+<text x="409.0" y="1536.0" font-size="16" fill="#c9c3b6">from build/release/.</text>
+<rect x="754" y="1436" width="330" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="768.5" y="1453.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="785.0" y="1465.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">v0.1.0 PUBLISHED</text>
+<text x="768.0" y="1491.0" font-size="18" fill="#f3efe6" font-weight="700">19. GitHub release</text>
+<text x="768.0" y="1514.0" font-size="16" fill="#c9c3b6">afterdarksys/blunix. blunix.io lists</text>
+<text x="768.0" y="1536.0" font-size="16" fill="#c9c3b6">it through /releases.json.</text>
+<rect x="36" y="1702" width="488" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="50.5" y="1719.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="67.0" y="1731.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">WORKFLOW BUILT</text>
+<text x="50.0" y="1757.0" font-size="18" fill="#f3efe6" font-weight="700">20. GitHub Actions, environment production</text>
+<text x="50.0" y="1780.0" font-size="16" fill="#c9c3b6">Job runs only on refs/heads/main. Actions</text>
+<text x="50.0" y="1802.0" font-size="16" fill="#c9c3b6">pinned to commit SHAs; token contents: read.</text>
+<polygon points="50.0,1845.0 510.0,1845.0 524.0,1859.0 524.0,1924.0 510.0,1938.0 50.0,1938.0 36.0,1924.0 36.0,1859.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="1874.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">GATE: STOPS THE DEPLOY</text>
+<text x="50.0" y="1900.0" font-size="18" fill="#f3efe6" font-weight="700">21. Stylesheet and tests</text>
+<text x="50.0" y="1923.0" font-size="16" fill="#c9c3b6">site.css equals portal.css; node --test.</text>
+<rect x="36" y="1966" width="488" height="93" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="55.5" cy="1989.0" r="5.5" fill="#a9b4c1"/>
+<text x="67.0" y="1995.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BLUNIX.IO IS LIVE; PORTAL IS NOT</text>
+<text x="50.0" y="2021.0" font-size="18" fill="#f3efe6" font-weight="700">22. wrangler pages deploy</text>
+<text x="50.0" y="2044.0" font-size="16" fill="#c9c3b6">site/ to blunix-io, portal/ to build-blunix-io.</text>
+<polygon points="610.0,1702.0 1070.0,1702.0 1084.0,1716.0 1084.0,1803.0 1070.0,1817.0 610.0,1817.0 596.0,1803.0 596.0,1716.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="610.0" y="1731.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">GATE: STOPS THE DEPLOY</text>
+<text x="610.0" y="1757.0" font-size="18" fill="#f3efe6" font-weight="700">23. Production config</text>
+<text x="610.0" y="1780.0" font-size="16" fill="#c9c3b6">Real D1 id, empty DEV_ORIGINS, OIDC issuer and</text>
+<text x="610.0" y="1802.0" font-size="16" fill="#c9c3b6">client id set, the client secret on the Worker.</text>
+<polygon points="610.0,1845.0 1070.0,1845.0 1084.0,1859.0 1084.0,1924.0 1070.0,1938.0 610.0,1938.0 596.0,1924.0 596.0,1859.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="610.0" y="1874.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">GATE: STOPS THE DEPLOY</text>
+<text x="610.0" y="1900.0" font-size="18" fill="#f3efe6" font-weight="700">24. Typecheck and tests</text>
+<text x="610.0" y="1923.0" font-size="16" fill="#c9c3b6">npm ci, tsc, vitest in the Workers runtime.</text>
+<rect x="596" y="1966" width="488" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="610.5" y="1983.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="627.0" y="1995.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SCRIPT BUILT, NOT RUN YET</text>
+<text x="610.0" y="2021.0" font-size="18" fill="#f3efe6" font-weight="700">25. D1 migrations, wrangler deploy</text>
+<text x="610.0" y="2044.0" font-size="16" fill="#c9c3b6">api.blunix.io and *.blnx.io.</text>
+<rect x="20" y="2109" width="1080" height="96" rx="10" fill="#1b2127" stroke="#3a434d" stroke-width="2"/>
+<text x="36.0" y="2136.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">LEGEND</text>
+<rect x="130" y="2119" width="40" height="24" rx="5" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<text x="182.0" y="2137.0" font-size="16" fill="#f3efe6">Deployed, live today</text>
+<rect x="356" y="2119" width="40" height="24" rx="5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="408.1" y="2137.0" font-size="16" fill="#f3efe6">Built and tested in the repo</text>
+<rect x="634" y="2119" width="40" height="24" rx="5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="7 5"/>
+<text x="686.5" y="2137.0" font-size="16" fill="#f3efe6">Designed, not built</text>
+<path d="M130 2173 L174 2173" stroke="#8e9aa8" stroke-width="2.5"/>
+<text x="184.0" y="2179.0" font-size="16" fill="#f3efe6">Call or data</text>
+<path d="M294 2173 L338 2173" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7"/>
+<text x="348.8" y="2179.0" font-size="16" fill="#f3efe6">Designed path</text>
+<polygon points="488.4,2161.0 518.4,2161.0 525.4,2168.0 525.4,2178.0 518.4,2185.0 488.4,2185.0 481.4,2178.0 481.4,2168.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="535.4" y="2179.0" font-size="16" fill="#f3efe6">Gate: the build stops, fails closed</text>
+</svg>
+<!-- /diagram:03-build-release -->
+        <figcaption>Diagram 3. <a href="assets/diagrams/03-build-release.png">Open it as a large image</a>.</figcaption>
+      </figure>
+      <div class="walk">
+<!-- walk:03-build-release -->
+<p>Octagons are gates: the build stops there and writes no release. The first two columns run in privileged Docker (<code>debian:trixie-slim</code>).</p>
+<h3>image/build-test-disk.sh --release</h3>
+<ol>
+  <li>Debian 13 packages: official packages, listed in <code>image/packages.txt</code>.</li>
+  <li>mmdebstrap builds the root filesystem: amd64, variant apt, cached by a stamp.</li>
+  <li>Gate: strip SSH host keys, the random seed and <code>credential.secret</code>, and empty the machine-id. A host key left behind stops the build.</li>
+  <li>A GPT disk with an ESP and an ext4 <code>blunix-root</code>. The root, the overlay and the tools are copied in, and grub is installed. For a release, root is locked and the test fixture is removed.</li>
+  <li>Gate: <code>scan-root.py --release</code> refuses test secrets, the fixture, an unlocked account, root or password SSH, a shipped host key, and vendor binaries.</li>
+  <li>zerofree zeroes the free blocks of <code>blunix-root</code>.</li>
+  <li>Gate: <code>scan-raw.py</code> reads every byte of the disk for private keys, age secret keys, the fixture&#x27;s age header and the two test secrets.</li>
+  <li>The output is <code>build/blunix-release.raw</code>, the release disk. It feeds step 9.</li>
+</ol>
+<h3>image/build-installer.sh --release (needs BLUNIX_RELEASE_VERSION)</h3>
+<ol start="9">
+  <li>Gate: no version, the word <code>latest</code>, or no release disk stops the build.</li>
+  <li>Gate: the release disk is scanned again. It is mounted read-only for <code>scan-root.py --release</code>, then <code>scan-raw.py</code> reads the raw file.</li>
+  <li>Gate: zstd compresses it to <code>blunix.raw.zst</code>, and <code>scan-raw.py</code> scans the decompressed stream byte by byte.</li>
+  <li>The digest <code>blunix.raw.zst.sha256</code> and the release pin <code>blunix.release</code> (version, sha256, size) go into the live root.</li>
+  <li>Gate: <code>scan-root.py</code> scans the installer&#x27;s own filesystem.</li>
+  <li>The ISO and netboot media: a squashfs, the boot menu with keys 1 to 5, a hybrid ISO with volume label <code>BLUNIX_INSTALL</code>, and <code>vmlinuz</code>, <code>initrd.img</code>, <code>blunix.squashfs</code> and <code>blunix.ipxe</code>.</li>
+  <li>Gate: every asset must be under 2 GiB, GitHub&#x27;s per-file limit.</li>
+  <li><code>SHA256SUMS</code> in <code>build/release/</code> covers the ISO, <code>blunix.raw.zst</code>, <code>vmlinuz</code>, <code>initrd.img</code> and <code>blunix.squashfs</code>. The build does not upload.</li>
+</ol>
+<h3>Publish</h3>
+<ol start="17">
+  <li>Designed, not built: sign the digests offline. The key is never on the builder or Cloudflare. Nothing is signed today. The dashed path runs through this step; the solid path skips it.</li>
+  <li>A manual step: a person runs <code>gh release upload</code> from <code>build/release/</code>.</li>
+  <li>The GitHub release on <code>afterdarksys/blunix</code>. blunix.io lists it through <code>/releases.json</code>. None is published yet.</li>
+</ol>
+<h3>Site and portal: push to main in site/, portal/ or brand/, or a manual run</h3>
+<ol start="20">
+  <li>GitHub Actions, environment <code>production</code> (the workflow is built). The job runs only on <code>refs/heads/main</code>. Actions are pinned to commit SHAs, and the token is <code>contents: read</code>.</li>
+  <li>Gate: <code>site/css/site.css</code> must equal <code>portal/css/site.css</code>, and the node tests must pass.</li>
+  <li><code>wrangler pages deploy</code>: <code>site/</code> to the Pages project <code>blunix-io</code>, <code>portal/</code> to <code>build-blunix-io</code>. blunix.io is live; the portal is not. <code>scripts/deploy-site.sh</code> is the same path from a laptop.</li>
+</ol>
+<h3>API Worker: scripts/deploy-api.sh, a laptop only, refuses in CI</h3>
+<ol start="23">
+  <li>Gate: a production config. A real D1 id, an empty <code>DEV_ORIGINS</code>, the OIDC issuer and client id set, and the client secret on the Worker.</li>
+  <li>Gate: <code>npm ci</code>, the typecheck, and the vitest suite in the Workers runtime.</li>
+  <li>D1 migrations, then <code>wrangler deploy</code> for api.blunix.io and <code>*.blnx.io</code>. The script is built and has not run yet.</li>
+</ol>
+<!-- /walk:03-build-release -->
+      </div>
+    </section>
+
+    <section class="wrap band" id="installer" aria-labelledby="h-inst">
+      <div class="band-head">
+        <h2 id="h-inst">4. The installer</h2>
+        <p>Thirteen steps from the boot menu to the reboot question, and every sentence it says when it stops.</p>
+      </div>
+      <figure class="diagram" tabindex="0" aria-label="Diagram 4, the installer flow. It scrolls sideways on a narrow screen. The walk-through follows.">
+<!-- diagram:04-installer -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 1919" width="1120" height="1919" role="img" aria-labelledby="inst-title inst-desc" font-family="Atkinson, &#x27;Atkinson Hyperlegible&#x27;, &#x27;Helvetica Neue&#x27;, Arial, sans-serif">
+<title id="inst-title">Installer flow: blunix install</title>
+<desc id="inst-desc">Thirteen steps from the boot menu to the reboot question, top to bottom on the left. Each step that can refuse has an arrow to an octagon on the right with the exact sentence the installer says. Every exit before the disk is written ends with Nothing applied; the two after it say the disk is not bootable. The key exists from step 6 to step 8. The numbered walk-through after this figure says everything the diagram shows.</desc>
+<defs><marker id="inst-head" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
+<defs><marker id="inst-bighead" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="22" markerHeight="22" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
+<rect width="1120" height="1919" fill="#12161a"/>
+<path d="M316.0 223.0 L316.0 253.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M596.0 298.5 L680.0 298.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M316.0 344.0 L316.0 374.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M596.0 419.5 L680.0 419.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M316.0 465.0 L316.0 495.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M36.0 571.5 L22.0 571.5 L22.0 531.5 L36.0 531.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M316.0 608.0 L316.0 638.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M596.0 683.5 L680.0 683.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M316.0 729.0 L316.0 759.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M596.0 793.5 L680.0 793.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M316.0 828.0 L316.0 858.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M596.0 903.5 L680.0 903.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M316.0 949.0 L316.0 979.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M596.0 1035.5 L680.0 1035.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M316.0 1092.0 L316.0 1122.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M596.0 1200.5 L680.0 1200.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M316.0 1279.0 L316.0 1309.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M596.0 1354.5 L680.0 1354.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M316.0 1400.0 L316.0 1430.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M596.0 1497.5 L680.0 1497.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M316.0 1565.0 L316.0 1595.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M596.0 1640.5 L680.0 1640.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<path d="M316.0 1686.0 L316.0 1716.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#inst-head)"/>
+<text x="28.0" y="44.0" font-size="26" fill="#f3efe6" font-weight="700">Installer flow: blunix install</text>
+<text x="28.0" y="72.0" font-size="16" fill="#c9c3b6">All built; it boots in a VM. Octagons are the sentences it says when it stops.</text>
+<rect x="36" y="110" width="560" height="113" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="141.0" font-size="18" fill="#f3efe6" font-weight="700">1. Boot menu, keys 1 to 5</text>
+<text x="50.0" y="164.0" font-size="16" fill="#c9c3b6">1 full speech, 2 console speech, 3 large print,</text>
+<text x="50.0" y="186.0" font-size="16" fill="#c9c3b6">4 regular (default after 3 s), 5 advanced. It</text>
+<text x="50.0" y="208.0" font-size="16" fill="#c9c3b6">beeps when ready. Netboot boots 4, no menu.</text>
+<rect x="36" y="253" width="560" height="91" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="284.0" font-size="18" fill="#f3efe6" font-weight="700">2. Find the image</text>
+<text x="50.0" y="307.0" font-size="16" fill="#c9c3b6">blunix.raw.zst with its .sha256 on the medium,</text>
+<text x="50.0" y="329.0" font-size="16" fill="#c9c3b6">or else a release pin: version, sha256, size.</text>
+<polygon points="694.0,252.5 1070.0,252.5 1084.0,266.5 1084.0,330.5 1070.0,344.5 694.0,344.5 680.0,330.5 680.0,266.5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="694.0" y="281.5" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">STOPS</text>
+<text x="694.0" y="307.5" font-size="16" fill="#f3efe6">blunix: no image on this medium.</text>
+<text x="694.0" y="329.5" font-size="16" fill="#f3efe6" font-weight="700">Nothing applied.</text>
+<rect x="36" y="374" width="560" height="91" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="405.0" font-size="18" fill="#f3efe6" font-weight="700">3. Read blunix.proxy= from the kernel line</text>
+<text x="50.0" y="428.0" font-size="16" fill="#c9c3b6">Netboot sets it. It changes only where the</text>
+<text x="50.0" y="450.0" font-size="16" fill="#c9c3b6">document is fetched from.</text>
+<polygon points="694.0,373.5 1070.0,373.5 1084.0,387.5 1084.0,451.5 1070.0,465.5 694.0,465.5 680.0,451.5 680.0,387.5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="694.0" y="402.5" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">STOPS</text>
+<text x="694.0" y="428.5" font-size="16" fill="#f3efe6">blunix: refused proxy.</text>
+<text x="694.0" y="450.5" font-size="16" fill="#f3efe6" font-weight="700">Nothing applied.</text>
+<rect x="36" y="495" width="560" height="113" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="526.0" font-size="18" fill="#f3efe6" font-weight="700">4. Network</text>
+<text x="50.0" y="549.0" font-size="16" fill="#c9c3b6">DHCP on en* and eth* for 30 s. No lease: type an</text>
+<text x="50.0" y="571.0" font-size="16" fill="#c9c3b6">address like 10.0.0.5/24, a gateway and a DNS</text>
+<text x="50.0" y="593.0" font-size="16" fill="#c9c3b6">server. Enter tries DHCP again. Loops until up.</text>
+<rect x="36" y="638" width="560" height="91" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="669.0" font-size="18" fill="#f3efe6" font-weight="700">5. Hostname</text>
+<text x="50.0" y="692.0" font-size="16" fill="#c9c3b6">ada, ada.blnx.io or v3.ada.blnx.io. It is read</text>
+<text x="50.0" y="714.0" font-size="16" fill="#c9c3b6">back; say yes. Three tries.</text>
+<polygon points="694.0,637.5 1070.0,637.5 1084.0,651.5 1084.0,715.5 1070.0,729.5 694.0,729.5 680.0,715.5 680.0,651.5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="694.0" y="666.5" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">STOPS</text>
+<text x="694.0" y="692.5" font-size="16" fill="#f3efe6">blunix: no hostname.</text>
+<text x="694.0" y="714.5" font-size="16" fill="#f3efe6" font-weight="700">Nothing applied.</text>
+<rect x="36" y="759" width="560" height="69" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="480.9" y="769.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="493.9" y="787.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="50.0" y="790.0" font-size="18" fill="#f3efe6" font-weight="700">6. Key</text>
+<text x="50.0" y="813.0" font-size="16" fill="#c9c3b6">Typed with echo off. Never spoken or logged.</text>
+<polygon points="694.0,747.5 1070.0,747.5 1084.0,761.5 1084.0,825.5 1070.0,839.5 694.0,839.5 680.0,825.5 680.0,761.5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="694.0" y="776.5" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">STOPS</text>
+<text x="694.0" y="802.5" font-size="16" fill="#f3efe6">blunix: no key.</text>
+<text x="694.0" y="824.5" font-size="16" fill="#f3efe6" font-weight="700">Nothing applied.</text>
+<rect x="36" y="858" width="560" height="91" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="480.9" y="868.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="493.9" y="886.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="50.0" y="889.0" font-size="18" fill="#f3efe6" font-weight="700">7. Fetch</text>
+<text x="50.0" y="912.0" font-size="16" fill="#c9c3b6">Direct: https://{host}/, verified TLS 1.2+, 256 KiB.</text>
+<text x="50.0" y="934.0" font-size="16" fill="#c9c3b6">With a proxy: http://{proxy}/v1/build/{host}.</text>
+<polygon points="694.0,853.5 1070.0,853.5 1084.0,867.5 1084.0,975.5 1070.0,989.5 694.0,989.5 680.0,975.5 680.0,867.5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="694.0" y="882.5" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">STOPS</text>
+<text x="694.0" y="908.5" font-size="16" fill="#f3efe6">blunix: document too large.</text>
+<text x="694.0" y="930.5" font-size="16" fill="#f3efe6">blunix: tls verify disabled.</text>
+<text x="694.0" y="952.5" font-size="16" fill="#f3efe6">blunix: fetch failed.</text>
+<text x="694.0" y="974.5" font-size="16" fill="#f3efe6" font-weight="700">Nothing applied.</text>
+<rect x="36" y="979" width="560" height="113" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="480.9" y="989.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="493.9" y="1007.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="50.0" y="1010.0" font-size="18" fill="#f3efe6" font-weight="700">8. Decrypt and check</text>
+<text x="50.0" y="1033.0" font-size="16" fill="#c9c3b6">Canonical key first, then the raw text. Then the</text>
+<text x="50.0" y="1055.0" font-size="16" fill="#c9c3b6">schema. Says the name and digest; through a proxy,</text>
+<text x="50.0" y="1077.0" font-size="16" fill="#c9c3b6">the full sha256 to compare with the card.</text>
+<polygon points="694.0,1003.5 1070.0,1003.5 1084.0,1017.5 1084.0,1103.5 1070.0,1117.5 694.0,1117.5 680.0,1103.5 680.0,1017.5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="694.0" y="1032.5" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">STOPS</text>
+<text x="694.0" y="1058.5" font-size="16" fill="#f3efe6">blunix: could not decrypt.</text>
+<text x="694.0" y="1080.5" font-size="16" fill="#f3efe6">blunix: document refused.</text>
+<text x="694.0" y="1102.5" font-size="16" fill="#f3efe6" font-weight="700">Nothing applied.</text>
+<rect x="36" y="1122" width="560" height="157" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="1153.0" font-size="18" fill="#f3efe6" font-weight="700">9. Pick the disk</text>
+<text x="50.0" y="1176.0" font-size="16" fill="#c9c3b6">Never the boot medium (live medium, live-media=,</text>
+<text x="50.0" y="1198.0" font-size="16" fill="#c9c3b6">bootfrom=, fromiso=, label BLUNIX_INSTALL), a disk</text>
+<text x="50.0" y="1220.0" font-size="16" fill="#c9c3b6">in use, read-only or too small. Several: type a</text>
+<text x="50.0" y="1242.0" font-size="16" fill="#c9c3b6">number. Erase needs yes, asked twice; silence is</text>
+<text x="50.0" y="1264.0" font-size="16" fill="#c9c3b6">no. Only a named, blank target skips the question.</text>
+<polygon points="694.0,1131.5 1070.0,1131.5 1084.0,1145.5 1084.0,1297.5 1070.0,1311.5 694.0,1311.5 680.0,1297.5 680.0,1145.5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="694.0" y="1160.5" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">STOPS</text>
+<text x="694.0" y="1186.5" font-size="16" fill="#f3efe6">blunix: could not list disks.</text>
+<text x="694.0" y="1208.5" font-size="16" fill="#f3efe6">blunix: target disk sdb is not usable.</text>
+<text x="694.0" y="1230.5" font-size="16" fill="#f3efe6">blunix: no disk fits the image.</text>
+<text x="694.0" y="1252.5" font-size="16" fill="#f3efe6">blunix: no disk chosen.</text>
+<text x="694.0" y="1274.5" font-size="16" fill="#f3efe6">blunix: disk sda kept.</text>
+<text x="694.0" y="1296.5" font-size="16" fill="#f3efe6" font-weight="700">Nothing applied.</text>
+<rect x="36" y="1309" width="560" height="91" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="1340.0" font-size="18" fill="#f3efe6" font-weight="700">10. Check the disk again</text>
+<text x="50.0" y="1363.0" font-size="16" fill="#c9c3b6">Same name, serial and size as when chosen. Open</text>
+<text x="50.0" y="1385.0" font-size="16" fill="#c9c3b6">it by /dev/disk/by-id; the size must match.</text>
+<polygon points="694.0,1325.5 1070.0,1325.5 1084.0,1339.5 1084.0,1403.5 1070.0,1417.5 694.0,1417.5 680.0,1403.5 680.0,1339.5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="694.0" y="1354.5" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">STOPS</text>
+<text x="694.0" y="1380.5" font-size="16" fill="#f3efe6">blunix: disk sda changed since it was chosen.</text>
+<text x="694.0" y="1402.5" font-size="16" fill="#f3efe6" font-weight="700">Nothing applied.</text>
+<rect x="36" y="1430" width="560" height="135" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="1461.0" font-size="18" fill="#f3efe6" font-weight="700">11. Write and verify</text>
+<text x="50.0" y="1484.0" font-size="16" fill="#c9c3b6">From the medium: sha256 before the first byte and</text>
+<text x="50.0" y="1506.0" font-size="16" fill="#c9c3b6">again after, zstd -dc onto the disk. From a pin: a</text>
+<text x="50.0" y="1528.0" font-size="16" fill="#c9c3b6">GitHub release over verified TLS, redirects only to</text>
+<text x="50.0" y="1550.0" font-size="16" fill="#c9c3b6">GitHub; the stream&#x27;s sha256 must match the pin.</text>
+<polygon points="694.0,1431.5 1070.0,1431.5 1084.0,1445.5 1084.0,1575.5 1070.0,1589.5 694.0,1589.5 680.0,1575.5 680.0,1445.5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="694.0" y="1460.5" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">STOPS</text>
+<text x="694.0" y="1486.5" font-size="16" fill="#f3efe6">blunix: image digest did not match.</text>
+<text x="694.0" y="1508.5" font-size="16" fill="#f3efe6">blunix: image write failed.</text>
+<text x="694.0" y="1530.5" font-size="16" fill="#f3efe6" font-weight="700">A digest wrong before the write:</text>
+<text x="694.0" y="1552.5" font-size="16" fill="#f3efe6" font-weight="700">Nothing applied. Otherwise:</text>
+<text x="694.0" y="1574.5" font-size="16" fill="#f3efe6" font-weight="700">The disk is not bootable.</text>
+<rect x="36" y="1595" width="560" height="91" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="1626.0" font-size="18" fill="#f3efe6" font-weight="700">12. Grow, apply, bootloader</text>
+<text x="50.0" y="1649.0" font-size="16" fill="#c9c3b6">sgdisk, growpart, resize2fs; apply the node</text>
+<text x="50.0" y="1671.0" font-size="16" fill="#c9c3b6">document into the new root; grub for EFI and BIOS.</text>
+<polygon points="694.0,1603.5 1070.0,1603.5 1084.0,1617.5 1084.0,1681.5 1070.0,1695.5 694.0,1695.5 680.0,1681.5 680.0,1617.5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="694.0" y="1632.5" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">STOPS</text>
+<text x="694.0" y="1658.5" font-size="16" fill="#f3efe6">blunix: install failed on sda.</text>
+<text x="694.0" y="1680.5" font-size="16" fill="#f3efe6" font-weight="700">The disk is not bootable.</text>
+<rect x="36" y="1716" width="560" height="91" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="50.0" y="1747.0" font-size="18" fill="#f3efe6" font-weight="700">13. Reboot?</text>
+<text x="50.0" y="1770.0" font-size="16" fill="#c9c3b6">installed ada-1. Remove the stick. Say yes to</text>
+<text x="50.0" y="1792.0" font-size="16" fill="#c9c3b6">reboot. Anything else: not rebooting.</text>
+<rect x="20" y="1847" width="1080" height="52" rx="10" fill="#1b2127" stroke="#3a434d" stroke-width="2"/>
+<text x="36.0" y="1874.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">LEGEND</text>
+<path d="M130 1871 L174 1871" stroke="#8e9aa8" stroke-width="2.5"/>
+<text x="184.0" y="1877.0" font-size="16" fill="#f3efe6">Call or data</text>
+<polygon points="301.8,1859.0 331.8,1859.0 338.8,1866.0 338.8,1876.0 331.8,1883.0 301.8,1883.0 294.8,1876.0 294.8,1866.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="348.8" y="1877.0" font-size="16" fill="#f3efe6">Octagon: it stops and says this</text>
+<rect x="594.5" y="1858.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="607.5" y="1876.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="709.6" y="1877.0" font-size="16" fill="#f3efe6">The key exists here</text>
+</svg>
+<!-- /diagram:04-installer -->
+        <figcaption>Diagram 4. <a href="assets/diagrams/04-installer.png">Open it as a large image</a>.</figcaption>
+      </figure>
+      <div class="walk">
+<!-- walk:04-installer -->
+<p>All of this is built and boots in a VM. Each exit is the exact sentence the installer says. Every exit before the disk is written ends with Nothing applied. The key exists from step 6 to step 8.</p>
+<ol>
+  <li>Boot menu, keys 1 to 5: 1 full speech, 2 console speech, 3 large print, 4 regular (the default after 3 seconds), 5 advanced. The menu beeps when it is ready. Netboot boots regular, with no menu.</li>
+  <li>Find the image: <code>blunix.raw.zst</code> with its <code>.sha256</code> on the medium, or else a release pin (version, sha256, size). Exit: <code>blunix: no image on this medium. Nothing applied.</code></li>
+  <li>Read <code>blunix.proxy=</code> from the kernel command line. Netboot sets it. It changes only where the document is fetched from. Exit: <code>blunix: refused proxy. Nothing applied.</code></li>
+  <li>Network: DHCP on <code>en*</code> and <code>eth*</code> for 30 seconds. With no lease, type an address like <code>10.0.0.5/24</code>, then a gateway and a DNS server. Enter tries DHCP again. It loops until the network is up; there is no exit here.</li>
+  <li>Hostname: <code>ada</code>, <code>ada.blnx.io</code> or <code>v3.ada.blnx.io</code>. It is read back; say yes. Three tries. Exit: <code>blunix: no hostname. Nothing applied.</code></li>
+  <li>Key: typed with echo off, never spoken or logged. The key now exists here. Exit, for an empty key: <code>blunix: no key. Nothing applied.</code></li>
+  <li>Fetch: directly from <code>https://{host}/</code> over verified TLS 1.2 or higher, capped at 256 KiB, or with a proxy from <code>http://{proxy}/v1/build/{host}</code>. Exits: <code>blunix: document too large.</code>, <code>blunix: tls verify disabled.</code>, <code>blunix: fetch failed.</code>, each followed by Nothing applied.</li>
+  <li>Decrypt and check: the canonical key first, then the raw text as typed, then the schema. It says the document name and digest; through a proxy it says the full sha256 to compare with the install card. The key is dropped after this step. Exits: <code>blunix: could not decrypt.</code> or <code>blunix: document refused.</code>, then Nothing applied.</li>
+  <li>Pick the disk. Never the boot medium (the live medium, any disk named by <code>live-media=</code>, <code>bootfrom=</code> or <code>fromiso=</code>, or a disk labelled <code>BLUNIX_INSTALL</code>), a disk in use, a read-only disk, or one too small. With several, type a number. Erasing needs yes, asked twice; silence is no. Only a target named in the document that is blank skips the question. Exits: <code>could not list disks</code>, <code>target disk sdb is not usable</code>, <code>no disk fits the image</code>, <code>no disk chosen</code>, <code>disk sda kept</code>, each as a <code>blunix:</code> sentence followed by Nothing applied.</li>
+  <li>Check the disk again: the same name, serial and size as when it was chosen. It is opened by <code>/dev/disk/by-id</code>, and the opened size must match. Exit: <code>blunix: disk sda changed since it was chosen. Nothing applied.</code></li>
+  <li>Write and verify. From the medium: the sha256 is checked before the first byte and again after, and <code>zstd -dc</code> writes the disk. From a release pin: the image streams from a GitHub release over verified TLS, redirects stay on GitHub, and the stream&#x27;s sha256 must match the pin. Exits: <code>blunix: image digest did not match.</code> A digest found wrong before the write says Nothing applied; after the write, and for <code>blunix: image write failed.</code>, it says The disk is not bootable.</li>
+  <li>Grow, apply, bootloader: <code>sgdisk</code>, <code>growpart</code> and <code>resize2fs</code>; apply the node document into the new root; grub for EFI and BIOS. Exit: <code>blunix: install failed on sda. The disk is not bootable.</code></li>
+  <li>Reboot: <code>blunix: installed ada-1. Remove the stick. Say yes to reboot.</code> Anything else: <code>blunix: not rebooting.</code></li>
+</ol>
+<p>Not drawn, but in the code: any answer typed at a second console stops with <code>blunix: another console is installing.</code>, and any unexpected error stops with <code>blunix: install failed.</code></p>
+<!-- /walk:04-installer -->
+      </div>
+    </section>
+
+    <section class="wrap band" id="build-proxy" aria-labelledby="h-proxy">
+      <div class="band-head">
+        <h2 id="h-proxy">5. The build-proxy on a LAN</h2>
+        <p>Publishing a site file of machines, then netbooting them. For trusted LANs only until images are signed.</p>
+      </div>
+      <figure class="diagram" tabindex="0" aria-label="Diagram 5, the build-proxy on an install LAN. It scrolls sideways on a narrow screen. The walk-through follows.">
+<!-- diagram:05-build-proxy -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 2008" width="1120" height="2008" role="img" aria-labelledby="proxy-title proxy-desc" font-family="Atkinson, &#x27;Atkinson Hyperlegible&#x27;, &#x27;Helvetica Neue&#x27;, Arial, sans-serif">
+<title id="proxy-title">blunix proxy on an install LAN</title>
+<desc id="proxy-desc">Cloudflare at the top holds the API and the build hosts. On the customer LAN, the operator&#x27;s Linux or macOS computer runs blunix proxy: init, a site file, plan, publish (which reserves labels and uploads ciphertext, and keeps the keys in keys.txt, mode 0600), dnsmasq (which renders a config), and serve (which relays only *.blnx.io, serves verified netboot media and boot.ipxe). Bare-metal machines get DHCP and a PXE chainload from dnsmasq, netboot the installer from serve, and fetch their ciphertext through serve. Netboot is for trusted LANs only until images are signed. The numbered walk-through after this figure says everything the diagram shows.</desc>
+<defs><marker id="proxy-head" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
+<defs><marker id="proxy-bighead" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="22" markerHeight="22" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
+<rect width="1120" height="2008" fill="#12161a"/>
+<rect x="20" y="300" width="1080" height="1562" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="34.0" y="326.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">CUSTOMER LAN, THE INSTALL VLAN</text>
+<rect x="20" y="100" width="1080" height="170" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="34.0" y="126.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">CLOUDFLARE</text>
+<rect x="36" y="350" width="1048" height="1106" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="50.0" y="376.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">OPERATOR&#x27;S COMPUTER, LINUX OR MACOS</text>
+<text x="50.0" y="397.0" font-size="15" fill="#c9c3b6">Python stdlib, PyYAML, and age on the PATH.</text>
+<path d="M287.0 579.0 L287.0 609.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#proxy-head)"/>
+<path d="M287.0 768.0 L287.0 798.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#proxy-head)"/>
+<path d="M287.0 913.0 L287.0 943.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#proxy-head)"/>
+<path d="M287.0 1124.0 L287.0 1154.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#proxy-head)"/>
+<path d="M287.0 1291.0 L287.0 1321.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#proxy-head)"/>
+<path d="M522.0 983.0 L551.0 983.0 L551.0 230.0 L516.0 230.0" fill="none" stroke="#8e9aa8" stroke-width="9" stroke-linejoin="round"/>
+<path d="M522.0 983.0 L551.0 983.0 L551.0 230.0 L516.0 230.0" fill="none" stroke="#12161a" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M522.0 983.0 L551.0 983.0 L551.0 230.0 L516.0 230.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#proxy-bighead)"/>
+<path d="M824.0 420.0 L824.0 239.0" fill="none" stroke="#8e9aa8" stroke-width="9" stroke-linejoin="round"/>
+<path d="M824.0 420.0 L824.0 239.0" fill="none" stroke="#12161a" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M824.0 420.0 L824.0 239.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#proxy-bighead)"/>
+<path d="M287.0 1436.0 L287.0 1516.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#proxy-head)"/>
+<path d="M466.0 1606.5 L580.0 1606.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#proxy-head)"/>
+<path d="M670.0 1516.0 L670.0 777.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#proxy-head)"/>
+<path d="M824.0 1516.0 L824.0 777.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#proxy-head)"/>
+<path d="M978.0 1516.0 L978.0 777.0" fill="none" stroke="#8e9aa8" stroke-width="9" stroke-linejoin="round"/>
+<path d="M978.0 1516.0 L978.0 777.0" fill="none" stroke="#12161a" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M978.0 1516.0 L978.0 777.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#proxy-bighead)"/>
+<text x="28.0" y="44.0" font-size="26" fill="#f3efe6" font-weight="700">blunix proxy on an install LAN</text>
+<text x="28.0" y="72.0" font-size="16" fill="#c9c3b6">All built and tested. The key stays in keys.txt and on the printed card.</text>
+<rect x="36" y="146" width="480" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="50.5" y="163.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="67.0" y="175.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<text x="50.0" y="201.0" font-size="18" fill="#f3efe6" font-weight="700">api.blunix.io</text>
+<text x="50.0" y="224.0" font-size="16" fill="#c9c3b6">POST /v1/hosts reserves; POST .../builds uploads.</text>
+<rect x="604" y="146" width="480" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="618.5" y="163.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="635.0" y="175.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<text x="618.0" y="201.0" font-size="18" fill="#f3efe6" font-weight="700">{label}.blnx.io</text>
+<text x="618.0" y="224.0" font-size="16" fill="#c9c3b6">GET / serves the ciphertext, verified TLS.</text>
+<rect x="52" y="420" width="470" height="159" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="66.5" y="437.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="83.0" y="449.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="66.0" y="475.0" font-size="18" fill="#f3efe6" font-weight="700">1. blunix proxy init</text>
+<text x="66.0" y="498.0" font-size="16" fill="#c9c3b6">Writes proxy.yaml (0600): API URL, key file,</text>
+<text x="66.0" y="520.0" font-size="16" fill="#c9c3b6">listen address. The blx_ key (hosts:write) is</text>
+<text x="66.0" y="542.0" font-size="16" fill="#c9c3b6">read with echo off into a 0600 file. A</text>
+<text x="66.0" y="564.0" font-size="16" fill="#c9c3b6">blx_join_ token or a key argument is refused.</text>
+<rect x="52" y="609" width="470" height="159" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="66.5" y="626.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="83.0" y="638.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="66.0" y="664.0" font-size="18" fill="#f3efe6" font-weight="700">2. site.yaml</text>
+<text x="66.0" y="687.0" font-size="16" fill="#c9c3b6">Per MAC: label, hostname, a static address or</text>
+<text x="66.0" y="709.0" font-size="16" fill="#c9c3b6">dhcp: true, disk, access, optional target.</text>
+<text x="66.0" y="731.0" font-size="16" fill="#c9c3b6">Strict parser: unknown keys, duplicates, aliases</text>
+<text x="66.0" y="753.0" font-size="16" fill="#c9c3b6">and multicast MACs are refused.</text>
+<rect x="52" y="798" width="470" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="66.5" y="815.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="83.0" y="827.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="66.0" y="853.0" font-size="18" fill="#f3efe6" font-weight="700">3. blunix proxy plan</text>
+<text x="66.0" y="876.0" font-size="16" fill="#c9c3b6">Renders and validates every node document.</text>
+<text x="66.0" y="898.0" font-size="16" fill="#c9c3b6">No network, unless --check reads GET /v1/hosts.</text>
+<rect x="52" y="943" width="470" height="181" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="66.5" y="960.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="83.0" y="972.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="66.0" y="998.0" font-size="18" fill="#f3efe6" font-weight="700">4. blunix proxy publish</text>
+<text x="66.0" y="1021.0" font-size="16" fill="#c9c3b6">All documents validate first, or nothing is sent.</text>
+<text x="66.0" y="1043.0" font-size="16" fill="#c9c3b6">Per machine: reserve the label, render with the</text>
+<text x="66.0" y="1065.0" font-size="16" fill="#c9c3b6">inline static network, make a 100-bit key,</text>
+<text x="66.0" y="1087.0" font-size="16" fill="#c9c3b6">age --passphrase, write the pending card, upload,</text>
+<text x="66.0" y="1109.0" font-size="16" fill="#c9c3b6">check the sha256 and size. state.json: no keys.</text>
+<rect x="52" y="1154" width="470" height="137" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="66.5" y="1171.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<rect x="406.9" y="1164.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="419.9" y="1182.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="83.0" y="1183.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="66.0" y="1209.0" font-size="18" fill="#f3efe6" font-weight="700">5. keys.txt</text>
+<text x="66.0" y="1232.0" font-size="16" fill="#c9c3b6">O_EXCL, mode 0600, one card per machine. Never</text>
+<text x="66.0" y="1254.0" font-size="16" fill="#c9c3b6">served; not in the media allowlist. Print the</text>
+<text x="66.0" y="1276.0" font-size="16" fill="#c9c3b6">cards, then delete the file.</text>
+<rect x="52" y="1321" width="470" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="66.5" y="1338.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="83.0" y="1350.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="66.0" y="1376.0" font-size="18" fill="#f3efe6" font-weight="700">6. blunix proxy dnsmasq</text>
+<text x="66.0" y="1399.0" font-size="16" fill="#c9c3b6">Renders a config to stdout. It does not start</text>
+<text x="66.0" y="1421.0" font-size="16" fill="#c9c3b6">dnsmasq.</text>
+<rect x="580" y="420" width="488" height="357" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="594.5" y="437.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="611.0" y="449.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="594.0" y="475.0" font-size="18" fill="#f3efe6" font-weight="700">7. blunix proxy serve</text>
+<text x="594.0" y="498.0" font-size="16" fill="#c9c3b6">GET and HEAD only; 64 connections; 60 requests</text>
+<text x="594.0" y="520.0" font-size="16" fill="#c9c3b6">per IP, refilled 1 a second; no bodies logged.</text>
+<text x="594.0" y="542.0" font-size="16" fill="#c9c3b6"></text>
+<text x="594.0" y="564.0" font-size="16" fill="#c9c3b6">/v1/build/{host}: relays only {label}.blnx.io and</text>
+<text x="594.0" y="586.0" font-size="16" fill="#c9c3b6">v{n}.{label}.blnx.io over verified TLS 1.2+. No</text>
+<text x="594.0" y="608.0" font-size="16" fill="#c9c3b6">redirects, 256 KiB, 20 s, age bodies only. Cache:</text>
+<text x="594.0" y="630.0" font-size="16" fill="#c9c3b6">latest 60 s, pinned 1 h. TLS failure: 502.</text>
+<text x="594.0" y="652.0" font-size="16" fill="#c9c3b6"></text>
+<text x="594.0" y="674.0" font-size="16" fill="#c9c3b6">/media/: vmlinuz, initrd.img, blunix.squashfs,</text>
+<text x="594.0" y="696.0" font-size="16" fill="#c9c3b6">hashed against SHA256SUMS at startup. A changed</text>
+<text x="594.0" y="718.0" font-size="16" fill="#c9c3b6">file is not served. /v1/boot.ipxe names the</text>
+<text x="594.0" y="740.0" font-size="16" fill="#c9c3b6">advertise address, never the Host header.</text>
+<text x="594.0" y="762.0" font-size="16" fill="#c9c3b6">/v1/netconfig/{mac}, /healthz.</text>
+<rect x="36" y="1516" width="430" height="181" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="50.5" y="1533.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="67.0" y="1545.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">CONFIG RENDERED</text>
+<text x="50.0" y="1571.0" font-size="18" fill="#f3efe6" font-weight="700">8. dnsmasq, run by the operator</text>
+<text x="50.0" y="1594.0" font-size="16" fill="#c9c3b6">DNS off (port=0). A DHCP reservation per</text>
+<text x="50.0" y="1616.0" font-size="16" fill="#c9c3b6">MAC; PXE only for listed MACs. iPXE gets</text>
+<text x="50.0" y="1638.0" font-size="16" fill="#c9c3b6">http://PROXY/v1/boot.ipxe; others get</text>
+<text x="50.0" y="1660.0" font-size="16" fill="#c9c3b6">ipxe.efi or undionly.kpxe over TFTP from</text>
+<text x="50.0" y="1682.0" font-size="16" fill="#c9c3b6">/srv/tftp, which the operator supplies.</text>
+<rect x="580" y="1516" width="488" height="159" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="594.5" y="1533.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<rect x="952.9" y="1526.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="965.9" y="1544.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="611.0" y="1545.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="594.0" y="1571.0" font-size="18" fill="#f3efe6" font-weight="700">9. Bare-metal machines</text>
+<text x="594.0" y="1594.0" font-size="16" fill="#c9c3b6">PXE, then iPXE, then the live installer with</text>
+<text x="594.0" y="1616.0" font-size="16" fill="#c9c3b6">blunix.proxy= on its kernel line. The operator</text>
+<text x="594.0" y="1638.0" font-size="16" fill="#c9c3b6">types the hostname, then the key from the card.</text>
+<text x="594.0" y="1660.0" font-size="16" fill="#c9c3b6">Decrypted on the machine.</text>
+<rect x="36" y="1727" width="1048" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="50.5" y="1744.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="67.0" y="1756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SIGNING: DESIGNED, NOT BUILT</text>
+<text x="50.0" y="1782.0" font-size="18" fill="#f3efe6" font-weight="700">Trusted LANs only until images are signed</text>
+<text x="50.0" y="1805.0" font-size="16" fill="#c9c3b6">Kernel, initrd and squashfs travel as plain http. serve&#x27;s startup check proves they match the</text>
+<text x="50.0" y="1827.0" font-size="16" fill="#c9c3b6">SHA256SUMS you trusted, not who built them. iPXE and live-boot verify nothing. Signing is designed.</text>
+<rect x="631.7" y="1167.5" width="76.7" height="25.0" rx="4" fill="#161b20"/>
+<text x="670.0" y="1186.5" font-size="16" fill="#c9c3b6" text-anchor="middle">boot.ipxe</text>
+<rect x="784.4" y="1167.5" width="79.1" height="47.0" rx="4" fill="#161b20"/>
+<text x="824.0" y="1186.5" font-size="16" fill="#c9c3b6" text-anchor="middle">/media/</text>
+<text x="824.0" y="1208.5" font-size="16" fill="#c9c3b6" text-anchor="middle">plain http</text>
+<rect x="938.7" y="1167.5" width="78.5" height="47.0" rx="4" fill="#161b20"/>
+<text x="978.0" y="1186.5" font-size="16" fill="#c9c3b6" text-anchor="middle">/v1/build/</text>
+<text x="978.0" y="1208.5" font-size="16" fill="#c9c3b6" text-anchor="middle">{host}</text>
+<rect x="494.4" y="1625.5" width="57.2" height="47.0" rx="4" fill="#161b20"/>
+<text x="523.0" y="1644.5" font-size="16" fill="#c9c3b6" text-anchor="middle">DHCP,</text>
+<text x="523.0" y="1666.5" font-size="16" fill="#c9c3b6" text-anchor="middle">PXE</text>
+<rect x="559.0" y="243.0" width="117.3" height="25.0" rx="4" fill="#12161a"/>
+<text x="565.0" y="262.0" font-size="16" fill="#c9c3b6">Bearer blx_ key</text>
+<rect x="832.0" y="243.0" width="96.2" height="25.0" rx="4" fill="#12161a"/>
+<text x="838.0" y="262.0" font-size="16" fill="#c9c3b6">verified TLS</text>
+<rect x="20" y="1892" width="1080" height="96" rx="10" fill="#1b2127" stroke="#3a434d" stroke-width="2"/>
+<text x="36.0" y="1919.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">LEGEND</text>
+<rect x="130" y="1902" width="40" height="24" rx="5" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<text x="182.0" y="1920.0" font-size="16" fill="#f3efe6">Deployed, live today</text>
+<rect x="356" y="1902" width="40" height="24" rx="5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="408.1" y="1920.0" font-size="16" fill="#f3efe6">Built and tested in the repo</text>
+<rect x="634" y="1902" width="40" height="24" rx="5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="7 5"/>
+<text x="686.5" y="1920.0" font-size="16" fill="#f3efe6">Designed, not built</text>
+<path d="M130 1956 L174 1956" stroke="#8e9aa8" stroke-width="2.5"/>
+<text x="184.0" y="1962.0" font-size="16" fill="#f3efe6">Call or data</text>
+<path d="M294 1956 L338 1956" stroke="#8e9aa8" stroke-width="9"/>
+<path d="M293 1956 L339 1956" stroke="#1b2127" stroke-width="3.5"/>
+<text x="348.8" y="1962.0" font-size="16" fill="#f3efe6">Ciphertext only</text>
+<path d="M484 1956 L528 1956" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7"/>
+<text x="538.7" y="1962.0" font-size="16" fill="#f3efe6">Designed path</text>
+<rect x="671.3" y="1943.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="684.3" y="1961.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="786.4" y="1962.0" font-size="16" fill="#f3efe6">The key exists here</text>
+<circle cx="551.0" cy="300.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="551.0" y="305.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">10</text>
+<circle cx="824.0" cy="300.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="824.0" y="305.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">11</text>
+<circle cx="287.0" cy="1486.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="287.0" y="1491.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">12</text>
+<circle cx="523.0" cy="1606.5" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="523.0" y="1612.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">13</text>
+<circle cx="670.0" cy="1146.5" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="670.0" y="1152.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">14</text>
+<circle cx="824.0" cy="1146.5" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="824.0" y="1152.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">15</text>
+<circle cx="978.0" cy="1146.5" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="978.0" y="1152.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">16</text>
+</svg>
+<!-- /diagram:05-build-proxy -->
+        <figcaption>Diagram 5. <a href="assets/diagrams/05-build-proxy.png">Open it as a large image</a>.</figcaption>
+      </figure>
+      <div class="walk">
+<!-- walk:05-build-proxy -->
+<p>Everything here is built and tested; the signing that would end the trusted-LAN rule is designed, not built. The key stays in <code>keys.txt</code> and on the printed card.</p>
+<h3>Cloudflare</h3>
+<ul>
+  <li>api.blunix.io, built and not deployed: <code>POST /v1/hosts</code> reserves a label; <code>POST /v1/hosts/{label}/builds</code> uploads.</li>
+  <li><code>{label}.blnx.io</code>, built and not deployed: <code>GET /</code> serves the ciphertext over verified TLS.</li>
+</ul>
+<h3>The operator&#x27;s computer, Linux or macOS (Python stdlib, PyYAML, and age on the PATH)</h3>
+<ol>
+  <li><code>blunix proxy init</code> writes <code>proxy.yaml</code> (mode 0600): the API URL, the key file and the listen address. The <code>blx_</code> API key (scope <code>hosts:write</code>) is read with echo off into a 0600 file. A <code>blx_join_</code> token, or a key given as an argument, is refused.</li>
+  <li><code>site.yaml</code> lists, per MAC: the label, the hostname, a static address or <code>dhcp: true</code>, the disk, the access profile, and an optional target disk. The parser refuses unknown keys, duplicate keys, aliases and multicast MACs.</li>
+  <li><code>blunix proxy plan</code> renders and validates every node document. It makes no network call unless <code>--check</code> reads <code>GET /v1/hosts</code>.</li>
+  <li><code>blunix proxy publish</code> validates every document first, or sends nothing. Then, per machine: reserve the label, render the document with its inline static network, make a 100-bit key, encrypt with <code>age --passphrase</code>, write the pending card, upload, and check the returned sha256 and size. <code>state.json</code> holds no keys.</li>
+  <li><code>keys.txt</code>: created with <code>O_EXCL</code>, mode 0600, one card per machine. It is never served and is not in the media allowlist. The key exists here. Print the cards, then delete the file.</li>
+  <li><code>blunix proxy dnsmasq</code> renders a dnsmasq config to stdout. It does not start dnsmasq.</li>
+  <li><code>blunix proxy serve</code>: <code>GET</code> and <code>HEAD</code> only, at most 64 connections, 60 requests per IP refilled at one a second, and no bodies logged. <code>/v1/build/{host}</code> relays only <code>{label}.blnx.io</code> and <code>v{n}.{label}.blnx.io</code> over verified TLS 1.2 or higher, with no redirects, a 256 KiB cap, a 20-second limit and age bodies only, cached 60 seconds for latest and 1 hour for pinned; a TLS failure is a 502. <code>/media/</code> serves <code>vmlinuz</code>, <code>initrd.img</code> and <code>blunix.squashfs</code>, hashed against <code>SHA256SUMS</code> at startup; a file that changes later is not served. <code>/v1/boot.ipxe</code> names the advertise address, never the Host header. Also <code>/v1/netconfig/{mac}</code> and <code>/healthz</code>.</li>
+</ol>
+<h3>On the install VLAN</h3>
+<ol start="8">
+  <li>dnsmasq, run by the operator with the rendered config: DNS off (<code>port=0</code>), a DHCP reservation per MAC, and PXE only for listed MACs. iPXE clients get <code>http://PROXY/v1/boot.ipxe</code>; others get <code>ipxe.efi</code> or <code>undionly.kpxe</code> over TFTP from <code>/srv/tftp</code>, which the operator supplies.</li>
+  <li>Bare-metal machines: PXE, then iPXE, then the live installer with <code>blunix.proxy=</code> on its kernel line. The operator types the hostname, then the key from the card. The key exists here. The document is decrypted on the machine.</li>
+</ol>
+<h3>The numbered arrows</h3>
+<ol start="10">
+  <li><code>publish</code> to api.blunix.io: reserve and upload, ciphertext only, with the <code>Bearer blx_</code> key.</li>
+  <li><code>serve</code> to <code>{label}.blnx.io</code>: verified TLS, ciphertext only.</li>
+  <li>The rendered config goes to dnsmasq, which the operator starts.</li>
+  <li>dnsmasq to the machines: DHCP and the PXE boot file.</li>
+  <li>The machines fetch <code>boot.ipxe</code> from <code>serve</code>.</li>
+  <li>The machines fetch the kernel, initrd and squashfs from <code>/media/</code> over plain http.</li>
+  <li>The installer fetches <code>/v1/build/{host}</code> from <code>serve</code>: ciphertext only.</li>
+</ol>
+<p>Trusted LANs only until images are signed. The kernel, initrd and squashfs travel as plain http. <code>serve</code>&#x27;s startup check proves they match the <code>SHA256SUMS</code> you trusted, not who built them. iPXE and live-boot verify nothing. Signing is designed, not built.</p>
+<!-- /walk:05-build-proxy -->
+      </div>
+    </section>
+
+    <section class="wrap band" id="future-plane" aria-labelledby="h-future">
+      <div class="band-head">
+        <h2 id="h-future">6. Later: the future plane</h2>
+        <p>Designed, not built. Enrolled machines, check-in, updates from the Blunix Log, and troubleshoot collect.</p>
+      </div>
+      <figure class="diagram" tabindex="0" aria-label="Diagram 6, the future plane, designed and not built. It scrolls sideways on a narrow screen. The walk-through follows.">
+<!-- diagram:06-future-plane -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 1856" width="1120" height="1856" role="img" aria-labelledby="future-title future-desc" font-family="Atkinson, &#x27;Atkinson Hyperlegible&#x27;, &#x27;Helvetica Neue&#x27;, Arial, sans-serif">
+<title id="future-title">The future plane: designed, not built</title>
+<desc id="future-desc">Everything on this diagram is designed, not built, except one box: the API already refuses every blx_join_ token with 401. Clients (the web, the laptop CLI, Terraform, Ansible, support) call api.blunix.io. An enrolled machine runs blunixservice, which dials out only: it enrolls once with a join token, then signs check-ins with its Ed25519 key and gets back a desired generation, fetches the ciphertext, applies it, and stages images with systemd-sysupdate from a manifest generated from the Blunix Log. A cloud builder appends log rows and an offline key signs them. Troubleshoot is a fixed collect that rides the check-in response and needs a spoken yes on speech and large-print machines. The numbered walk-through after this figure says everything the diagram shows.</desc>
+<defs><marker id="future-head" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
+<defs><marker id="future-bighead" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="22" markerHeight="22" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
+<rect width="1120" height="1856" fill="#12161a"/>
+<rect x="20" y="100" width="1080" height="150" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="34.0" y="126.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">CLIENTS OF ONE API</text>
+<rect x="580" y="280" width="520" height="684" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="594.0" y="306.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">API.BLUNIX.IO</text>
+<rect x="20" y="280" width="520" height="1022" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="34.0" y="306.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">ENROLLED MACHINE</text>
+<rect x="20" y="1352" width="520" height="348" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="34.0" y="1378.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">BLUNIX LOG</text>
+<rect x="580" y="1352" width="520" height="326" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
+<text x="594.0" y="1378.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">BUILD AND SIGN</text>
+<path d="M278.0 467.0 L278.0 493.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#future-head)"/>
+<path d="M278.0 630.0 L278.0 656.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#future-head)"/>
+<path d="M278.0 793.0 L278.0 819.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#future-head)"/>
+<path d="M278.0 956.0 L278.0 982.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#future-head)"/>
+<path d="M278.0 1119.0 L278.0 1145.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#future-head)"/>
+<path d="M278.0 1539.0 L278.0 1565.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#future-head)"/>
+<path d="M310.0 239.0 L310.0 265.0 L840.0 265.0 L840.0 330.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#future-head)"/>
+<path d="M520.0 561.5 L548.0 561.5 L548.0 380.0 L600.0 380.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#future-head)"/>
+<path d="M520.0 724.5 L572.0 724.5 L572.0 430.0 L600.0 430.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#future-head)" marker-start="url(#future-head)"/>
+<path d="M600.0 705.5 L586.0 705.5 L586.0 887.5 L520.0 887.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#future-head)"/>
+<path d="M520.0 1213.5 L560.0 1213.5 L560.0 924.0 L600.0 924.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#future-head)"/>
+<path d="M600.0 1459.5 L520.0 1459.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#future-head)"/>
+<path d="M600.0 1600.5 L560.0 1600.5 L560.0 1519.0 L520.0 1519.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#future-head)"/>
+<path d="M36.0 1050.5 L26.0 1050.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7"/>
+<path d="M26.0 1050.5 L26.0 1622.5 L36.0 1622.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7"/>
+<path d="M26 1050.5 L36.0 1050.5" fill="none" stroke="none" marker-end="url(#future-head)"/>
+<text x="28.0" y="44.0" font-size="26" fill="#f3efe6" font-weight="700">The future plane</text>
+<text x="28.0" y="72.0" font-size="16" fill="#c9c3b6">DESIGNED, NOT BUILT: docs/designs/blunix-service.md and blunix-platform.md. Dashed throughout.</text>
+<rect x="36" y="146" width="1048" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="50.5" y="163.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="67.0" y="175.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="50.0" y="201.0" font-size="18" fill="#f3efe6" font-weight="700">Web console, laptop CLI, Terraform, Ansible, support desk</text>
+<text x="50.0" y="224.0" font-size="16" fill="#c9c3b6">No second control plane. Keys by scope: hosts:write, machines:read, troubleshoot:request, log:publish.</text>
+<rect x="600" y="330" width="484" height="181" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="614.5" y="347.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="631.0" y="359.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="614.0" y="385.0" font-size="18" fill="#f3efe6" font-weight="700">api.blunix.io/v1, new routes</text>
+<text x="614.0" y="408.0" font-size="16" fill="#c9c3b6">PUT /v1/hosts/{label}: visibility public or</text>
+<text x="614.0" y="430.0" font-size="16" fill="#c9c3b6">enrolled. POST .../join-tokens mints blx_join_.</text>
+<text x="614.0" y="452.0" font-size="16" fill="#c9c3b6">POST /v1/machines: bind a public key, consume</text>
+<text x="614.0" y="474.0" font-size="16" fill="#c9c3b6">the token. POST .../checkin, GET .../desired.</text>
+<text x="614.0" y="496.0" font-size="16" fill="#c9c3b6">GET /v1/machines?channel=stable&amp;behind=1.</text>
+<rect x="600" y="533" width="484" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="614.5" y="550.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="631.0" y="562.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<text x="614.0" y="588.0" font-size="18" fill="#f3efe6" font-weight="700">Built today: the refusal</text>
+<text x="614.0" y="611.0" font-size="16" fill="#c9c3b6">Any blx_join_ bearer token is a 401 on every route.</text>
+<rect x="600" y="648" width="484" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="614.5" y="665.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="631.0" y="677.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="614.0" y="703.0" font-size="18" fill="#f3efe6" font-weight="700">{label}.blnx.io, visibility enrolled</text>
+<text x="614.0" y="726.0" font-size="16" fill="#c9c3b6">Only a bound machine signature fetches the</text>
+<text x="614.0" y="748.0" font-size="16" fill="#c9c3b6">ciphertext. public keeps the anonymous GET.</text>
+<rect x="600" y="785" width="484" height="159" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="614.5" y="802.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="631.0" y="814.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="614.0" y="840.0" font-size="18" fill="#f3efe6" font-weight="700">Troubleshoot jobs</text>
+<text x="614.0" y="863.0" font-size="16" fill="#c9c3b6">troubleshoot:request mints one: hostname, reason</text>
+<text x="614.0" y="885.0" font-size="16" fill="#c9c3b6">(behind, decrypt, network, speech, other), expiry.</text>
+<text x="614.0" y="907.0" font-size="16" fill="#c9c3b6">No shell scope; a command field is refused.</text>
+<text x="614.0" y="929.0" font-size="16" fill="#c9c3b6">Report read needs troubleshoot:read.</text>
+<rect x="36" y="330" width="484" height="137" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="50.5" y="347.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="67.0" y="359.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="50.0" y="385.0" font-size="18" fill="#f3efe6" font-weight="700">blunixservice.service</text>
+<text x="50.0" y="408.0" font-size="16" fill="#c9c3b6">Dials out only; no TCP listener. Local control</text>
+<text x="50.0" y="430.0" font-size="16" fill="#c9c3b6">on /run/blunix/service.sock (0660). Boot does</text>
+<text x="50.0" y="452.0" font-size="16" fill="#c9c3b6">not wait for it.</text>
+<rect x="36" y="493" width="484" height="137" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="50.5" y="510.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="67.0" y="522.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="50.0" y="548.0" font-size="18" fill="#f3efe6" font-weight="700">Enroll once</text>
+<text x="50.0" y="571.0" font-size="16" fill="#c9c3b6">Ed25519 key made on first start, machine.key</text>
+<text x="50.0" y="593.0" font-size="16" fill="#c9c3b6">0600. A blx_join_ token (single use, expiry)</text>
+<text x="50.0" y="615.0" font-size="16" fill="#c9c3b6">is sent once over TLS, then discarded.</text>
+<rect x="36" y="656" width="484" height="137" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="50.5" y="673.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="67.0" y="685.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="50.0" y="711.0" font-size="18" fill="#f3efe6" font-weight="700">Check in, signed</text>
+<text x="50.0" y="734.0" font-size="16" fill="#c9c3b6">Signature over method, path, time and body</text>
+<text x="50.0" y="756.0" font-size="16" fill="#c9c3b6">sha256; 5-minute skew; 64 KiB; jitter, backoff.</text>
+<text x="50.0" y="778.0" font-size="16" fill="#c9c3b6">Reply: the desired generation.</text>
+<rect x="36" y="819" width="484" height="137" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="50.5" y="836.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<rect x="404.9" y="829.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="417.9" y="847.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="67.0" y="848.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="50.0" y="874.0" font-size="18" fill="#f3efe6" font-weight="700">Apply inside the window</text>
+<text x="50.0" y="897.0" font-size="16" fill="#c9c3b6">Fetch the ciphertext, decrypt with the local</text>
+<text x="50.0" y="919.0" font-size="16" fill="#c9c3b6">credential blunix.build-passphrase, run</text>
+<text x="50.0" y="941.0" font-size="16" fill="#c9c3b6">blunix node apply. On failure keep the old one.</text>
+<rect x="36" y="982" width="484" height="137" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="50.5" y="999.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="67.0" y="1011.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="50.0" y="1037.0" font-size="18" fill="#f3efe6" font-weight="700">systemd-sysupdate, A/B</text>
+<text x="50.0" y="1060.0" font-size="16" fill="#c9c3b6">Stage the image in the other slot; the old slot</text>
+<text x="50.0" y="1082.0" font-size="16" fill="#c9c3b6">still boots. Reboot only in the window; speech</text>
+<text x="50.0" y="1104.0" font-size="16" fill="#c9c3b6">and large print ask and wait.</text>
+<rect x="36" y="1145" width="484" height="137" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="50.5" y="1162.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="67.0" y="1174.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="50.0" y="1200.0" font-size="18" fill="#f3efe6" font-weight="700">Troubleshoot collect</text>
+<text x="50.0" y="1223.0" font-size="16" fill="#c9c3b6">blunix: troubleshoot requested for lab-3. Say</text>
+<text x="50.0" y="1245.0" font-size="16" fill="#c9c3b6">yes to start. A fixed collector, an allowlisted</text>
+<text x="50.0" y="1267.0" font-size="16" fill="#c9c3b6">report of 64 KiB, signed. No journal, no keys.</text>
+<rect x="36" y="1402" width="484" height="137" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="50.5" y="1419.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="67.0" y="1431.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="50.0" y="1457.0" font-size="18" fill="#f3efe6" font-weight="700">Blunix Log, append-only</text>
+<text x="50.0" y="1480.0" font-size="16" fill="#c9c3b6">Row: version, channel, artifact sha256,</text>
+<text x="50.0" y="1502.0" font-size="16" fill="#c9c3b6">signature, predecessor, files. Withdraw is a new</text>
+<text x="50.0" y="1524.0" font-size="16" fill="#c9c3b6">row. GET is public; the site renders it.</text>
+<rect x="36" y="1565" width="484" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="50.5" y="1582.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="67.0" y="1594.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="50.0" y="1620.0" font-size="18" fill="#f3efe6" font-weight="700">Manifest, updates.blunix.io/blunix</text>
+<text x="50.0" y="1643.0" font-size="16" fill="#c9c3b6">Generated from current rows, never hand-edited.</text>
+<text x="50.0" y="1665.0" font-size="16" fill="#c9c3b6">Mirrors are caches of one digest.</text>
+<rect x="600" y="1402" width="484" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="614.5" y="1419.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="631.0" y="1431.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="614.0" y="1457.0" font-size="18" fill="#f3efe6" font-weight="700">Cloud builder</text>
+<text x="614.0" y="1480.0" font-size="16" fill="#c9c3b6">Runs the build the repo specifies. Its only</text>
+<text x="614.0" y="1502.0" font-size="16" fill="#c9c3b6">output is a log row, through log:publish.</text>
+<rect x="600" y="1543" width="484" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
+<rect x="614.5" y="1560.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
+<text x="631.0" y="1572.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
+<text x="614.0" y="1598.0" font-size="18" fill="#f3efe6" font-weight="700">Offline signing key</text>
+<text x="614.0" y="1621.0" font-size="16" fill="#c9c3b6">Signs images and rows. Never on the builder</text>
+<text x="614.0" y="1643.0" font-size="16" fill="#c9c3b6">or on Cloudflare.</text>
+<rect x="20" y="1740" width="1080" height="96" rx="10" fill="#1b2127" stroke="#3a434d" stroke-width="2"/>
+<text x="36.0" y="1767.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">LEGEND</text>
+<rect x="130" y="1750" width="40" height="24" rx="5" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<text x="182.0" y="1768.0" font-size="16" fill="#f3efe6">Deployed, live today</text>
+<rect x="356" y="1750" width="40" height="24" rx="5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="408.1" y="1768.0" font-size="16" fill="#f3efe6">Built and tested in the repo</text>
+<rect x="634" y="1750" width="40" height="24" rx="5" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="7 5"/>
+<text x="686.5" y="1768.0" font-size="16" fill="#f3efe6">Designed, not built</text>
+<path d="M130 1804 L174 1804" stroke="#8e9aa8" stroke-width="2.5"/>
+<text x="184.0" y="1810.0" font-size="16" fill="#f3efe6">Call or data</text>
+<path d="M294 1804 L338 1804" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7"/>
+<text x="348.8" y="1810.0" font-size="16" fill="#f3efe6">Designed path</text>
+<rect x="481.4" y="1791.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="494.4" y="1809.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="596.5" y="1810.0" font-size="16" fill="#f3efe6">The key exists here</text>
+<circle cx="560.0" cy="265.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="560.0" y="270.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">1</text>
+<circle cx="548.0" cy="470.8" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="548.0" y="476.2" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">2</text>
+<circle cx="572.0" cy="607.2" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="572.0" y="612.8" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">3</text>
+<circle cx="586.0" cy="816.5" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="586.0" y="822.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">4</text>
+<circle cx="560.0" cy="1068.8" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="560.0" y="1074.2" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">5</text>
+<circle cx="560.0" cy="1459.5" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="560.0" y="1465.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">6</text>
+<circle cx="560.0" cy="1600.5" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="560.0" y="1606.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">7</text>
+<circle cx="26.0" cy="1336.5" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="26.0" y="1342.0" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">8</text>
+</svg>
+<!-- /diagram:06-future-plane -->
+        <figcaption>Diagram 6. <a href="assets/diagrams/06-future-plane.png">Open it as a large image</a>.</figcaption>
+      </figure>
+      <div class="walk">
+<!-- walk:06-future-plane -->
+<p>Everything on this diagram is designed, not built, from <code>docs/designs/blunix-service.md</code> and <code>docs/designs/blunix-platform.md</code>. One box is the exception: the API already refuses every <code>blx_join_</code> bearer token with 401 on every route. That refusal is built, not deployed.</p>
+<h3>The boxes</h3>
+<ul>
+  <li><strong>Clients of one API.</strong> The web console, the laptop CLI, Terraform, Ansible and the support desk. There is no second control plane. Keys by scope: <code>hosts:write</code>, <code>machines:read</code>, <code>troubleshoot:request</code>, <code>log:publish</code>.</li>
+  <li><strong>api.blunix.io, new routes.</strong> <code>PUT /v1/hosts/{label}</code> sets visibility to public or enrolled. <code>POST /v1/hosts/{label}/join-tokens</code> mints a <code>blx_join_</code> token. <code>POST /v1/machines</code> binds a public key and consumes the token. <code>POST /v1/machines/{hostname}/checkin</code> and <code>GET .../desired</code>. <code>GET /v1/machines?channel=stable&amp;behind=1</code> lists machines behind the channel head.</li>
+  <li><strong><code>{label}.blnx.io</code> with visibility enrolled.</strong> Only a bound machine&#x27;s signature fetches the ciphertext. Public keeps the anonymous <code>GET</code>.</li>
+  <li><strong>Troubleshoot jobs.</strong> <code>troubleshoot:request</code> mints one: a hostname, a reason (behind, decrypt, network, speech, other) and an expiry. There is no shell scope, and a command field is refused. Reading the report needs <code>troubleshoot:read</code>.</li>
+  <li><strong>Enrolled machine, blunixservice.service.</strong> It dials out only and has no TCP listener. Local control is on <code>/run/blunix/service.sock</code> (0660). Boot does not wait for it.</li>
+  <li><strong>Enroll once.</strong> An Ed25519 key is made on first start, in <code>machine.key</code>, mode 0600. A <code>blx_join_</code> token (single use, with an expiry) is sent once over TLS, then discarded.</li>
+  <li><strong>Check in, signed.</strong> The signature covers the method, the path, the time and the body&#x27;s sha256, with a 5-minute skew, a 64 KiB cap, jitter and backoff. The reply is the desired generation.</li>
+  <li><strong>Apply inside the window.</strong> Fetch the ciphertext, decrypt with the local credential <code>blunix.build-passphrase</code>, run <code>blunix node apply</code>. On failure, keep the old document. The key exists here, as that credential.</li>
+  <li><strong>systemd-sysupdate, A/B.</strong> Stage the image in the other slot; the old slot still boots. Reboot only in the window. Speech and large-print machines ask and wait.</li>
+  <li><strong>Troubleshoot collect.</strong> <code>blunix: troubleshoot requested for lab-3. Say yes to start.</code> A fixed collector, an allowlisted report of 64 KiB, signed. No journal text and no keys.</li>
+  <li><strong>Blunix Log, append-only.</strong> A row holds the version, channel, artifact sha256, signature, predecessor and file names. Withdrawing is a new row. <code>GET</code> is public; the site renders it.</li>
+  <li><strong>Manifest at <code>updates.blunix.io/blunix</code>.</strong> Generated from the current rows, never edited by hand. Mirrors are caches of one digest.</li>
+  <li><strong>Cloud builder.</strong> Runs the build the repo specifies. Its only output is a log row, through <code>log:publish</code>.</li>
+  <li><strong>Offline signing key.</strong> Signs images and rows. Never on the builder or on Cloudflare.</li>
+</ul>
+<h3>The numbered arrows, all designed</h3>
+<ol>
+  <li>The clients call api.blunix.io.</li>
+  <li>The machine enrolls with its join token.</li>
+  <li>Check-in and the desired generation, both ways.</li>
+  <li>The build host sends the ciphertext to the apply step.</li>
+  <li>The collect sends its signed report to the troubleshoot job.</li>
+  <li>The cloud builder appends a log row.</li>
+  <li>The offline key signs the rows.</li>
+  <li>systemd-sysupdate reads the manifest.</li>
+</ol>
+<!-- /walk:06-future-plane -->
+      </div>
+    </section>
+  </main>
+  <footer class="wrap site-footer">
+    <p>Built by people who keep cats. blunix.io is this project, and the source is <a href="https://github.com/afterdarksys/blunix">afterdarksys/blunix</a>. blunix.com is Blunix GmbH in Berlin, a different company.</p>
+  </footer>
+</body>
+</html>
