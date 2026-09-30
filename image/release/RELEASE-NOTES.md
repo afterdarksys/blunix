@@ -35,3 +35,8 @@ sha256sum -c --ignore-missing SHA256SUMS
 
 On a Mac, use `shasum -a 256 -c SHA256SUMS`. Every line must say OK. Do not
 boot or write a file that fails.
+
+## Licenses and source
+
+- **Debian packages** in these images keep their own licenses, many of them the GNU GPL. `SOURCES.md`, attached to this release, lists every source package at its exact version, with a snapshot.debian.org link and a written offer for the corresponding source.
+- **Blunix's own code** is source-available under the PolyForm Noncommercial License 1.0.0. It is free for personal use and noncommercial organizations. Commercial use needs a commercial license (see COMMERCIAL.md in the repository).

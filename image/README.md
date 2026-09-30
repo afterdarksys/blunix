@@ -10,6 +10,7 @@ Build scripts for the Blunix spike. Each one runs itself inside `docker run --pr
 | `BLUNIX_RELEASE_VERSION=v0.1.0 build-installer.sh --release` | The same, packing `build/blunix-release.raw`. It mounts that disk read-only and runs the release scan first, so a fixture disk cannot become a release. |
 | `boot-installer-test.sh [uefi\|bios]` | Boots the ISO headless in QEMU against a blank disk and answers the first prompts over serial. Log: `build/installer/serial.log`. |
 | `run-unit-tests.sh` | The unit tests, in Debian 13 with `age` and `zstd`. |
+| `gpl-sources.py VERSION STATUS...` | `SOURCES.md` for a release: every Debian source package and exact version from the artifacts' dpkg status files, with snapshot.debian.org links and the written offer. Attach it to every release. |
 
 ## Install media
 
