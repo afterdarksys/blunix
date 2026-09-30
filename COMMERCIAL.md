@@ -23,7 +23,7 @@ The license text is the authority. In short, it covers:
 
 ## Ask
 
-Open an issue titled "Commercial license" at https://github.com/afterdarksys/blunix/issues. Say who you are and roughly how many machines you run. Do not put anything secret in the issue.
+Email **licensing@blunix.io**. Say who you are and roughly how many machines you run. Companies contributing code can ask for an entity contributor agreement at the same address.
 
 ## What this does not change
 

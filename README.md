@@ -61,10 +61,11 @@ node --test tests/site/releases.test.mjs tests/site/portal.test.mjs
 
 ## License
 
-- **Blunix's own code:** source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE). It is free for personal use and for noncommercial organizations such as schools, schools for the blind, charities and public institutions. Commercial use needs a commercial license: see [COMMERCIAL.md](COMMERCIAL.md).
+- **Blunix's own code:** source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE). It is free for personal use and for noncommercial organizations such as schools, schools for the blind, charities and public institutions. Commercial use needs a commercial license: see [COMMERCIAL.md](COMMERCIAL.md) or email licensing@blunix.io.
 - **Debian packages inside the images:** they keep their own licenses, many of them the GNU GPL. Each release's `SOURCES.md` links the exact source of every package and carries a written offer.
 - **Bundled third-party code and fonts:** see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 - **The logo and Blubie artwork:** © After Dark Systems, LLC.
+- **Contributing:** see [CONTRIBUTING.md](CONTRIBUTING.md). Contributors sign the [CLA](CLA.md) once, by commenting on their first pull request.
 
 ---
 
