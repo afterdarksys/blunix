@@ -291,7 +291,7 @@ def _say(log, message):
 
 def ask_hostname(reader, log, speech, tries=3):
     for _ in range(tries):
-        _say(log, "blunix: build hostname.")
+        _say(log, "blunix: build address.")
         try:
             typed = reader()
         except (EOFError, OSError, BlunixError):
@@ -305,22 +305,13 @@ def ask_hostname(reader, log, speech, tries=3):
         except BlunixError:
             _say(log, "blunix: refused hostname")
             continue
-        if speech:
-            _say(log, "blunix: hostname " + host + ". Say yes to keep it.")
-            try:
-                answer = reader()
-            except (EOFError, OSError, BlunixError):
-                _say(log, "blunix: refused hostname")
-                continue
-            if not isinstance(answer, str) or answer.strip() != "yes":
-                _say(log, "blunix: refused hostname")
-                continue
+        _say(log, "blunix: build address " + host + ".")
         return host
     return None
 
 
 def read_passphrase(reader, log):
-    _say(log, "blunix: key. Type it. It will not be spoken.")
+    _say(log, "blunix: build password. Type it. It will not be spoken.")
     try:
         if reader is None:
             import getpass

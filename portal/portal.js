@@ -9,7 +9,7 @@
 
 import { Encrypter, armor } from "./vendor/age-encryption.js";
 import {
-  buildNode, displayKey, generateKey, hex, installBundle, installCardText,
+  PACKAGES, shareableRecipe, buildNode, displayKey, generateKey, hex, installBundle, installCardText,
   keyGroups, labelProblem, latestUrl, MAX_CIPHER, pinnedUrl, spellGroup, validVersion,
 } from "./lib.js";
 
@@ -100,6 +100,10 @@ function signedOut(message) {
   wipeCard();
   wipeMinted();
   hosts = [];
+  setSelected(null);
+  $("configurations").replaceChildren();
+  $("admin-key").value = "";
+  $("install-erase").checked = false;
   say(message || "blunix: signed out.");
 }
 
@@ -143,6 +147,7 @@ async function start() {
   $("who").textContent = "Signed in as " + accountName(me.data) + ".";
   await loadHosts();
   await loadKeys();
+  await loadConfigurations();
   renderPreview();
   say("blunix: signed in. " + countSentence(hosts.length));
 }
@@ -361,7 +366,7 @@ async function onReserve(ev) {
 // ---- build -----------------------------------------------------------------
 
 const BUILD_FIELDS = ["build-label", "build-hostname", "build-disk", "build-network",
-  "build-match", "build-address", "build-gateway", "build-dns", "build-access", "build-form"];
+  "build-match", "build-address", "build-gateway", "build-dns", "build-access", "build-packages", "build-admin", "build-install", "build-form"];
 
 function readBuild() {
   const f = $("build");
@@ -373,6 +378,10 @@ function readBuild() {
     hostname: $("build-hostname").value.trim() || label,
     disk: disk ? disk.value : "",
     access: $("build-access").value,
+    packages: [...document.querySelectorAll('input[name="package"]:checked')].map(el => el.value),
+    target: $("install-target").value.trim(),
+    install: { erase: $("install-erase").checked, reboot: $("install-reboot").checked },
+    admin: { name: $("admin-name").value.trim(), sshPublicKey: $("admin-key").value.trim().split(/\s+/).slice(0, 2).join(" ") },
     network: {
       mode: netmode ? netmode.value : "",
       match: $("build-match").value,
@@ -400,7 +409,7 @@ function renderPreview() {
 const ERROR_FIELD = {
   label: "build-label", hostname: "build-hostname", disk: "build-disk", network: "build-network",
   match: "build-match", address: "build-address", gateway: "build-gateway", dns: "build-dns",
-  access: "build-access", form: "build-form",
+  access: "build-access", packages: "build-packages", admin: "build-admin", install: "build-install", form: "build-form",
 };
 
 let building = false;
@@ -673,5 +682,115 @@ function wire() {
   window.addEventListener("pagehide", () => { wipeCard(); wipeMinted(); });
 }
 
+
+
+// ---- Reusable configuration library ----------------------------------------
+let selectedConfiguration = null;
+let ownOffset = null;
+let communityOffset = null;
+
+function recipeFromForm() { return shareableRecipe(readBuild()); }
+function useRecipe(recipe) {
+  const safe = shareableRecipe(recipe);
+  $("build-access").value = safe.access;
+  for (const input of document.querySelectorAll('input[name="package"]')) input.checked = safe.packages.includes(input.value);
+  renderPreview();
+}
+function setSelected(c) {
+  selectedConfiguration = c;
+  $("configuration-revise").disabled = !c;
+  $("configuration-editing").textContent = c ? "Editing " + c.title + ", based on revision " + c.revision + "." : "No saved configuration selected.";
+}
+function wireConfigurations() {
+  for (const name of PACKAGES) {
+    const label = document.createElement("label"); label.className = "choice";
+    const input = document.createElement("input"); input.type = "checkbox"; input.name = "package"; input.value = name;
+    label.append(input, document.createTextNode(" " + name)); $("package-choices").append(label);
+  }
+  $("configuration-save").addEventListener("click", () => guarded(() => saveConfiguration(false)));
+  $("configuration-revise").addEventListener("click", () => guarded(() => saveConfiguration(true)));
+  $("configurations-more").addEventListener("click", () => guarded(() => loadConfigurations(ownOffset)));
+  $("community-more").addEventListener("click", () => guarded(() => loadCommunity(communityOffset)));
+}
+async function saveConfiguration(revise) {
+  const recipe = recipeFromForm();
+  const c = selectedConfiguration;
+  if (revise && !c) return;
+  const r = await api("POST", revise ? "/configurations/" + c.id + "/revisions" : "/configurations", {
+    json: revise ? { recipe, revision: c.revision, message: $("configuration-message").value } : { recipe, title: $("configuration-title").value },
+  });
+  if (!r.ok) { say("blunix: configuration was not saved. " + why(r)); return; }
+  setSelected({ id: r.data.id, revision: r.data.revision, title: revise ? c.title : $("configuration-title").value });
+  await loadConfigurations(); await loadCommunity();
+  say("blunix: saved configuration revision " + r.data.revision + ".");
+}
+async function loadConfigurations(offset = 0) {
+  const r = await api("GET", "/configurations?offset=" + (offset || 0));
+  if (!r.ok) { say("blunix: could not load configurations. " + why(r)); return; }
+  if (!offset) $("configurations").replaceChildren();
+  for (const c of r.data.configurations) renderConfiguration(c, false);
+  ownOffset = r.data.nextOffset; $("configurations-more").hidden = ownOffset === null;
+}
+async function loadCommunity(offset = 0) {
+  const r = await api("GET", "/community?offset=" + (offset || 0));
+  if (!r.ok) { $("community").textContent = "Community configurations are currently unavailable."; return; }
+  if (!offset) $("community").replaceChildren();
+  for (const c of r.data.configurations) renderConfiguration(c, true);
+  if (!offset && !r.data.configurations.length) $("community").textContent = "No public configurations yet. Share a configuration to start the library.";
+  communityOffset = r.data.nextOffset; $("community-more").hidden = communityOffset === null;
+}
+function renderConfiguration(c, publicView) {
+  const li = document.createElement("li"), h = document.createElement("h3"), p = document.createElement("p"), detail = document.createElement("div");
+  h.textContent = c.title; p.textContent = "Revision " + c.revision + ". " + c.visibility + ".";
+  if (c.source) p.append(document.createTextNode(" Fork of " + c.source.id + ", revision " + c.source.revision + "."));
+  li.append(h, p, button("View revisions", () => guarded(async () => {
+    const r = await api("GET", (publicView ? "/community/" : "/configurations/") + c.id);
+    if (!r.ok) { say(why(r)); return; }
+    detail.replaceChildren();
+    for (const rev of r.data.revisions) {
+      const row = document.createElement("p"), code = document.createElement("code");
+      code.textContent = "Revision " + rev.revision + ": " + rev.recipe.packages.join(", ") + "; access: " + rev.recipe.access + ". " + rev.message;
+      row.append(code, document.createTextNode(" "), button(publicView ? "Fork revision " + rev.revision : "Use revision " + rev.revision, () => guarded(async () => {
+        if (publicView) {
+          const fork = await api("POST", "/configurations", { json: { title: c.title, source: { id: c.id, revision: rev.revision } } });
+          if (!fork.ok) { say(why(fork)); return; }
+          setSelected({ ...fork.data, title: c.title }); await loadConfigurations();
+        } else {
+          // Saving after restoring history still compares with the current head.
+          setSelected({ ...c, revision: r.data.revision });
+        }
+        useRecipe(rev.recipe); $("configuration-title").value = c.title;
+        $("build-access").focus(); say("blunix: configuration loaded. Add your personal installation settings before publishing a build.");
+      }), true));
+      detail.append(row);
+    }
+  }), true), detail);
+  if (!publicView) {
+    li.append(button(c.visibility === "public" ? "Make private" : "Share publicly", () => guarded(async () => {
+      const visibility = c.visibility === "public" ? "private" : "public";
+      if (visibility === "public" && !confirm("Publish every revision of this configuration for other members to use and adapt? Titles and revision notes become public too. Others can keep copies.")) return;
+      const r = await api("POST", "/configurations/" + c.id + "/publication", { json: { visibility } });
+      if (!r.ok) { say(why(r)); return; }
+      await loadConfigurations(); await loadCommunity(); say("blunix: configuration is " + visibility + ".");
+    }), true));
+    li.append(button("Delete configuration", () => guarded(async () => {
+      if (!confirm("Delete this configuration and remove it from the community? Copies others made remain theirs.")) return;
+      const r = await api("DELETE", "/configurations/" + c.id);
+      if (!r.ok) { say(why(r)); return; }
+      if (selectedConfiguration?.id === c.id) setSelected(null);
+      await loadConfigurations(); await loadCommunity(); say("blunix: configuration deleted.");
+    }), true));
+  } else {
+    li.append(button("Report abuse", () => guarded(async () => {
+      if (!confirm("Report this configuration for review by the maintainers?")) return;
+      const r = await api("POST", "/community/" + c.id + "/reports", { json: { reason: "abuse" } });
+      say(r.ok ? "blunix: report recorded for review." : why(r));
+    }), true));
+  }
+  $(publicView ? "community" : "configurations").append(li);
+}
+
 wire();
+wireConfigurations();
 guarded(start);
+guarded(() => loadCommunity());

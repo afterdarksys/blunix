@@ -22,6 +22,7 @@ from blunix.ai import install_ai, load_ai
 from blunix.cmd import run_cmd
 from blunix.disk import load_disk, render_disk, write_disk
 from blunix.errors import BlunixError
+from blunix.personal import parse_packages, parse_install, parse_admin, provision
 from blunix.network import parse_inline_network, resolve_network, write_network
 from blunix.schema import (
     load_bytes,
@@ -47,6 +48,9 @@ _NODE_KEYS = {
     "update",
     "sysexts",
     "target",
+    "packages",
+    "install",
+    "admin",
 }
 _UPDATE_KEYS = {"url", "channel"}
 _TARGET = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}")
@@ -110,6 +114,9 @@ def parse_node(doc):
         "ai": ai,
         "update": update,
         "target": _target(doc.get("target")),
+        "packages": parse_packages(doc.get("packages", [])),
+        "install": parse_install(doc.get("install"), _target(doc.get("target"))),
+        "admin": parse_admin(doc.get("admin")),
     }
 
 
@@ -181,6 +188,7 @@ def apply_node(doc, root, models=None, log=None):
     access = checked["access"]
     ai = checked["ai"]
     dumped = checked["dumped"]
+    provision(root, parsed["packages"], parsed["admin"])
     write_disk(disk, os.path.join(root, "usr", "lib", "repart.d"))
     write_network(network, os.path.join(root, "run", "systemd", "network"))
     plan = apply_access(access, root, log=log)

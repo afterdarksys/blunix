@@ -52,17 +52,17 @@
     <section class="wrap portal-head">
       <p class="kicker">Portal</p>
       <h1>Build a host.</h1>
-      <p class="lede">Reserve a hostname. Compose the node document. This browser makes the key, encrypts the document with age, and uploads only the ciphertext. The key is shown once and never sent.</p>
+      <p class="lede">Choose your packages and machine settings. Get your build address and password. At the installer, enter those two things and let your configuration do the rest.</p>
       <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true">blunix: checking sign-in.</p>
       <noscript><p class="problem">The portal needs JavaScript. The key is made and used in this browser, so there is no server-side form.</p></noscript>
     </section>
 
     <section id="signed-out" class="wrap band" aria-labelledby="signin-h" hidden>
       <div class="band-head">
-        <h2 id="signin-h">Sign in</h2>
-        <p>Authentik at adsas.id. The portal keeps no password. Signing in sets a session cookie for the API and returns you here.</p>
+        <h2 id="signin-h">Create an account or sign in</h2>
+        <p>Continue to our account provider to sign in or create an account, then return here to configure your machine. Your account password is separate from your generated build password.</p>
       </div>
-      <p><a id="login" class="button" href="https://api.blunix.io/v1/auth/login">Sign in with Authentik</a></p>
+      <p><a id="login" class="button" href="https://api.blunix.io/v1/auth/login">Continue to account signup or sign-in</a></p>
     </section>
 
     <div id="signed-in" hidden>
@@ -102,7 +102,7 @@
       <section class="wrap band" aria-labelledby="build-h">
         <div class="band-head">
           <h2 id="build-h">Build</h2>
-          <p>The document names the disk, the network, and the access profile for one machine. It is checked here, then encrypted here. The server cannot read it.</p>
+          <p>Choose how your machine should be installed. Your personal configuration is encrypted in this browser, and its build password is shown once. Save it before closing the install card.</p>
         </div>
         <form id="build" class="form" novalidate>
           <div class="field">
@@ -120,8 +120,8 @@
 
           <fieldset id="build-disk" class="field" aria-describedby="build-disk-problem">
             <legend>Disk layout</legend>
-            <label class="choice"><input type="radio" name="disk" value="cloud-vm" checked> cloud-vm: A and B read-only roots with verity, and a plain /var. For a VM or a cloud node.</label>
-            <label class="choice"><input type="radio" name="disk" value="metal-luks"> metal-luks: the same layout, with /var encrypted and bound to the TPM. For bare metal.</label>
+            <label class="choice"><input type="radio" name="disk" value="cloud-vm" checked> cloud-vm: Debian system on a mutable ext4 root, expanded to the target disk.</label>
+            <p class="hint">Encrypted disks and verified read-only roots are not available in this installer yet.</p>
             <p id="build-disk-problem" class="problem" hidden></p>
           </fieldset>
 
@@ -169,10 +169,32 @@
             <p id="build-access-problem" class="problem" hidden></p>
           </div>
 
+          <fieldset class="field" id="build-packages" aria-describedby="build-packages-problem">
+            <legend>Packages</legend>
+            <p class="hint">Installed automatically from Debian repositories. The machine needs internet access during installation.</p>
+            <div id="package-choices"></div>
+            <p class="problem" id="build-packages-problem" hidden></p>
+          </fieldset>
+          <fieldset class="field" id="build-admin" aria-describedby="build-admin-problem">
+            <legend>Your administrator account</legend>
+            <label for="admin-name">Username</label><input id="admin-name" type="text" value="operator" maxlength="31" autocomplete="off">
+            <label for="admin-key">Ed25519 SSH public key</label><textarea id="admin-key" rows="3" spellcheck="false" autocomplete="off"></textarea>
+            <p class="hint">Paste your public key, never your private key. This account can administer the machine with sudo. SSH password login is disabled.</p>
+            <p class="problem" id="build-admin-problem" hidden></p>
+          </fieldset>
+          <fieldset class="field" id="build-install" aria-describedby="build-install-problem">
+            <legend>Installation choices</legend>
+            <label for="install-target">Exact target disk name or serial</label><input id="install-target" type="text" placeholder="nvme0n1 or disk serial" maxlength="64" autocomplete="off">
+            <p class="hint">Use a disk serial when possible. The installer stops if it cannot identify exactly this disk, or if it is mounted or is the installation media.</p>
+            <label class="choice"><input id="install-erase" type="checkbox"> I authorize erasing all data on this target disk when I enter this build address and password at the installer.</label>
+            <label class="choice"><input id="install-reboot" type="checkbox"> Reboot automatically when installation finishes.</label>
+            <p class="problem" id="build-install-problem" hidden></p>
+          </fieldset>
+
           <p class="fixed">Update channel: stable. It is the only channel.</p>
 
           <div class="field">
-            <h3 id="preview-h">Document preview</h3>
+            <h3 id="preview-h">Configuration preview</h3>
             <p class="hint">This is the plaintext that gets encrypted. It updates as you type.</p>
             <pre id="preview" class="preview" aria-labelledby="preview-h" tabindex="0"><code id="preview-code"></code></pre>
           </div>
@@ -180,6 +202,18 @@
           <p id="build-form-problem" class="problem" hidden></p>
           <button type="submit" id="build-submit" class="button">Encrypt and publish</button>
         </form>
+      </section>
+
+      <section class="wrap band" aria-labelledby="configurations-h">
+        <h2 id="configurations-h">Your configurations</h2>
+        <p>Save package choices and access profiles, then reuse or share them. Machine names, network addresses, SSH keys, build passwords, and disk-erasure choices are never included.</p>
+        <label for="configuration-title">Configuration title</label><input id="configuration-title" maxlength="100" type="text" value="My configuration">
+        <label for="configuration-message">Revision note</label><input id="configuration-message" maxlength="240" type="text">
+        <p class="hint">Titles and revision notes are visible when shared. Keep personal information out of them. Sharing includes all revisions; copies others make cannot be recalled.</p>
+        <p id="configuration-editing">No saved configuration selected.</p>
+        <div class="actions"><button id="configuration-save" type="button" class="button">Save as new configuration</button><button id="configuration-revise" type="button" class="button quiet" disabled>Save a revision</button></div>
+        <ul id="configurations" class="rows"></ul>
+        <button id="configurations-more" type="button" class="button quiet" hidden>More configurations</button>
       </section>
 
       <section id="card" class="wrap band card" aria-labelledby="card-h" hidden>
@@ -192,7 +226,7 @@
           <div><dt>Ciphertext sha256</dt><dd><code id="card-sha" class="sha"></code></dd></div>
           <div><dt>Date</dt><dd id="card-date"></dd></div>
         </dl>
-        <h3 id="key-h">Key</h3>
+        <h3 id="key-h">Build password</h3>
         <ol id="card-key" class="key" aria-labelledby="key-h"></ol>
         <p class="hint">At the installer, hyphens and spaces are optional. Letters i and l count as 1, and o counts as 0.</p>
         <div class="actions">
@@ -239,6 +273,12 @@
         <ul id="keys" class="rows" aria-labelledby="keylist-h"></ul>
       </section>
     </div>
+    <section class="wrap band" aria-labelledby="community-h">
+      <h2 id="community-h">Community configurations</h2>
+      <p>Explore package selections and access profiles. Sign in to fork an exact revision into your own library, then add your personal machine settings. Public configurations are shared for other members to use and adapt; review each selection before building.</p>
+      <ul id="community" class="rows"></ul>
+      <button id="community-more" type="button" class="button quiet" hidden>More community configurations</button>
+    </section>
   </main>
   <footer class="wrap site-footer">
     <p>Built by people who keep cats. <a href="https://blunix.io/">blunix.io</a> is this project, and build.blunix.io is its portal. blunix.com is Blunix GmbH in Berlin, a different company. age encryption in this page is <a href="vendor/VENDOR.md">typage</a>, served from this site. Fonts: Fraunces and Atkinson Hyperlegible, SIL Open Font License, files in <code>fonts/</code>.</p>

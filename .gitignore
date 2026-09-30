@@ -7,3 +7,5 @@ __pycache__/
 brand/mascot/raw/
 brand/mascot/raw-v2/
 brand/mascot/*.lock
+node_modules/
+.code-review-graph/

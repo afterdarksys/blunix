@@ -40,3 +40,27 @@ The contract fixes routes, not every response body. The page reads:
 - `POST /v1/hosts/{label}/builds`: `{version, sha256, size, url, pinnedUrl}`. The page refuses to show a card unless `sha256` equals its own digest of the bytes it sent. It builds the latest URL itself, `https://{label}.blnx.io/`. `pinnedUrl` is `null` until the API's `PINNED_HOSTS_TLS` is on; the card and the version list show a pinned URL only when the API names one and it equals `https://v{n}.{label}.blnx.io/`. `blnx.io` is a separate registrable domain, so build files never share cookies with this portal, the site, or the API.
 - `POST /v1/keys`: `{key, fingerprint}`, with `key` matching `blx_` plus 43 base64url characters.
 - `GET /v1/keys`: an array, or `{keys: [...]}`, of `{fingerprint, name, scopes}`.
+
+## Personal builds and community
+
+The composer now includes an allowlisted Debian package selection, Ed25519 SSH
+administrator, exact target disk/serial, explicit erase consent, and reboot choice.
+Only the released mutable `cloud-vm` image is offered. The generated Node document
+is checked by both browser validation and Python contract tests.
+
+Saved configurations are reusable templates: **packages and access profile only**.
+They start private, keep immutable revisions, and can be published or forked from
+an exact revision. A fork starts private. Hostname, IP configuration, target,
+administrator key, erase consent, and build password never enter template requests.
+Titles and revision notes do become public on publication; the sharing confirmation
+explicitly covers all revisions and permission for community members to use and adapt the template.
+
+Public browsing works signed out. Saving, forking, sharing, deleting, and reporting
+require a session. Configurations are not editable through host-scoped API keys.
+See `docs/personal-builds.md` for endpoints, limits, and deployment order.
+
+From the repository root: `npm ci`, `npm test`, then
+`npx playwright install chromium` and `npm run test:browser`.
+Python contract tests require Python 3 with PyYAML. The browser test uses an
+in-memory API fixture and never connects to production; backend integration tests
+run separately in the Workers runtime.

@@ -51,3 +51,12 @@ scripts/deploy-api.sh
 It refuses unless `database_id` is real, `DEV_ORIGINS` is empty, `OIDC_ISSUER` and `OIDC_CLIENT_ID` are set, and `wrangler secret list` shows `OIDC_CLIENT_SECRET`. Then it runs `npm ci`, the typecheck and the tests, applies migrations to the remote D1, and deploys.
 
 `blnx.io` must be a zone on the same account. `v{n}.{label}.blnx.io` needs a certificate per label (Cloudflare for SaaS custom hostnames or Advanced Certificate Manager). See the contract's Deploy notes.
+
+## Configuration library
+
+Migration `0003_configurations.sql` adds reusable templates, immutable revisions,
+fork provenance, and community reports. See `docs/personal-builds.md` at the
+repository root for the complete contract. Apply all
+migrations before deploying the portal. Template operations require account sessions;
+existing bearer keys retain only their original host scopes. Public GETs use
+`/v1/community` and `/v1/community/{id}`.

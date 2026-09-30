@@ -676,7 +676,7 @@ class InstallFlowTests(unittest.TestCase):
 
     def test_happy_path(self):
         rig = Rig(
-            answers=["ada", "yes", "yes", "yes"],
+            answers=["ada", "yes", "yes"],
             key=display_key(self.KEY).upper(),
             cipher=self.CIPHER,
         )
@@ -688,7 +688,7 @@ class InstallFlowTests(unittest.TestCase):
         self.assertIn(ASK_HOST, rig.said)
         self.assertIn(ASK_KEY, rig.said)
         self.assertIn("blunix: network up at 10.0.0.5/24 on ens3.", rig.said)
-        self.assertIn("blunix: hostname ada.blnx.io. Say yes to keep it.", rig.said)
+        self.assertIn("blunix: build address ada.blnx.io.", rig.said)
         self.assertIn("blunix: erase disk vda, 21 gigabytes, Test Disk. Say yes to erase.", rig.said)
         self.assertIn("blunix: installed blunix-test. Remove the stick. Say yes to reboot.", rig.said)
         self.assertIn("blunix: applied node document blunix-test", rig.said)
@@ -697,13 +697,13 @@ class InstallFlowTests(unittest.TestCase):
             self.assertNotIn("\x1b", line)
 
     def test_no_reboot_on_silence(self):
-        rig = Rig(answers=["ada", "yes", "yes", "", ""], key=self.KEY, cipher=self.CIPHER)
+        rig = Rig(answers=["ada", "yes", "", ""], key=self.KEY, cipher=self.CIPHER)
         self.assertEqual(rig.run(), 0)
         self.assertEqual(rig.rebooted, [])
         self.assertEqual(rig.said[-1], "blunix: not rebooting.")
 
-    def test_hostname_silence_is_no(self):
-        rig = Rig(answers=["ada", "", "", "v3.ada.blnx.io", "yes", "yes", "no"], key=self.KEY, cipher=self.CIPHER)
+    def test_hostname_invalid_then_valid(self):
+        rig = Rig(answers=["", "", "v3.ada.blnx.io", "yes", "no"], key=self.KEY, cipher=self.CIPHER)
         self.assertEqual(rig.run(), 0)
         self.assertEqual(rig.fetched, [("v3.ada.blnx.io", None)])
 
@@ -716,7 +716,7 @@ class InstallFlowTests(unittest.TestCase):
 
     def test_wrong_key_writes_nothing(self):
         wrong = generate_key()
-        rig = Rig(answers=["ada", "yes"], key=display_key(wrong), cipher=self.CIPHER)
+        rig = Rig(answers=["ada"], key=display_key(wrong), cipher=self.CIPHER)
         self.assertEqual(rig.run(), 1)
         self.assertEqual(rig.said[-1], "blunix: could not decrypt. Nothing applied.")
         self.assertEqual((rig.written, rig.applied, rig.booted, rig.listed), ([], [], [], 0))
@@ -726,26 +726,26 @@ class InstallFlowTests(unittest.TestCase):
 
     def test_shell_script_refused(self):
         cipher = encrypt_bytes(b"#!/bin/sh\nrm -rf /\n", self.KEY)
-        rig = Rig(answers=["ada", "yes"], key=self.KEY, cipher=cipher)
+        rig = Rig(answers=["ada"], key=self.KEY, cipher=cipher)
         self.assertEqual(rig.run(), 1)
         self.assertEqual(rig.said[-1], "blunix: document refused. Nothing applied.")
         self.assertEqual((rig.written, rig.applied, rig.booted), ([], [], []))
 
     def test_unknown_field_refused(self):
         cipher = encrypt_bytes(_node_bytes() + b"extra: 1\n", self.KEY)
-        rig = Rig(answers=["ada", "yes"], key=self.KEY, cipher=cipher)
+        rig = Rig(answers=["ada"], key=self.KEY, cipher=cipher)
         self.assertEqual(rig.run(), 1)
         self.assertEqual(rig.said[-1], "blunix: document refused. Nothing applied.")
         self.assertEqual(rig.written, [])
 
     def test_proxy_only_when_named(self):
-        rig = Rig(answers=["ada", "yes", "yes", "no"], key=self.KEY, cipher=self.CIPHER)
+        rig = Rig(answers=["ada", "yes", "no"], key=self.KEY, cipher=self.CIPHER)
         rig.run()
         self.assertEqual(rig.fetched, [("ada.blnx.io", None)])
         self.assertNotIn("proxy", rig.lines())
         self.assertNotIn("install card", rig.lines())
         rig = Rig(
-            answers=["ada", "yes", "yes", "no"],
+            answers=["ada", "yes", "no"],
             key=self.KEY,
             cipher=self.CIPHER,
             cmdline="boot=live blunix.proxy=10.0.0.2:8080",
@@ -758,7 +758,7 @@ class InstallFlowTests(unittest.TestCase):
         digest = hashlib.sha256(self.CIPHER).hexdigest()
         line = "blunix: document sha256 " + digest + ". Compare it with the install card."
         rig = Rig(
-            answers=["ada", "yes", "", ""],
+            answers=["ada", "", ""],
             key=self.KEY,
             cipher=self.CIPHER,
             cmdline="blunix.proxy=10.0.0.2:8080",
@@ -769,13 +769,13 @@ class InstallFlowTests(unittest.TestCase):
         self._assert_key_hidden(rig)
 
     def test_refused_proxy_stops_before_anything(self):
-        rig = Rig(answers=["ada", "yes"], key=self.KEY, cipher=self.CIPHER, cmdline="blunix.proxy=evil")
+        rig = Rig(answers=["ada"], key=self.KEY, cipher=self.CIPHER, cmdline="blunix.proxy=evil")
         self.assertEqual(rig.run(), 1)
         self.assertEqual(rig.said, ["blunix: refused proxy. Nothing applied."])
         self.assertEqual(rig.dhcp_runs, 0)
 
     def test_oversized_fetch(self):
-        rig = Rig(answers=["ada", "yes"], key=self.KEY)
+        rig = Rig(answers=["ada"], key=self.KEY)
 
         def big(host, proxy):
             raise BlunixError("document too large")
@@ -789,7 +789,7 @@ class InstallFlowTests(unittest.TestCase):
         listing = _listing(
             _disk("sda", 20 * GIB, children=[_part("sda1", "sda")]),
         )
-        rig = Rig(answers=["ada", "yes"], key=self.KEY, cipher=self.CIPHER, listing=listing, boot_source="/dev/sda1")
+        rig = Rig(answers=["ada"], key=self.KEY, cipher=self.CIPHER, listing=listing, boot_source="/dev/sda1")
         self.assertEqual(rig.run(), 1)
         self.assertEqual(rig.said[-1], "blunix: no disk fits the image. Nothing applied.")
         self.assertEqual(rig.written, [])
@@ -800,7 +800,7 @@ class InstallFlowTests(unittest.TestCase):
             _disk("sda", 20 * GIB),
             _disk("sdb", 20 * GIB, children=[_part("sdb1", "sdb")]),
         )
-        rig = Rig(answers=["ada", "yes"], key=self.KEY, cipher=cipher, listing=listing, boot_source="/dev/sdb1")
+        rig = Rig(answers=["ada"], key=self.KEY, cipher=cipher, listing=listing, boot_source="/dev/sdb1")
         self.assertEqual(rig.run(), 1)
         self.assertEqual(rig.said[-1], "blunix: target disk sdb is not usable. Nothing applied.")
         self.assertEqual(rig.written, [])
@@ -808,7 +808,7 @@ class InstallFlowTests(unittest.TestCase):
     def test_target_picks_among_many(self):
         cipher = encrypt_bytes(_node_bytes() + b"target: SER2\n", self.KEY)
         listing = _listing(_disk("sda", 20 * GIB, serial="SER1"), _disk("sdb", 20 * GIB, serial="SER2"))
-        rig = Rig(answers=["ada", "yes", "no"], key=self.KEY, cipher=cipher, listing=listing)
+        rig = Rig(answers=["ada", "no"], key=self.KEY, cipher=cipher, listing=listing)
         self.assertEqual(rig.run(), 0)
         self.assertEqual(rig.written, ["/dev/sdb"])
         self.assertNotIn("blunix: type the disk number.", rig.said)
@@ -816,14 +816,14 @@ class InstallFlowTests(unittest.TestCase):
 
     def test_read_only_disk_refused(self):
         listing = _listing(_disk("sda", 500 * GIB, ro=True))
-        rig = Rig(answers=["ada", "yes"], key=self.KEY, cipher=self.CIPHER, listing=listing)
+        rig = Rig(answers=["ada"], key=self.KEY, cipher=self.CIPHER, listing=listing)
         self.assertEqual(rig.run(), 1)
         self.assertEqual(rig.said[-1], "blunix: no disk fits the image. Nothing applied.")
         self.assertEqual(rig.written, [])
 
     def test_too_small_disk_refused(self):
         listing = _listing(_disk("sda", 7 * GIB))
-        rig = Rig(answers=["ada", "yes"], key=self.KEY, cipher=self.CIPHER, listing=listing)
+        rig = Rig(answers=["ada"], key=self.KEY, cipher=self.CIPHER, listing=listing)
         self.assertEqual(rig.run(), 1)
         self.assertEqual(rig.said[-1], "blunix: no disk fits the image. Nothing applied.")
         self.assertEqual(rig.written, [])
@@ -832,7 +832,7 @@ class InstallFlowTests(unittest.TestCase):
         listing = _listing(
             _disk("sda", 480 * 10 ** 9, model="Samsung SSD", children=[_part("sda1", "sda")]),
         )
-        rig = Rig(answers=["ada", "yes", "", ""], key=self.KEY, cipher=self.CIPHER, listing=listing)
+        rig = Rig(answers=["ada", "", ""], key=self.KEY, cipher=self.CIPHER, listing=listing)
         self.assertEqual(rig.run(), 1)
         question = "blunix: erase disk sda, 480 gigabytes, Samsung SSD. Say yes to erase."
         self.assertEqual(rig.said.count(question), 2)
@@ -841,31 +841,31 @@ class InstallFlowTests(unittest.TestCase):
 
     def test_existing_partitions_and_yes_erase(self):
         listing = _listing(_disk("sda", 480 * 10 ** 9, children=[_part("sda1", "sda")]))
-        rig = Rig(answers=["ada", "yes", "yes", "no"], key=self.KEY, cipher=self.CIPHER, listing=listing)
+        rig = Rig(answers=["ada", "yes", "no"], key=self.KEY, cipher=self.CIPHER, listing=listing)
         self.assertEqual(rig.run(), 0)
         self.assertEqual(rig.written, ["/dev/sda"])
 
     def test_many_disks_without_target_asks(self):
         listing = _listing(_disk("sda", 20 * GIB, model="Disk A"), _disk("sdb", 40 * GIB, model="Disk B"))
-        rig = Rig(answers=["ada", "yes", "", ""], key=self.KEY, cipher=self.CIPHER, listing=listing)
+        rig = Rig(answers=["ada", "", ""], key=self.KEY, cipher=self.CIPHER, listing=listing)
         self.assertEqual(rig.run(), 1)
         self.assertIn("blunix: disk 1 is sda, 21 gigabytes, Disk A.", rig.said)
         self.assertIn("blunix: disk 2 is sdb, 43 gigabytes, Disk B.", rig.said)
         self.assertIn("blunix: type the disk number.", rig.said)
         self.assertEqual(rig.said[-1], "blunix: no disk chosen. Nothing applied.")
         self.assertEqual(rig.written, [])
-        rig = Rig(answers=["ada", "yes", "2", "yes", "no"], key=self.KEY, cipher=self.CIPHER, listing=listing)
+        rig = Rig(answers=["ada", "2", "yes", "no"], key=self.KEY, cipher=self.CIPHER, listing=listing)
         self.assertEqual(rig.run(), 0)
         self.assertEqual(rig.written, ["/dev/sdb"])
 
     def test_blank_disk_without_target_needs_yes(self):
-        rig = Rig(answers=["ada", "yes", "", ""], key=self.KEY, cipher=self.CIPHER)
+        rig = Rig(answers=["ada", "", ""], key=self.KEY, cipher=self.CIPHER)
         self.assertEqual(rig.run(), 1)
         question = "blunix: erase disk vda, 21 gigabytes, Test Disk. Say yes to erase."
         self.assertEqual(rig.said.count(question), 2)
         self.assertEqual(rig.said[-1], "blunix: disk vda kept. Nothing applied.")
         self.assertEqual((rig.written, rig.applied, rig.booted), ([], [], []))
-        rig = Rig(answers=["ada", "yes", "no"], key=self.KEY, cipher=self.CIPHER)
+        rig = Rig(answers=["ada", "no"], key=self.KEY, cipher=self.CIPHER)
         self.assertEqual(rig.run(), 1)
         self.assertEqual(rig.said[-1], "blunix: disk vda kept. Nothing applied.")
         self.assertEqual(rig.written, [])
@@ -879,7 +879,7 @@ class InstallFlowTests(unittest.TestCase):
         )
         listing = _listing(_disk("sda", 20 * GIB), stick)
         rig = Rig(
-            answers=["ada", "yes", "yes", "no"],
+            answers=["ada", "yes", "no"],
             key=self.KEY,
             cipher=self.CIPHER,
             listing=listing,
@@ -890,7 +890,7 @@ class InstallFlowTests(unittest.TestCase):
         self.assertEqual(rig.written, ["/dev/sda"])
         self.assertNotIn("sdb", rig.lines())
         cipher = encrypt_bytes(_node_bytes() + b"target: sdb\n", self.KEY)
-        rig = Rig(answers=["ada", "yes"], key=self.KEY, cipher=cipher, listing=listing, boot_source="tmpfs", cmdline="toram")
+        rig = Rig(answers=["ada"], key=self.KEY, cipher=cipher, listing=listing, boot_source="tmpfs", cmdline="toram")
         self.assertEqual(rig.run(), 1)
         self.assertEqual(rig.said[-1], "blunix: target disk sdb is not usable. Nothing applied.")
         self.assertEqual(rig.written, [])
@@ -904,7 +904,7 @@ class InstallFlowTests(unittest.TestCase):
             _listing(_disk("sda", 20 * GIB, serial="SER1", mounts=["/mnt"])),
         ):
             with self.subTest(after=after):
-                rig = Rig(answers=["ada", "yes", "yes"], key=self.KEY, cipher=self.CIPHER, listings=[before, after])
+                rig = Rig(answers=["ada", "yes"], key=self.KEY, cipher=self.CIPHER, listings=[before, after])
                 self.assertEqual(rig.run(), 1)
                 self.assertEqual(rig.said[-1], "blunix: disk sda changed since it was chosen. Nothing applied.")
                 self.assertEqual((rig.written, rig.applied, rig.booted), ([], [], []))
@@ -913,7 +913,7 @@ class InstallFlowTests(unittest.TestCase):
     def test_write_opens_by_id_with_the_listed_size(self):
         seen = []
         rig = Rig(
-            answers=["ada", "yes", "yes", "no"],
+            answers=["ada", "yes", "no"],
             key=self.KEY,
             cipher=self.CIPHER,
             write=lambda image, device, size=None: seen.append((device, size)),
@@ -927,7 +927,7 @@ class InstallFlowTests(unittest.TestCase):
         def changed(image, device, size=None):
             raise DiskChanged()
 
-        rig = Rig(answers=["ada", "yes", "yes"], key=self.KEY, cipher=self.CIPHER, write=changed)
+        rig = Rig(answers=["ada", "yes"], key=self.KEY, cipher=self.CIPHER, write=changed)
         self.assertEqual(rig.run(), 1)
         self.assertEqual(rig.said[-1], "blunix: disk vda changed since it was chosen. Nothing applied.")
         self.assertEqual((rig.applied, rig.booted), ([], []))
@@ -936,13 +936,13 @@ class InstallFlowTests(unittest.TestCase):
         def mismatch(image, device, size=None):
             raise ImageMismatch(False)
 
-        rig = Rig(answers=["ada", "yes", "yes"], key=self.KEY, cipher=self.CIPHER, write=mismatch)
+        rig = Rig(answers=["ada", "yes"], key=self.KEY, cipher=self.CIPHER, write=mismatch)
         self.assertEqual(rig.run(), 1)
         self.assertEqual(rig.said[-1], "blunix: image digest did not match. Nothing applied.")
         self.assertEqual((rig.applied, rig.booted, rig.rebooted), ([], [], []))
 
     def test_no_image_stops_first(self):
-        rig = Rig(answers=["ada", "yes"], key=self.KEY, cipher=self.CIPHER)
+        rig = Rig(answers=["ada"], key=self.KEY, cipher=self.CIPHER)
 
         def missing():
             raise BlunixError("no image")
@@ -952,7 +952,7 @@ class InstallFlowTests(unittest.TestCase):
         self.assertEqual(rig.said, ["blunix: no image on this medium. Nothing applied."])
 
     def test_bootloader_failure_is_said(self):
-        rig = Rig(answers=["ada", "yes", "yes"], key=self.KEY, cipher=self.CIPHER)
+        rig = Rig(answers=["ada", "yes"], key=self.KEY, cipher=self.CIPHER)
 
         def fail(root, device):
             raise BlunixError("bootloader failed")
@@ -961,25 +961,14 @@ class InstallFlowTests(unittest.TestCase):
         self.assertEqual(rig.run(), 1)
         self.assertEqual(rig.said[-1], "blunix: install failed on vda. The disk is not bootable.")
 
-    def test_static_network_prompt(self):
-        rig = Rig(
-            answers=["10.0.0.5/24", "10.9.9.1", "10.0.0.53", "10.0.0.5/24", "10.0.0.1", "10.0.0.53", "ada", "yes", "yes", "no"],
-            key=self.KEY,
-            cipher=self.CIPHER,
-            ip_lines=[""] * 7,
-        )
-        self.assertEqual(rig.run(), 0)
-        self.assertIn(NO_NETWORK, rig.said)
-        self.assertIn("blunix: refused address. Try again.", rig.said)
-        self.assertEqual(len(rig.statics), 1)
-        self.assertEqual(rig.statics[0]["address"], "10.0.0.5/24")
-        self.assertEqual(rig.statics[0]["gateway"], "10.0.0.1")
-
-    def test_enter_retries_dhcp(self):
-        rig = Rig(answers=["", "ada", "yes", "yes", "no"], key=self.KEY, cipher=self.CIPHER, ip_lines=[""] * 7)
-        self.assertEqual(rig.run(), 0)
-        self.assertEqual(rig.dhcp_runs, 2)
+    def test_dhcp_failure_never_asks_for_static_settings(self):
+        rig = Rig(answers=[], key=self.KEY, cipher=self.CIPHER, ip_lines=[""] * 100)
+        self.assertEqual(rig.run(), 1)
+        self.assertEqual(rig.dhcp_runs, 1)
         self.assertEqual(rig.statics, [])
+        self.assertEqual(rig.fetched, [])
+        self.assertEqual(rig.written, [])
+        self.assertIn("DHCP did not provide", rig.said[-1])
 
     def test_second_console_backs_off(self):
         rig = Rig(answers=["ada"], key=self.KEY, cipher=self.CIPHER)
@@ -989,7 +978,7 @@ class InstallFlowTests(unittest.TestCase):
         self.assertEqual(rig.fetched, [])
 
     def test_every_line_is_console_safe(self):
-        rig = Rig(answers=["ada", "yes", "yes", "yes"], key=self.KEY, cipher=self.CIPHER, cmdline="blunix.proxy=10.0.0.2:8080")
+        rig = Rig(answers=["ada", "yes", "yes"], key=self.KEY, cipher=self.CIPHER, cmdline="blunix.proxy=10.0.0.2:8080")
         self.assertEqual(rig.run(), 0)
         for line in rig.said:
             self.assertTrue(line.startswith("blunix"), line)
@@ -1044,7 +1033,7 @@ class ImageTests(unittest.TestCase):
             device = os.path.join(folder, "disk")
             open(device, "wb").close()
             rig = Rig(
-                answers=["ada", "yes", "yes"],
+                answers=["ada", "yes"],
                 key=key,
                 cipher=encrypt_bytes(_node_bytes(), key),
                 write=lambda image, _dev, size=None: write_image(image, device),
@@ -1223,7 +1212,7 @@ class ReleaseTests(unittest.TestCase):
         def mismatch(image, device, size=None):
             raise ImageMismatch(True)
 
-        rig = Rig(answers=["ada", "yes", "yes"], key=key, cipher=encrypt_bytes(_node_bytes(), key), write=mismatch)
+        rig = Rig(answers=["ada", "yes"], key=key, cipher=encrypt_bytes(_node_bytes(), key), write=mismatch)
         rig.hooks.find_image = lambda: {"url": self.URL, "version": "v0.1.0", "sha256": "a" * 64, "size": GIB}
         self.assertEqual(rig.run(), 1)
         self.assertIn("blunix: the image comes from release v0.1.0 on github.com.", rig.said)

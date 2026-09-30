@@ -114,8 +114,8 @@ _WIRED = ["en*", "eth*"]
 NO_NETWORK = "blunix: no network. Type an address like 10.0.0.5/24, or press enter to try again."
 ASK_GATEWAY = "blunix: gateway. Type an address like 10.0.0.1."
 ASK_DNS = "blunix: dns server. Type an address like 10.0.0.1."
-ASK_HOST = "blunix: build hostname."
-ASK_KEY = "blunix: key. Type it. It will not be spoken."
+ASK_HOST = "blunix: build address."
+ASK_KEY = "blunix: build password. Type it. It will not be spoken."
 NOTHING = "Nothing applied."
 
 
@@ -787,18 +787,12 @@ class _Flow:
         return False
 
     def network(self):
-        while True:
-            self.h.dhcp()
-            found = wait_global(self.h.ip_show, sleeper=self.h.sleep, attempts=DHCP_ATTEMPTS)
-            if found is not None:
-                self.say("blunix: network up at " + found[0] + " on " + found[1] + ".")
-                return found
-            if self.static_prompt():
-                found = wait_global(self.h.ip_show, sleeper=self.h.sleep, attempts=DHCP_ATTEMPTS)
-                if found is not None:
-                    self.say("blunix: network up at " + found[0] + " on " + found[1] + ".")
-                    return found
-                self.say("blunix: that address did not come up.")
+        self.h.dhcp()
+        found = wait_global(self.h.ip_show, sleeper=self.h.sleep, attempts=DHCP_ATTEMPTS)
+        if found is None:
+            raise _Stop("blunix: DHCP did not provide an address. Connect wired networking and restart. " + NOTHING)
+        self.say("blunix: network up at " + found[0] + " on " + found[1] + ".")
+        return found
 
     def static_prompt(self):
         address = self.ask(NO_NETWORK)
@@ -829,8 +823,8 @@ class _Flow:
             except BlunixError:
                 self.say("blunix: refused hostname.")
                 continue
-            if self.yes("blunix: hostname " + host + ". Say yes to keep it."):
-                return host
+            self.say("blunix: build address " + host + ".")
+            return host
         raise _Stop("blunix: no hostname. " + NOTHING)
 
     def key(self):
@@ -878,7 +872,7 @@ class _Flow:
             chosen = good[0]
         else:
             chosen = self.choose(good)
-        if chosen["used"] or target is None:
+        if checked["parsed"].get("install") is None and (chosen["used"] or target is None):
             question = "blunix: erase disk " + describe(chosen) + ". Say yes to erase."
             if not self.yes(question):
                 raise _Stop("blunix: disk " + chosen["name"] + " kept. " + NOTHING)
@@ -963,8 +957,15 @@ class _Flow:
         self.say("blunix: document " + parsed["name"] + " from " + host + ", digest " + digest[:12] + ".")
         if proxy is not None:
             self.say("blunix: document sha256 " + digest + ". Compare it with the install card.")
+        if parsed.get("install") and parsed["disk"] != "cloud-vm":
+            raise _Stop("blunix: this image supports cloud-vm only. " + NOTHING)
         disk = self.disk(checked, image)
         self.install(plain, parsed, image, disk)
+        if parsed.get("install") is not None:
+            self.say("blunix: installed " + parsed["hostname"] + ". Remove the installation media.")
+            if parsed["install"]["reboot"]:
+                self.h.reboot()
+            return 0
         if self.yes("blunix: installed " + parsed["hostname"] + ". Remove the stick. Say yes to reboot."):
             self.h.reboot()
         else:

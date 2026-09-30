@@ -84,7 +84,7 @@
     <section class="wrap band">
       <div class="band-head">
         <h2>On the machine</h2>
-        <p>The image is already Debian. The file names the disk, the network, and the access profile for this one machine. A shell script in that file is refused. Like a careful cat, it asks once, reads back what it heard, and does not jump at silence.</p>
+        <p>The installer starts from the released Debian image, then applies your packages, administrator account, network, and access settings. New portal builds need only the build address and build password. You choose the exact target disk and approve erasing it in the portal beforehand.</p>
       </div>
       <ol class="steps">
         <li>
@@ -97,19 +97,19 @@
         </li>
         <li>
           <h3>The network comes up</h3>
-          <p>Every wired interface tries DHCP for 30 seconds. With no lease, the console asks for an address, a gateway, and a DNS server, and tries again until one works. On a netboot LAN, the build-proxy's dnsmasq reservation hands out the address. A proxy named on the kernel line changes only where the document is fetched from. The static address in the document applies after install.</p>
+          <p>Wired interfaces try DHCP. If no address is available, installation stops without changing a disk. Connect a working DHCP network and restart. A build-proxy can supply DHCP on a netboot LAN; a proxy on the kernel line changes where the document is fetched. Static networking selected in your configuration applies after installation.</p>
         </li>
         <li>
           <h3>Say the build hostname</h3>
-          <p>The prompt is <q>blunix: build hostname.</q> Type <span class="host">ada.blnx.io</span>, or <span class="host">v3.ada.blnx.io</span> for one version. A bare <span class="host">ada</span> expands to the full name. It reads the name back and waits: <q>blunix: hostname ada.blnx.io. Say yes to keep it.</q> A typo must not hit someone else's host. Silence does not fetch.</p>
+          <p>The prompt is <q>blunix: build address.</q> Paste your HTTPS build URL, type its hostname, or enter the bare label. The password authenticates the encrypted configuration; an address belonging to someone else will not decrypt with your password.</p>
         </li>
         <li>
-          <h3>Type the key</h3>
-          <p>The prompt is <q>blunix: key. Type it. It will not be spoken.</q> Echo is off. Hyphens and spaces are optional. The machine fetches <span class="host">https://that-host/</span> and decrypts on the box. A wrong key says <q>blunix: could not decrypt. Nothing applied.</q></p>
+          <h3>Type the build password</h3>
+          <p>The prompt is <q>blunix: build password. Type it. It will not be spoken.</q> Echo is off. Hyphens and spaces are optional. The machine fetches <span class="host">https://that-host/</span> and decrypts on the box. A wrong key says <q>blunix: could not decrypt. Nothing applied.</q></p>
         </li>
         <li>
           <h3>The document is the build</h3>
-          <p>Disk layout, network, access profile, and which pinned tools to fetch from their vendors. Unknown fields are refused. Then the renderers exit. The next boot follows the document.</p>
+          <p>The installer checks the configuration, writes the released image to the exact authorized disk, installs selected Debian packages, and configures your SSH administrator, network, and access profile. It stops if the target is unavailable or ambiguous. Reboot behavior is selected in the portal; no further questions are asked for new portal builds. Legacy configurations without installation choices retain confirmation prompts.</p>
         </li>
       </ol>
     </section>

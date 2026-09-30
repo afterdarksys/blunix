@@ -77,6 +77,7 @@ label.choice input {
 }
 
 input[type="text"],
+textarea,
 select {
   width: 100%;
   font: inherit;
@@ -93,7 +94,8 @@ input[type="text"]::placeholder {
 }
 
 input[aria-invalid="true"],
-select[aria-invalid="true"] {
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
   border-color: var(--ink);
   border-style: dashed;
   border-width: 3px;
@@ -280,3 +282,7 @@ h4 {
   .key { background: #fff; border-color: #111; }
   .key li, .problem, .status { color: #111; }
 }
+
+#package-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: .5rem; }
+textarea { resize: vertical; }
+#configurations-h ~ input { max-width: 44rem; display: block; margin-bottom: 1rem; }

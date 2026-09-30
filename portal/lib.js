@@ -85,7 +85,17 @@ export function labelProblem(label) {
 // ---- Node document ---------------------------------------------------------
 
 export const API_VERSION = "blunix.dev/v1";
-export const DISKS = ["cloud-vm", "metal-luks"];
+export const DISKS = ["cloud-vm"];
+export const PACKAGES = ["curl", "git", "htop", "jq", "tmux", "vim", "wget", "rsync", "python3", "podman", "nginx", "postgresql-client", "dnsutils", "tcpdump", "strace"];
+
+// Deliberately projects only reusable choices. Never spread the personal input.
+export function shareableRecipe(input) {
+  if (!ACCESS.includes(input.access) || !Array.isArray(input.packages) ||
+      input.packages.some(p => !PACKAGES.includes(p)) || new Set(input.packages).size !== input.packages.length) {
+    throw new Error("Choose supported packages and an access profile.");
+  }
+  return { packages: [...input.packages].sort(), access: input.access };
+}
 export const ACCESS = ["regular", "full-speech", "console-speech", "large-print", "advanced"];
 export const UPDATE_URL = "https://updates.blunix.io/blunix";
 export const MAX_DOCUMENT = 64 * 1024;
@@ -215,6 +225,15 @@ export function buildNode(input) {
   if (hp) errors.hostname = hp;
   if (!DISKS.includes(input.disk)) errors.disk = "Pick a disk layout.";
   if (!ACCESS.includes(input.access)) errors.access = "Pick an access profile.";
+  const packages = input.packages || [];
+  if (!Array.isArray(packages) || packages.some(p => !PACKAGES.includes(p)) || new Set(packages).size !== packages.length) errors.packages = "Pick supported packages.";
+  const install = input.install;
+  if (!install || install.erase !== true || typeof install.reboot !== "boolean" || !/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/.test(input.target || "")) {
+    errors.install = "Name the exact target disk and authorize erasing it.";
+  }
+  const admin = input.admin;
+  if (!admin || !/^[a-z][a-z0-9-]{0,30}$/.test(admin.name || "") || ["root", "daemon", "nobody", "bin", "sys", "sync", "games", "mail", "www-data", "backup", "systemd-network"].includes(admin.name)) errors.admin = "Choose an administrator username.";
+  if (!admin || !/^ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI[A-Za-z0-9+/]{43}$/.test(admin.sshPublicKey || "")) errors.admin = "Provide an Ed25519 SSH public key (ssh-ed25519, followed by the key; no comment).";
   const net = input.network || {};
   const match = parseMatch(net.match);
   if (match.problem) errors.match = match.problem;
@@ -255,6 +274,9 @@ export function buildNode(input) {
     lines.push("  dns:");
     for (const d of dns.value) lines.push("    - " + q(d));
   }
+  lines.push("packages: " + JSON.stringify(packages), "target: " + q(input.target),
+    "install:", "  erase: true", "  reboot: " + install.reboot,
+    "admin:", "  name: " + q(admin.name), "  sshPublicKey: " + q(admin.sshPublicKey));
   lines.push(
     "access: " + input.access,
     "ai: default",
@@ -301,7 +323,7 @@ export function installCardText({ label, version, pinned = null, key, sha256, da
     pinned
       ? "At the installer, type the hostname " + label + ".blnx.io, or v" + version + "." + label + ".blnx.io for this exact version."
       : "At the installer, type the hostname " + label + ".blnx.io.",
-    "Then type the key. Hyphens and spaces are optional.",
+    "Then type the build password (key). Hyphens and spaces are optional. The configured target disk is erased automatically.",
     "Keep this card private. Anyone with the URL and this key can read the build.",
     "",
   ].join("\n");

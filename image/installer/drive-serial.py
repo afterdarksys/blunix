@@ -27,8 +27,11 @@ def _serve(key):
     sys.path.insert(0, "/src/lib")
     from blunix.age import encrypt_bytes
 
+    import yaml
     with open("/src/models/node/vmware-test.yaml", "rb") as handle:
-        blob = encrypt_bytes(handle.read(), key)
+        doc = yaml.safe_load(handle.read())
+    doc.update(target="vda", install={"erase": True, "reboot": False})
+    blob = encrypt_bytes(yaml.safe_dump(doc).encode(), key)
     root = "/var/tmp/proxy-root"
     os.makedirs(os.path.join(root, "v1", "build"), exist_ok=True)
     with open(os.path.join(root, "v1", "build", "ada.blnx.io"), "wb") as handle:
@@ -66,8 +69,7 @@ def main():
             "-drive", "if=pflash,format=raw,file=/var/tmp/OVMF_VARS_4M.fd",
         ]
     steps = [
-        ("blunix: build hostname.", "ada\r"),
-        ("Say yes to keep it.", "yes\r"),
+        ("blunix: build address.", "ada\r"),
         ("It will not be spoken.", typed + "\r"),
         ("Nothing applied.", None),
     ]
@@ -80,11 +82,7 @@ def main():
             "-append",
             "boot=live noeject blunix.access=regular blunix.proxy=10.0.2.2:8080 console=tty0 console=ttyS0,115200",
         ]
-        steps = steps[:3] + [
-            ("Say yes to erase.", "yes\r"),
-            ("Say yes to reboot.", "no\r"),
-            ("blunix: not rebooting.", None),
-        ]
+        steps = steps[:2] + [("Remove the installation media.", None)]
     proc = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     seen = b""
     mark = 0

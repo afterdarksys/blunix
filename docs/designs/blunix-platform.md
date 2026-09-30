@@ -1,3 +1,8 @@
+> Implementation update (2026-09-30): the personal-build/community implementation
+> described in `docs/personal-builds.md` supersedes the earlier exclusion of
+> selectable packages. It uses the released base image plus an encrypted personal
+> configuration. It does not yet provide a server-side custom-image build farm.
+
 # Design: the blunix.io platform
 
 Date: 2026-09-29
