@@ -51,9 +51,11 @@ def _run_age(mode, passphrase, payload, timeout=_TIMEOUT):
     if not isinstance(payload, (bytes, bytearray)):
         _fail(mode)
     payload = bytes(payload)
-    if len(payload) > MAX_DOCUMENT:
-        if mode == "decrypt":
-            _fail(mode)
+    # Encrypt takes a document; decrypt takes ciphertext, which carries the
+    # age header on top of it. Each has its own cap.
+    if mode == "decrypt" and len(payload) > _MAX_CIPHER:
+        _fail(mode)
+    if mode == "encrypt" and len(payload) > MAX_DOCUMENT:
         raise BlunixError("document too large")
     age_bin = shutil.which("age")
     if age_bin is None:

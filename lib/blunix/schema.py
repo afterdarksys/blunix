@@ -34,8 +34,30 @@ _BANNED = (
 )
 
 _NAME = re.compile(r"[a-z]([a-z0-9-]{0,61}[a-z0-9])?")
-_BUILD_HOST = re.compile(
+# One ASCII DNS label, 2 to 32 characters. See blunix-install-plane.md, Names.
+_LABEL = re.compile(r"[a-z][a-z0-9-]{0,30}[a-z0-9]")
+_VERSION = re.compile(r"v([1-9][0-9]{0,5})")
+_LEGACY_HOST = re.compile(
     r"([a-z][a-z0-9]{1,20})-([1-9][0-9]{0,5})\.build\.blunix\.io"
+)
+# User build hosts live on their own registrable domain. build.blunix.io is
+# the web portal, not a build host.
+_BUILD_SUFFIX = ".blnx.io"
+_RESERVED = frozenset(
+    (
+        "www",
+        "api",
+        "updates",
+        "log",
+        "mail",
+        "build",
+        "portal",
+        "admin",
+        "root",
+        "blunix",
+        "proxy",
+        "status",
+    )
 )
 
 
@@ -169,10 +191,44 @@ def require_name(value, what="name"):
     return value
 
 
-def require_build_host(value):
-    if not isinstance(value, str) or not _BUILD_HOST.fullmatch(value):
+def check_label(value):
+    if not isinstance(value, str) or not _LABEL.fullmatch(value):
+        raise BlunixError("refused hostname")
+    if "--" in value or value in _RESERVED or re.fullmatch(r"v[0-9]+", value):
         raise BlunixError("refused hostname")
     return value
+
+
+def require_build_host(value):
+    """Accept {label}.blnx.io, v{n}.{label}.blnx.io, and the legacy
+    name-1042.build.blunix.io fixture form. Nothing is lowercased or trimmed
+    here."""
+    if not isinstance(value, str) or len(value) > 64:
+        raise BlunixError("refused hostname")
+    if _LEGACY_HOST.fullmatch(value):
+        return value
+    if not value.endswith(_BUILD_SUFFIX):
+        raise BlunixError("refused hostname")
+    parts = value[: -len(_BUILD_SUFFIX)].split(".")
+    if len(parts) == 2:
+        if not _VERSION.fullmatch(parts[0]):
+            raise BlunixError("refused hostname")
+        check_label(parts[1])
+        return value
+    if len(parts) == 1:
+        check_label(parts[0])
+        return value
+    raise BlunixError("refused hostname")
+
+
+def expand_build_host(typed):
+    """A bare label becomes {label}.blnx.io. Anything else must already be a
+    build host."""
+    if not isinstance(typed, str):
+        raise BlunixError("refused hostname")
+    if "." not in typed:
+        return check_label(typed) + _BUILD_SUFFIX
+    return require_build_host(typed)
 
 
 def require_bool(value, what):

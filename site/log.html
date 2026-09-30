@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.blunix.io; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Log, blunix</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="assets/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#12161a">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="blunix">
+  <meta property="og:title" content="Log, blunix">
+  <meta property="og:description" content="Every blunix release, read live from GitHub, with file sizes and sha256. The append-only image log is designed, not built.">
+  <meta property="og:url" content="https://blunix.io/log.html">
+  <meta property="og:image" content="https://blunix.io/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="blunix: a quiet Debian host for cloud nodes.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="description" content="Every blunix release, read live from GitHub, with file sizes and sha256. The append-only image log is designed, not built.">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="js/live.js"></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="wrap site-header">
+    <a class="brand" href="index.html">
+      <img src="assets/logo-mark.svg" width="40" height="48" alt="">
+      <span>blunix</span>
+    </a>
+    <nav aria-label="Primary">
+      <a href="index.html">Host</a>
+      <a href="install.html">Install</a>
+      <a href="access.html">Access</a>
+      <a href="log.html" aria-current="page">Log</a>
+      <a href="account.html">Account</a>
+      <a href="service.html">Service</a>
+      <a href="platform.html">Platform</a>
+      <a href="api.html">API</a>
+      <a href="https://build.blunix.io/">Portal</a>
+    </nav>
+  </header>
+  <main id="content" tabindex="-1">
+    <section class="wrap hero">
+      <div>
+        <p class="kicker">Log</p>
+        <h1>Every release, as it lands.</h1>
+        <p class="lede">Releases are published on GitHub. This page reads them live, so a release appears here when it is published, not when this site is next deployed.</p>
+      </div>
+      <figure class="mark mark-small">
+        <img src="assets/logo-mark.svg" width="372" height="446" alt="">
+        <figcaption>A cat keeps track of what comes through the door.</figcaption>
+      </figure>
+    </section>
+
+    <section class="wrap band" aria-labelledby="releases-h">
+      <div class="band-head">
+        <div>
+          <span class="kicker">From GitHub</span>
+          <h2 id="releases-h">Releases</h2>
+        </div>
+        <p>Every release on <a href="https://github.com/afterdarksys/blunix/releases">afterdarksys/blunix</a>, with its files, their sizes, and their sha256 when the release publishes one.</p>
+      </div>
+      <div id="release-table" aria-live="polite" aria-busy="false">
+        <p>The release table loads from GitHub when JavaScript runs. Without it, <a href="https://github.com/afterdarksys/blunix/releases">read the releases on GitHub</a>.</p>
+      </div>
+      <p class="note">No release is signed yet. Signing is designed, not built. Check a download before you use it: put it beside the release's <code>SHA256SUMS</code> and run <code>sha256sum --check --ignore-missing SHA256SUMS</code>.</p>
+    </section>
+
+    <section class="wrap band" aria-labelledby="designed-h">
+      <div class="band-head">
+        <div>
+          <span class="kicker">Designed, not built</span>
+          <h2 id="designed-h">The log we are building</h2>
+        </div>
+        <p>GitHub releases are how images ship today. The design adds an append-only Blunix Log on top: one row per version and channel, holding the artifact digest, the signature, and the version it replaces. None of this is running.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3>The log is the source</h3>
+          <p>A publisher appends a row through the API. An ordinary account key cannot. The public page is a rendering of those rows. An old row stays where it was written.</p>
+        </li>
+        <li>
+          <h3>The manifest is generated</h3>
+          <p>systemd-sysupdate reads a manifest at the update URL. That file is produced from the current rows for the channel. Nobody edits it by hand.</p>
+        </li>
+        <li>
+          <h3>Mirrors are caches</h3>
+          <p>A row can name more than one https mirror, and GitHub release assets are one of them. The machine checks the digest. A mismatch is refused, and the running image stays. The build is on the <a href="platform.html">platform</a> page.</p>
+        </li>
+        <li>
+          <h3>The other slot boots</h3>
+          <p>The new image installs beside the one that is running, and the previous slot still boots. That is how the host lands on its feet.</p>
+        </li>
+        <li>
+          <h3>A withdrawn version leaves the manifest</h3>
+          <p>Withdrawing appends a row. The old row remains, so you can see that it shipped and that it was pulled. A new boot does not select it.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="wrap band" aria-labelledby="config-h">
+      <div class="band-head">
+        <h2 id="config-h">Config is the other pipe</h2>
+        <p>An image is a release. The build document for one machine is ciphertext on a label, such as <span class="host">https://ada.blnx.io/</span>. Republishing a label changes the next install from it. It does not rewrite a machine that already applied a document.</p>
+      </div>
+      <ul class="props">
+        <li><strong>Next install.</strong> A new publish replaces what the next install from that label will decrypt. The build hosts are built and tested, not deployed.</li>
+        <li><strong>Already installed.</strong> Taking a new document on a running machine is the job of the <a href="service.html">service</a> client, which is designed, not built.</li>
+      </ul>
+      <p class="note">The account that registers a label is on the <a href="account.html">account</a> page. The routes are on the <a href="api.html">API</a> page.</p>
+    </section>
+  </main>
+  <footer class="wrap site-footer">
+    <p>Built by people who keep cats. blunix.io is this project, and the source is <a href="https://github.com/afterdarksys/blunix">afterdarksys/blunix</a>. blunix.com is Blunix GmbH in Berlin, a different company.</p>
+  </footer>
+</body>
+</html>

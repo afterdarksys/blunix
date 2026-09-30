@@ -1,0 +1,10 @@
+# Reviewed 2026-09-29: illustrative key shapes, scanner marker strings, and age's published README example key. None are secrets.
+docs/proxy.md:generic-api-key:80
+image/scan-raw.py:age-secret-key:34
+image/scan-raw.py:private-key:15
+tests/site/portal.test.mjs:generic-api-key:10
+tests/test_scan_raw.py:age-secret-key:68
+tests/test_scan_raw.py:private-key:63
+tests/test_installer.py:generic-api-key:408
+tests/test_installer.py:generic-api-key:444
+tests/test_proxy.py:generic-api-key:598

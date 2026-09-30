@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.blunix.io; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Platform, blunix</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="assets/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#12161a">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="blunix">
+  <meta property="og:title" content="Platform, blunix">
+  <meta property="og:description" content="blunix.io builds one image in the cloud and deploys it anywhere a machine can dial out. A troubleshoot is a collect the machine has to accept. The platform is designed, not built.">
+  <meta property="og:url" content="https://blunix.io/platform.html">
+  <meta property="og:image" content="https://blunix.io/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="blunix: a quiet Debian host for cloud nodes.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="description" content="blunix.io builds one image in the cloud and deploys it anywhere a machine can dial out. A troubleshoot is a collect the machine has to accept. The platform is designed, not built.">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="js/live.js"></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="wrap site-header">
+    <a class="brand" href="index.html">
+      <img src="assets/logo-mark.svg" width="40" height="48" alt="">
+      <span>blunix</span>
+    </a>
+    <nav aria-label="Primary">
+      <a href="index.html">Host</a>
+      <a href="install.html">Install</a>
+      <a href="access.html">Access</a>
+      <a href="log.html">Log</a>
+      <a href="account.html">Account</a>
+      <a href="service.html">Service</a>
+      <a href="platform.html" aria-current="page">Platform</a>
+      <a href="api.html">API</a>
+      <a href="https://build.blunix.io/">Portal</a>
+    </nav>
+  </header>
+  <main id="content" tabindex="-1">
+    <section class="wrap hero">
+      <div>
+        <p class="kicker">Platform</p>
+        <h1>Build here. Deploy anywhere.</h1>
+        <p class="lede">One image is built in the cloud. A machine anywhere dials out, takes the document, and can be asked to collect a report. This page is a design. None of it is built.</p>
+      </div>
+      <figure class="mark mark-small">
+        <img src="assets/logo-mark.svg" width="372" height="446" alt="">
+        <figcaption>The platform routes will live under <span class="host">https://api.blunix.io/v1</span>. They are designed, not built.</figcaption>
+      </figure>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Build</h2>
+        <p>The cloud builder will run the image build this project already has. Debian packages. Tools that already have a digest. Today that build runs by hand and the result is a GitHub release on the <a href="log.html">log</a>.</p>
+      </div>
+      <ul class="props">
+        <li><strong>One image.</strong> A customer system is a node document on that image. The builder does not accept a script, a Dockerfile, or a git URL from an account.</li>
+        <li><strong>One digest, every region.</strong> A row can name more than one https mirror. The machine checks the digest. A mismatch is refused. A region is a cache, not a second configuration.</li>
+        <li><strong>Publish is a separate key.</strong> <code>log:publish</code> appends the row. An ordinary account key cannot.</li>
+      </ul>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Deploy</h2>
+        <p>A system is a profile plus the machines enrolled on it. The profile holds the ciphertext. Each machine holds a spoken hostname. The steps are the <a href="account.html">account</a>, then the <a href="service.html">service</a>.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3>Compose</h3>
+          <p>Disk, network, access profile, channel, and tools that already have a digest. The browser encrypts. The passphrase stays in that browser.</p>
+        </li>
+        <li>
+          <h3>Enroll</h3>
+          <p>A join token, shown once, or a hostname set on the machine. A site with no route uses the JSON bundle on a USB stick.</p>
+        </li>
+        <li>
+          <h3>Apply</h3>
+          <p>The machine calls home from wherever it has a route out. A school, a NAT, and a bank use the same client. The platform does not SSH to the box.</p>
+        </li>
+      </ol>
+      <p class="note">Terraform and Ansible call the same API. That contract is on the <a href="service.html">service</a> page. The providers are not written.</p>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Troubleshoot</h2>
+        <p>The cloud requests a collect. The machine runs a fixed report that shipped with the image. A shell scope and a command field are refused. Break-glass SSH stays the person's own login.</p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <caption>What a collect will do. The collector is designed, not built, so no machine says these yet.</caption>
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">What happens</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Request</th>
+              <td>A key with <code>troubleshoot:request</code> opens a job. The reason is <code>behind</code>, <code>decrypt</code>, <code>network</code>, <code>speech</code>, or a short note. The note is not a command.</td>
+            </tr>
+            <tr>
+              <th scope="row">Ask</th>
+              <td>Speech and large print say <q>blunix: troubleshoot requested for lab-3. Say yes to start.</q> Silence is no.</td>
+            </tr>
+            <tr>
+              <th scope="row">Collect</th>
+              <td>Digests, the document hash, whether time is synchronized, addresses, and the names of failed units. No journal text. No keys. Cap 64KiB.</td>
+            </tr>
+            <tr>
+              <th scope="row">Done</th>
+              <td><q>blunix: troubleshoot finished. Sent the report.</q> A refused job says <q>blunix: troubleshoot refused.</q> An expired job says <q>blunix: troubleshoot expired.</q></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">The report is not public. A quiet profile collects unattended only when that profile allows it, only inside the maintenance window, and only after the clock is synchronized. The default is to ask. The sentences sit with the rest on the <a href="service.html">service</a> page.</p>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Support</h2>
+        <p>A support package is a key scope on the check-in. It is not a second agent. v1 has no billing. These rows are the offer after a machine can check in and a key can be revoked.</p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <caption>Support packages. None of them are for sale. The platform is designed, not built.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Package</th>
+              <th scope="col">What a person gets</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Image</th>
+              <td>The public log. No view of their machines.</td>
+            </tr>
+            <tr>
+              <th scope="row">Fleet</th>
+              <td>Many profiles on one account. Which machines are behind. No troubleshoot.</td>
+            </tr>
+            <tr>
+              <th scope="row">Support</th>
+              <td>Inventory, a collect, and a ticket. The ticket has the spoken sentence and the digests. It does not have the document or the passphrase.</td>
+            </tr>
+            <tr>
+              <th scope="row">Desk</th>
+              <td>The same collect, plus a person for a USB bundle. The customer types the passphrase.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">The machine never holds a ticket-system token. The API posts the event. Revoke the key and the posts stop. Routes are on the <a href="api.html">API</a> page.</p>
+    </section>
+  </main>
+  <footer class="wrap site-footer">
+    <p>Built by people who keep cats. blunix.io is this project, and the source is <a href="https://github.com/afterdarksys/blunix">afterdarksys/blunix</a>. blunix.com is Blunix GmbH in Berlin, a different company.</p>
+  </footer>
+</body>
+</html>

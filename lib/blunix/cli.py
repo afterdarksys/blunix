@@ -14,9 +14,11 @@ from blunix.bootstrap import run_bootstrap
 from blunix.console import console_line
 from blunix.disk import load_disk, write_disk
 from blunix.errors import BlunixError, DecryptError
+from blunix.gui import apply_gui
 from blunix.network import load_network, write_network
 from blunix.node import apply_node, boot_node
 from blunix.schema import load_path, models_dir
+from blunix.tools import install_tools, load_tools
 
 _FLAGS = {"--root", "--dest", "--models", "--file"}
 
@@ -110,6 +112,37 @@ def _ai(rest, opts):
     return 0
 
 
+def _gui(rest, opts):
+    if rest != ["apply"]:
+        raise BlunixError("refused command")
+    root = opts.get("root", "/")
+    if apply_gui(root):
+        print("blunix: blue theme selected", flush=True)
+    else:
+        print("blunix: graphical session absent; blue theme not selected", flush=True)
+    return 0
+
+
+def _tools(rest, opts):
+    if not rest or rest[0] != "apply":
+        raise BlunixError("refused command")
+    names = rest[1:]
+    model = load_tools(models_dir(opts.get("models")), "default")
+    linked = install_tools(model, opts.get("root", "/"), names or None)
+    if linked:
+        print("blunix: tools linked " + " ".join(linked), flush=True)
+    else:
+        print("blunix: tools idle", flush=True)
+    if not names:
+        for tool in model["tools"]:
+            if not tool["default"] and "digest" not in tool:
+                print(
+                    "blunix: tool " + tool["name"] + " waiting on a digest",
+                    flush=True,
+                )
+    return 0
+
+
 def _node(rest, opts):
     if not rest or rest[0] not in ("apply", "boot") or len(rest) != 1:
         raise BlunixError("refused command")
@@ -123,9 +156,28 @@ def _node(rest, opts):
     return 0
 
 
+def _proxy(rest):
+    try:
+        import blunix.proxy as proxy
+    except ImportError:
+        print("blunix: proxy not installed", flush=True)
+        return 2
+    return proxy.main(rest)
+
+
+def _install(rest, opts):
+    if rest:
+        raise BlunixError("refused command")
+    from blunix.installer import run_install
+
+    return run_install(models=opts.get("models"))
+
+
 def _dispatch(argv):
     if any(arg == "--passphrase" or arg.startswith("--passphrase=") for arg in argv):
         raise BlunixError("refused command")
+    if argv and argv[0] == "proxy":
+        return _proxy(argv[1:])
     positional, opts = _parse(argv)
     if not positional or positional[0] == "bootstrap":
         if positional and positional[0] == "bootstrap" and len(positional) != 1:
@@ -147,8 +199,14 @@ def _dispatch(argv):
         return _access(rest, opts)
     if group == "ai":
         return _ai(rest, opts)
+    if group == "gui":
+        return _gui(rest, opts)
+    if group == "tools":
+        return _tools(rest, opts)
     if group == "node":
         return _node(rest, opts)
+    if group == "install":
+        return _install(rest, opts)
     raise BlunixError("refused command")
 
 

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.blunix.io; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Access, blunix</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="assets/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#12161a">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="blunix">
+  <meta property="og:title" content="Access, blunix">
+  <meta property="og:description" content="Five blunix boot entries: full speech, console speech, large print, regular, and advanced. Keys 1 through 5. The menu beeps because speech starts after the kernel.">
+  <meta property="og:url" content="https://blunix.io/access.html">
+  <meta property="og:image" content="https://blunix.io/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="blunix: a quiet Debian host for cloud nodes.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="description" content="Five blunix boot entries: full speech, console speech, large print, regular, and advanced. Keys 1 through 5. The menu beeps because speech starts after the kernel.">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="js/live.js"></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="wrap site-header">
+    <a class="brand" href="index.html">
+      <img src="assets/logo-mark.svg" width="40" height="48" alt="">
+      <span>blunix</span>
+    </a>
+    <nav aria-label="Primary">
+      <a href="index.html">Host</a>
+      <a href="install.html">Install</a>
+      <a href="access.html" aria-current="page">Access</a>
+      <a href="log.html">Log</a>
+      <a href="account.html">Account</a>
+      <a href="service.html">Service</a>
+      <a href="platform.html">Platform</a>
+      <a href="api.html">API</a>
+      <a href="https://build.blunix.io/">Portal</a>
+    </nav>
+  </header>
+  <main id="content" tabindex="-1">
+    <section class="wrap hero">
+      <div>
+        <p class="kicker">Access</p>
+        <h1>Five keys. Then a voice.</h1>
+        <p class="lede">Speakup starts once the kernel is running, the same limit the Debian installer has. The menu beeps when it is ready. Keys 1 through 5 choose the entry, so a blind operator does not have to arrow through a silent list.</p>
+      </div>
+    </section>
+    <section class="wrap band">
+      <table>
+        <caption>Boot entries, in menu order. After three seconds the menu picks regular. These are in the test image and the installer today.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Key</th>
+            <th scope="col">Entry</th>
+            <th scope="col">This boot</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">1</th>
+            <td>Full speech</td>
+            <td>Speakup with espeak-ng, Speech Dispatcher, and BRLTTY. A graphical screen reader is not in the image.</td>
+          </tr>
+          <tr>
+            <th scope="row">2</th>
+            <td>Console speech</td>
+            <td>The same console stack. The graphical reader stays off. This is the entry for a blind install at the glass.</td>
+          </tr>
+          <tr>
+            <th scope="row">3</th>
+            <td>Large print</td>
+            <td>A 32-cell console font. The screen does not blank. Speech and braille stay off.</td>
+          </tr>
+          <tr>
+            <th scope="row">4</th>
+            <td>Regular</td>
+            <td>None of the access programs. This is the quiet cloud default, and the unit list still fits on one screen.</td>
+          </tr>
+          <tr>
+            <th scope="row">5</th>
+            <td>Advanced</td>
+            <td>Same quiet services as regular, with boot status on the console, for a sighted operator who wants to watch it come up.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="note">Key 1 or key 2 is the blind-ready boot. The menu itself only beeps; a Russian Blue does not meow much either. The installer then says each step as one sentence on the console and on the first serial port.</p>
+      <p class="note">Today the menu is a one-screen GRUB that loads its own kernel, because the image is not signed. Designed, not built: one signed boot file per slot behind the same five keys, three beeps when speech was asked for and did not start, and remembering the last pick.</p>
+    </section>
+  </main>
+  <footer class="wrap site-footer">
+    <p>Built by people who keep cats. blunix.io is this project, and the source is <a href="https://github.com/afterdarksys/blunix">afterdarksys/blunix</a>. blunix.com is Blunix GmbH in Berlin, a different company.</p>
+  </footer>
+</body>
+</html>

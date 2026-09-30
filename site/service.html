@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.blunix.io; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Service, blunix</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="assets/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#12161a">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="blunix">
+  <meta property="og:title" content="Service, blunix">
+  <meta property="og:description" content="blunixservice is the client on each machine. It dials out, takes a spoken hostname, and stages the next image and the next document. It is designed, not built.">
+  <meta property="og:url" content="https://blunix.io/service.html">
+  <meta property="og:image" content="https://blunix.io/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="blunix: a quiet Debian host for cloud nodes.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="description" content="blunixservice is the client on each machine. It dials out, takes a spoken hostname, and stages the next image and the next document. It is designed, not built.">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="js/live.js"></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="wrap site-header">
+    <a class="brand" href="index.html">
+      <img src="assets/logo-mark.svg" width="40" height="48" alt="">
+      <span>blunix</span>
+    </a>
+    <nav aria-label="Primary">
+      <a href="index.html">Host</a>
+      <a href="install.html">Install</a>
+      <a href="access.html">Access</a>
+      <a href="log.html">Log</a>
+      <a href="account.html">Account</a>
+      <a href="service.html" aria-current="page">Service</a>
+      <a href="platform.html">Platform</a>
+      <a href="api.html">API</a>
+      <a href="https://build.blunix.io/">Portal</a>
+    </nav>
+  </header>
+  <main id="content" tabindex="-1">
+    <section class="wrap hero">
+      <div>
+        <p class="kicker">Service</p>
+        <h1>One client on every machine.</h1>
+        <p class="lede">blunixservice dials out, takes a spoken hostname, and stages the next image and the next document. A laptop, Terraform, and Ansible call the same API. This client is designed, not built.</p>
+      </div>
+      <figure class="mark mark-small">
+        <img src="assets/logo-mark.svg" width="372" height="446" alt="">
+        <figcaption>The machine will call <span class="host">https://api.blunix.io/v1</span>. The machine routes are designed, not built.</figcaption>
+      </figure>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>What it does</h2>
+        <p>The familiar picture is a host joined to an account, reporting what it runs, and taking errata from a console. Here the errata is a row on the <a href="log.html">log</a>, and the configuration is the age ciphertext the <a href="account.html">account</a> already publishes.</p>
+      </div>
+      <ul class="props">
+        <li><strong>It dials out.</strong> No listening port. A school, a NAT, and a bank all look the same on the wire. The local socket is a Unix socket.</li>
+        <li><strong>Boot does not wait.</strong> If the API is down, the machine keeps the document it already applied. The console still comes up.</li>
+        <li><strong>Apply calls the renderers.</strong> They exit. The client does not edit <code>/etc</code> by hand, does not run apt, and does not fetch a tool from GitHub.</li>
+        <li><strong>A patch is a new image.</strong> The question the console answers is which machines last reported the previous digest.</li>
+      </ul>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Two names</h2>
+        <p>A profile is the label you can say. A machine is one host enrolled on that label. A classroom shares the profile and does not share the hostname.</p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <caption>Profile and machine, using the label ada to show the shape. Enrolment is designed, not built.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Which</th>
+              <th scope="col">Profile</th>
+              <th scope="col">Machine</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Name</th>
+              <td><span class="host">ada</span></td>
+              <td><span class="host">ada-1</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Where</th>
+              <td><span class="host">https://ada.blnx.io/</span></td>
+              <td>The spoken hostname, and the inventory</td>
+            </tr>
+            <tr>
+              <th scope="row">Shared</th>
+              <td>Every machine on that profile</td>
+              <td>One machine</td>
+            </tr>
+            <tr>
+              <th scope="row">Secret</th>
+              <td>The age passphrase, which stays off the server</td>
+              <td>An Ed25519 machine key, generated on the box</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">A public profile still serves ciphertext to anyone who can say the name. An enrolled profile serves it only to a bound machine key. The passphrase decrypts either way. The server cannot read the document. New service profiles default to enrolled. The spoken <a href="install.html">install</a> still uses public.</p>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Offline</h2>
+        <p>The <code>blunix</code> CLI installs on your computer. It exports and imports a JSON bundle. The bundle holds ciphertext and metadata. It has no passphrase field and no API key.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3>Export</h3>
+          <p><code>blunix service export lab.json</code> writes the bundle from the laptop that encrypted the document, or from a machine that already holds the ciphertext.</p>
+        </li>
+        <li>
+          <h3>Carry it</h3>
+          <p>A USB stick is enough. One laptop can prepare a lab.</p>
+        </li>
+        <li>
+          <h3>Import</h3>
+          <p>On the machine, <code>blunix service import lab.json --hostname lab-3</code>. The hostname is read back. Decrypt is a console prompt with echo off. A flag for the passphrase is refused.</p>
+        </li>
+        <li>
+          <h3>Check in later</h3>
+          <p>When a link exists, <code>blunix service checkin</code> registers the machine. Until then the API does not know it, and the machine is still configured.</p>
+        </li>
+      </ol>
+      <p class="note">Speech and large print use the sentences in the next section. Silence means no. A quiet cloud profile may reboot inside a maintenance window. A speech profile may not.</p>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Blind ready</h2>
+        <p>Key 1 or key 2 at the beep. The menu does not speak. After the kernel, every question is one sentence, and the answer is the word yes or the word no. The same line goes to a braille display. Large print shows it in the 32-cell font and does not speak. The <a href="access.html">access page</a> lists the five keys.</p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <caption>What the console will say. lab-3 and lab-west stand in for real names. The service is designed, not built, so no machine says these yet.</caption>
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Sentence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Hostname</th>
+              <td><q>blunix: hostname lab-3. Say yes to keep it.</q></td>
+            </tr>
+            <tr>
+              <th scope="row">Passphrase</th>
+              <td><q>blunix: passphrase. Type it. It will not be spoken.</q></td>
+            </tr>
+            <tr>
+              <th scope="row">Enrolled</th>
+              <td><q>blunix: enrolled as lab-3 on profile lab-west.</q></td>
+            </tr>
+            <tr>
+              <th scope="row">Token consumed</th>
+              <td><q>blunix: join token discarded.</q></td>
+            </tr>
+            <tr>
+              <th scope="row">API down</th>
+              <td><q>blunix: api unreachable. Keeping the applied document.</q></td>
+            </tr>
+            <tr>
+              <th scope="row">New document</th>
+              <td><q>blunix: new document for profile lab-west. Say yes to apply.</q></td>
+            </tr>
+            <tr>
+              <th scope="row">Reboot</th>
+              <td><q>blunix: image <var>version</var> is staged. Say yes to reboot.</q> The version is the release tag on the <a href="log.html">log</a>.</td>
+            </tr>
+            <tr>
+              <th scope="row">Decrypt failed, first install</th>
+              <td><q>blunix: could not decrypt. Nothing applied.</q></td>
+            </tr>
+            <tr>
+              <th scope="row">Decrypt failed, later</th>
+              <td><q>blunix: could not decrypt. Keeping the applied document.</q></td>
+            </tr>
+            <tr>
+              <th scope="row">Document refused</th>
+              <td><q>blunix: document refused. Keeping the applied document.</q></td>
+            </tr>
+            <tr>
+              <th scope="row">Answer was not yes</th>
+              <td><q>blunix: keeping the applied document.</q></td>
+            </tr>
+            <tr>
+              <th scope="row">Troubleshoot asked</th>
+              <td><q>blunix: troubleshoot requested for lab-3. Say yes to start.</q></td>
+            </tr>
+            <tr>
+              <th scope="row">Troubleshoot finished</th>
+              <td><q>blunix: troubleshoot finished. Sent the report.</q></td>
+            </tr>
+            <tr>
+              <th scope="row">Troubleshoot refused</th>
+              <td><q>blunix: troubleshoot refused.</q></td>
+            </tr>
+            <tr>
+              <th scope="row">Troubleshoot expired</th>
+              <td><q>blunix: troubleshoot expired.</q></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">The passphrase, the join token, and the account key are never in the sentence. Keystrokes at the passphrase prompt are not spoken. Silence, or any answer other than yes, does not reboot, does not apply, and does not collect. The machine asks once more, then keeps the document it already has. A collect is specified on the <a href="platform.html">platform</a> page. Three beeps mean speech was requested and did not start. Boot still continues.</p>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>On the web</h2>
+        <p>Package selection is composing the node document: disk model, network model, access profile, channel, and tools that already have a digest. The Debian package set is the image. The web does not install packages onto a live host.</p>
+      </div>
+      <ul class="props">
+        <li><strong>The image still refuses a sysext list.</strong> That control stays closed. Orca remains an optional extension the cloud image does not install.</li>
+        <li><strong>The channel the schema accepts today is <code>stable</code>.</strong> A second channel is a later change.</li>
+        <li><strong>A tool with no digest is shown as waiting.</strong> It cannot be selected. The client does not go fetch a newer one.</li>
+        <li><strong>The browser encrypts.</strong> The upload is ciphertext. This page has no form, and it does not submit a passphrase.</li>
+      </ul>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Same client, four policies</h2>
+        <p>The binary does not change. The profile does.</p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <caption>Who the service is for. It is designed, not built, and runs for none of them yet.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Place</th>
+              <th scope="col">Policy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">A blind school</th>
+              <td>The Blind ready sentences. Short spoken names. A USB bundle from one laptop. Key 1 or key 2. Orca stays an extension.</td>
+            </tr>
+            <tr>
+              <th scope="row">A link that drops</th>
+              <td>A small check-in. The last good document still boots. One laptop enrolls the lab. The API being down is a normal state.</td>
+            </tr>
+            <tr>
+              <th scope="row">An IT shop</th>
+              <td>One account, many profiles. Terraform stamps documents. No billing and no extra tenant layer in v1.</td>
+            </tr>
+            <tr>
+              <th scope="row">A bank</th>
+              <td>Enrolled fetch. Expiring join tokens. Machine keys. An audit of digests and fingerprints. A maintenance window. Their own DNS name recorded beside the spoken hostname.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Terraform and Ansible</h2>
+        <p>Both are clients of the <a href="api.html">API</a>. The connection is HTTPS. SSH is the break-glass shell, not the way a playbook changes the host.</p>
+      </div>
+      <ul class="props">
+        <li><strong>The provider encrypts on your machine.</strong> State stores the ciphertext sha256. State does not store the API key, the passphrase, or the join token.</li>
+        <li><strong>The join token is shown once.</strong> State keeps the fingerprint. A refresh cannot read the token back.</li>
+        <li><strong>The passphrase is a file, mode 0600.</strong> A passphrase variable is refused, because a plan would keep it.</li>
+        <li><strong>Ansible may list machines</strong> so a person can open a shell. Collection playbooks do not run apt, and they do not mutate the host over SSH.</li>
+      </ul>
+      <p class="note">The provider and the collection are not written. The routes they will call are on the <a href="api.html">API</a> page.</p>
+    </section>
+  </main>
+  <footer class="wrap site-footer">
+    <p>Built by people who keep cats. blunix.io is this project, and the source is <a href="https://github.com/afterdarksys/blunix">afterdarksys/blunix</a>. blunix.com is Blunix GmbH in Berlin, a different company.</p>
+  </footer>
+</body>
+</html>

@@ -1,5 +1,11 @@
 #!/bin/bash
 # Mutable Debian 13 test disk. This is not the signed UKI image.
+# --release builds the same disk for publishing: root locked, no fixture, no
+# root-login sshd drop-in, the console first-boot bootstrap, and a scan that
+# refuses any test secret. Output: build/blunix-release.raw.
+# Host keys, machine-id and seeds are stripped before the copy, so no deleted
+# secret sits in a free block; zerofree clears free blocks anyway, and
+# scan-raw.py reads every byte of the release disk before it is kept.
 set -eu
 set -o pipefail
 
@@ -11,13 +17,23 @@ if [ "$(uname -s)" = "Darwin" ]; then
     echo "blunix: image build refused" >&2
     exit 1
   fi
+  mode_flag=""
+  case "${1:-}" in
+    "") ;;
+    --release) mode_flag=--release ;;
+    *)
+      echo "blunix: image build refused" >&2
+      exit 1
+      ;;
+  esac
   python3 "$ROOT/image/prepare-secrets.py"
   mkdir -p "$ROOT/build"
   set +e
+  # shellcheck disable=SC2086
   docker run --rm --privileged \
     -v "$ROOT":/src -w /src \
     debian:trixie-slim \
-    bash /src/image/build-test-disk.sh --inside
+    bash /src/image/build-test-disk.sh --inside $mode_flag
   code=$?
   set -e
   if [ "$code" -ne 0 ]; then
@@ -31,6 +47,21 @@ if [ "${1:-}" != "--inside" ]; then
   echo "blunix: image build refused" >&2
   exit 1
 fi
+RELEASE=0
+case "${2:-}" in
+  "") ;;
+  --release) RELEASE=1 ;;
+  *)
+    echo "blunix: image build refused" >&2
+    exit 1
+    ;;
+esac
+OUTPUT=/src/build/blunix-test.raw
+if [ "$RELEASE" -eq 1 ]; then
+  OUTPUT=/src/build/blunix-release.raw
+fi
+# A failed build leaves no disk behind.
+rm -f "$OUTPUT"
 
 export DEBIAN_FRONTEND=noninteractive
 export LANG=C
@@ -70,7 +101,7 @@ trap cleanup EXIT
 echo "blunix: builder packages"
 apt-get update -qq
 apt-get install -y -qq \
-  mmdebstrap parted e2fsprogs dosfstools kpartx rsync \
+  mmdebstrap parted e2fsprogs zerofree dosfstools kpartx rsync \
   python3 python3-yaml age ca-certificates >/dev/null
 
 pkgs=""
@@ -125,6 +156,19 @@ fi
 
 if [ ! -x "$ROOTFS/usr/bin/apt" ]; then
   echo "blunix: apt missing" >&2
+  exit 1
+fi
+
+echo "blunix: strip"
+# openssh's postinst made host keys in the cache. Each machine makes its own.
+rm -f "$ROOTFS"/etc/ssh/ssh_host_*
+rm -f "$ROOTFS/var/lib/systemd/random-seed" "$ROOTFS/var/lib/systemd/credential.secret"
+: > "$ROOTFS/etc/machine-id"
+if [ -f "$ROOTFS/var/lib/dbus/machine-id" ] && [ ! -L "$ROOTFS/var/lib/dbus/machine-id" ]; then
+  rm -f "$ROOTFS/var/lib/dbus/machine-id"
+fi
+if [ -n "$(find "$ROOTFS/etc/ssh" -maxdepth 1 -name 'ssh_host_*' -print -quit)" ]; then
+  echo "blunix: host key left in rootfs" >&2
   exit 1
 fi
 
@@ -193,6 +237,15 @@ cp -a /src/models "$MNT/usr/share/blunix/models"
 for launcher in /src/apply/blunix /src/apply/blunix-*; do
   install -m 0755 "$launcher" "$MNT/usr/bin/$(basename "$launcher")"
 done
+
+echo "blunix: theme"
+rm -rf "$MNT/usr/share/themes/Blunix"
+mkdir -p "$MNT/usr/share/themes"
+cp -a /src/image/gui/Blunix "$MNT/usr/share/themes/Blunix"
+python3 /src/apply/blunix gui apply --root "$MNT"
+
+echo "blunix: tools"
+python3 /src/apply/blunix tools apply --root "$MNT" --models /src/models
 mkdir -p "$MNT/etc/systemd/system"
 install -m 0644 /src/image/units/*.service "$MNT/etc/systemd/system/"
 
@@ -264,8 +317,18 @@ ln -s /run/systemd/resolve/stub-resolv.conf "$MNT/etc/resolv.conf"
 rm -f "$MNT/etc/ssh/ssh_host_"*
 mkdir -p "$MNT/etc/systemd/system/ssh.service.d"
 install -m 0644 /src/image/test/ssh-hostkeys.conf "$MNT/etc/systemd/system/ssh.service.d/hostkeys.conf"
+if ! grep -q '^ExecStartPre=/usr/bin/ssh-keygen -A$' "$MNT/etc/systemd/system/ssh.service.d/hostkeys.conf"; then
+  echo "blunix: no first-boot host keys" >&2
+  exit 1
+fi
 mkdir -p "$MNT/etc/ssh/sshd_config.d"
-install -m 0644 /src/image/test/sshd-test.conf "$MNT/etc/ssh/sshd_config.d/00-blunix-test.conf"
+if [ "$RELEASE" -eq 1 ]; then
+  mkdir -p "$MNT/etc/systemd/system/blunix-bootstrap.service.d"
+  install -m 0644 /src/image/release/bootstrap-console.conf \
+    "$MNT/etc/systemd/system/blunix-bootstrap.service.d/console.conf"
+else
+  install -m 0644 /src/image/test/sshd-test.conf "$MNT/etc/ssh/sshd_config.d/00-blunix-test.conf"
+fi
 if ! grep -q '^Include /etc/ssh/sshd_config.d/\*\.conf' "$MNT/etc/ssh/sshd_config"; then
   echo "blunix: sshd include missing" >&2
   exit 1
@@ -287,8 +350,14 @@ if [ -d "$MNT/boot/grub/x86_64-efi" ]; then
   cp -a "$MNT/boot/grub/x86_64-efi" "$MNT/boot/efi/EFI/BOOT/x86_64-efi"
 fi
 
-echo "blunix: seal"
-PYTHONPATH=/src/lib python3 /src/image/seal-root.py "$MNT"
+if [ "$RELEASE" -eq 1 ]; then
+  echo "blunix: lock"
+  chroot "$MNT" passwd -l root >/dev/null
+  rm -f "$MNT/etc/blunix/test-image" "$MNT/usr/share/blunix/bootstrap-fixture.age"
+else
+  echo "blunix: seal"
+  PYTHONPATH=/src/lib python3 /src/image/seal-root.py "$MNT"
+fi
 
 umount "$MNT/proc"
 umount "$MNT/sys"
@@ -299,17 +368,26 @@ install -m 0644 /src/image/grub/grub.cfg "$MNT/boot/grub/grub.cfg"
 install -m 0644 /src/image/grub/grub.cfg "$MNT/boot/efi/EFI/BOOT/grub.cfg"
 
 echo "blunix: scan"
-python3 /src/image/scan-root.py "$MNT"
+if [ "$RELEASE" -eq 1 ]; then
+  python3 /src/image/scan-root.py --release "$MNT"
+else
+  python3 /src/image/scan-root.py "$MNT"
+fi
 
 echo "blunix: copy"
 sync
 umount "$MNT/boot/efi"
 umount "$MNT"
+zerofree "$PART2"
 kpartx -d "$LOOP"
 losetup -d "$LOOP"
 LOOP=""
-cp --sparse=always "$DISK" /src/build/blunix-test.raw
-if [ ! -s /src/build/blunix-test.raw ]; then
+if [ "$RELEASE" -eq 1 ]; then
+  echo "blunix: raw scan"
+  python3 /src/image/scan-raw.py "$DISK"
+fi
+cp --sparse=always "$DISK" "$OUTPUT"
+if [ ! -s "$OUTPUT" ]; then
   echo "blunix: disk missing" >&2
   exit 1
 fi

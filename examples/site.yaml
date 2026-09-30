@@ -1,0 +1,31 @@
+# blunix proxy site file. See docs/proxy.md.
+# Quote every MAC: YAML reads some unquoted MACs as numbers.
+defaults:
+  disk: metal-luks
+  access: regular
+  channel: stable
+  dns:
+    - 192.0.2.53
+machines:
+  - mac: "00:50:56:aa:bb:01"
+    label: ada
+    hostname: ada-1
+    network:
+      address: 192.0.2.21/24
+      gateway: 192.0.2.1
+  - mac: "00:50:56:aa:bb:02"
+    label: grace
+    hostname: grace-1
+    network:
+      address: 192.0.2.22/24
+      gateway: 192.0.2.1
+      dns:
+        - 192.0.2.53
+        - 192.0.2.54
+    access: full-speech
+    target: nvme0n1
+  - mac: "00:50:56:aa:bb:03"
+    label: linus
+    hostname: linus-1
+    dhcp: true
+    disk: cloud-vm

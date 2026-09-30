@@ -7,10 +7,14 @@ not apply. They do not log passphrase bytes.
 
 from __future__ import annotations
 
+import contextlib
+import gzip
 import hashlib
+import io
 import os
 import ssl
 import stat
+import tarfile
 import tempfile
 import unittest
 import urllib.request
@@ -27,6 +31,7 @@ from blunix.age import decrypt_bytes, decrypt_to_file, encrypt_bytes
 from blunix.ai import artifact_url, digest_matches, install_ai, parse_ai
 from blunix.ai import _check_url
 from blunix.bootstrap import (
+    MAX_CIPHER,
     _Redirect,
     check_fetch_url,
     fetch_https,
@@ -37,7 +42,11 @@ from blunix.cli import main
 from blunix.console import console_line
 from blunix.disk import load_disk, parse_disk, parse_size, render_disk
 from blunix.errors import BlunixError, DecryptError
+from blunix.gui import apply_gui
 from blunix.network import check_match, load_network, parse_network, render_network
+from blunix.tools import _check_url as tool_check_url
+from blunix.tools import artifact_url as tool_artifact_url
+from blunix.tools import extract_named, install_tools, load_tools, parse_tools
 from blunix.node import apply_node, parse_node
 from blunix.schema import MAX_DOCUMENT, load_bytes, load_path, load_text, require_build_host
 
@@ -130,9 +139,7 @@ class SchemaTests(unittest.TestCase):
     def test_build_host(self):
         self.assertEqual(require_build_host(HOST), HOST)
         for bad in (
-            "ada.build.blunix.io",
             "ADA-1.build.blunix.io",
-            "ada-0.build.blunix.io",
             "ada-1042.build.blunix.com",
         ):
             with self.subTest(bad=bad):
@@ -421,6 +428,17 @@ class AgeTests(unittest.TestCase):
         self.assertEqual(str(caught.exception), "could not decrypt")
         self.assertNotIn(passphrase, str(caught.exception))
 
+    def test_full_size_document_decrypts(self):
+        # The ciphertext of a document at the document cap is over 64 KiB.
+        # Decrypt caps ciphertext, not the document size.
+        passphrase = "test-passphrase-value"
+        document = b"#" * (64 * 1024 - 16)
+        blob = encrypt_bytes(document, passphrase)
+        self.assertGreater(len(blob), 64 * 1024)
+        self.assertEqual(decrypt_bytes(blob, passphrase), document)
+        with self.assertRaises(DecryptError):
+            decrypt_bytes(b"x" * (256 * 1024 + 1), passphrase)
+
     def test_empty_passphrase(self):
         import blunix.age as age_mod
 
@@ -456,7 +474,9 @@ class AgeTests(unittest.TestCase):
         age_mod.shutil.which = which
         try:
             with self.assertRaises(DecryptError):
-                decrypt_bytes(b"x" * (MAX_DOCUMENT + 1), "pw")
+                decrypt_bytes(b"x" * (age_mod._MAX_CIPHER + 1), "pw")
+            with self.assertRaises(BlunixError):
+                encrypt_bytes(b"x" * (MAX_DOCUMENT + 1), "pw")
         finally:
             age_mod.shutil.which = original
         self.assertEqual(called, [])
@@ -636,7 +656,7 @@ class BootstrapTests(unittest.TestCase):
             recorded.append(req.full_url)
             recorded.append(req.data)
             recorded.append(tuple(req.headers.items()))
-            return _Body(b"x" * (MAX_DOCUMENT + 1))
+            return _Body(b"x" * (MAX_CIPHER + 1))
 
         with self.assertRaises(BlunixError) as caught:
             fetch_https(HOST, urlopen=urlopen, context_factory=_good_context)
@@ -666,6 +686,330 @@ class CliTests(unittest.TestCase):
     def test_disk_check(self):
         code = main(["disk", "check", "cloud-vm", "--models", MODELS])
         self.assertEqual(code, 0)
+
+
+def _gzip_tar(entries):
+    plain = io.BytesIO()
+    with tarfile.open(fileobj=plain, mode="w:") as tar:
+        for entry in entries:
+            info = tarfile.TarInfo(entry["name"])
+            if entry.get("kind") == "symlink":
+                info.type = tarfile.SYMTYPE
+                info.linkname = entry.get("link", "bin/adssh")
+                tar.addfile(info)
+                continue
+            data = entry["data"]
+            info.size = len(data)
+            tar.addfile(info, io.BytesIO(data))
+    compressed = io.BytesIO()
+    with gzip.GzipFile(fileobj=compressed, mode="wb", mtime=0) as handle:
+        handle.write(plain.getvalue())
+    return compressed.getvalue()
+
+
+def _tools_doc(**overrides):
+    tool = {
+        "name": "adssh",
+        "repo": "adssh",
+        "version": "v0.9.0",
+        "asset": "adssh_v0.9.0_linux_amd64.tar.gz",
+        "default": False,
+        "files": [
+            {"archive": "adssh_v0.9.0_linux_amd64/bin/adssh", "dest": "adssh"},
+            {"archive": "adssh_v0.9.0_linux_amd64/bin/adssh-mcp", "dest": "adssh-mcp"},
+        ],
+    }
+    tool.update(overrides)
+    return {
+        "apiVersion": "blunix.dev/v1",
+        "kind": "GithubTools",
+        "name": "default",
+        "tools": [tool],
+    }
+
+
+def _adssh_blob():
+    blob = _gzip_tar(
+        [
+            {"name": "adssh_v0.9.0_linux_amd64/bin/adssh", "data": b"adssh-bin"},
+            {"name": "adssh_v0.9.0_linux_amd64/bin/adssh-mcp", "data": b"mcp-bin"},
+            {"name": "adssh_v0.9.0_linux_amd64/install.sh", "data": b"DO-NOT-RUN"},
+        ]
+    )
+    return blob, "sha256:" + hashlib.sha256(blob).hexdigest()
+
+
+def _rel_luminance(hex_color):
+    value = hex_color.lstrip("#")
+    channels = [int(value[index:index + 2], 16) / 255 for index in (0, 2, 4)]
+    linear = []
+    for channel in channels:
+        if channel <= 0.04045:
+            linear.append(channel / 12.92)
+        else:
+            linear.append(((channel + 0.055) / 1.055) ** 2.4)
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+
+def _contrast(foreground, background):
+    lighter = max(_rel_luminance(foreground), _rel_luminance(background))
+    darker = min(_rel_luminance(foreground), _rel_luminance(background))
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+class ToolTests(unittest.TestCase):
+    def test_shipped_pin_is_optional_and_has_no_digest(self):
+        model = load_tools(MODELS, "default")
+        self.assertEqual([tool["name"] for tool in model["tools"]], ["adssh"])
+        tool = model["tools"][0]
+        self.assertFalse(tool["default"])
+        self.assertNotIn("digest", tool)
+        self.assertEqual(tool["version"], "v0.9.0")
+        url = (
+            "https://github.com/afterdarksys/adssh/releases/download/"
+            "v0.9.0/adssh_v0.9.0_linux_amd64.tar.gz"
+        )
+        self.assertEqual(tool["url"], url)
+        self.assertNotIn("/releases/latest", tool["url"])
+        self.assertEqual(tool_artifact_url("adssh", "v0.9.0", tool["asset"]), url)
+
+    def test_default_apply_does_not_fetch(self):
+        def fetch(*_args):
+            raise AssertionError("network")
+
+        with tempfile.TemporaryDirectory() as root:
+            linked = install_tools(load_tools(MODELS, "default"), root, fetch=fetch)
+            self.assertEqual(linked, [])
+            self.assertFalse(os.path.isdir(os.path.join(root, "var", "lib", "blunix", "tools")))
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                code = main(["tools", "apply", "--models", MODELS, "--root", root])
+            self.assertEqual(code, 0)
+            text = buf.getvalue()
+            self.assertIn("blunix: tools idle", text)
+            self.assertIn("blunix: tool adssh waiting on a digest", text)
+
+    def test_named_apply_without_a_digest_writes_nothing(self):
+        def fetch(*_args):
+            raise AssertionError("network")
+
+        with tempfile.TemporaryDirectory() as root:
+            with self.assertRaises(BlunixError) as caught:
+                install_tools(
+                    load_tools(MODELS, "default"), root, names=["adssh"], fetch=fetch
+                )
+            self.assertEqual(str(caught.exception), "refused digest")
+            self.assertFalse(os.path.isdir(os.path.join(root, "var", "lib", "blunix", "tools")))
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                code = main(["tools", "apply", "adssh", "--models", MODELS, "--root", root])
+            self.assertEqual(code, 1)
+            self.assertIn("blunix: refused digest", buf.getvalue())
+
+    def test_pinned_archive_links_the_two_binaries(self):
+        blob, digest = _adssh_blob()
+        calls = []
+
+        def fetch(name, url):
+            calls.append((name, url))
+            return blob
+
+        model = parse_tools(_tools_doc(digest=digest, default=True))
+        with tempfile.TemporaryDirectory() as root:
+            linked = install_tools(model, root, fetch=fetch)
+            self.assertEqual(linked, ["adssh", "adssh-mcp"])
+            self.assertEqual(
+                calls,
+                [(
+                    "adssh",
+                    "https://github.com/afterdarksys/adssh/releases/download/"
+                    "v0.9.0/adssh_v0.9.0_linux_amd64.tar.gz",
+                )],
+            )
+            tools = os.path.join(root, "var", "lib", "blunix", "tools")
+            self.assertFalse(os.path.isdir(os.path.join(tools, "stage")))
+            for dest, payload in (("adssh", b"adssh-bin"), ("adssh-mcp", b"mcp-bin")):
+                final = os.path.join(tools, "adssh", "v0.9.0", dest)
+                link = os.path.join(tools, "bin", dest)
+                with open(final, "rb") as handle:
+                    self.assertEqual(handle.read(), payload)
+                self.assertEqual(stat.S_IMODE(os.stat(final).st_mode), 0o755)
+                self.assertEqual(
+                    os.readlink(link), os.path.join("..", "adssh", "v0.9.0", dest)
+                )
+            for dirpath, _dirs, filenames in os.walk(tools):
+                self.assertNotIn("install.sh", filenames)
+                for filename in filenames:
+                    path = os.path.join(dirpath, filename)
+                    if os.path.islink(path):
+                        continue
+                    with open(path, "rb") as handle:
+                        self.assertNotIn(b"DO-NOT-RUN", handle.read())
+
+    def test_bad_digest_writes_nothing(self):
+        blob, _digest = _adssh_blob()
+        model = parse_tools(_tools_doc(digest="sha256:" + ("ab" * 32), default=True))
+        with tempfile.TemporaryDirectory() as root:
+            with self.assertRaises(BlunixError) as caught:
+                install_tools(model, root, fetch=lambda _name, _url: blob)
+            self.assertEqual(str(caught.exception), "refused digest")
+            self.assertFalse(os.path.isdir(os.path.join(root, "var", "lib", "blunix", "tools")))
+
+    def test_latest_other_org_and_install_asset_refused(self):
+        refused = (
+            ({"version": "latest"}, "refused version"),
+            ({"repo": "afterdarksys/adssh"}, "refused repo"),
+            ({"asset": "adssh.zip"}, "refused asset"),
+            ({"asset": "install.tar.gz"}, "refused asset"),
+            ({"asset": "adssh-install.tar.gz"}, "refused asset"),
+        )
+        for overrides, message in refused:
+            with self.subTest(overrides=overrides):
+                with self.assertRaises(BlunixError) as caught:
+                    parse_tools(_tools_doc(**overrides))
+                self.assertEqual(str(caught.exception), message)
+        with self.assertRaises(BlunixError) as caught:
+            tool_artifact_url("adssh", "latest", "adssh_v0.9.0_linux_amd64.tar.gz")
+        self.assertEqual(str(caught.exception), "refused version")
+
+    def test_url_refuses_http_other_hosts_and_latest(self):
+        refused = (
+            "http://github.com/afterdarksys/adssh/releases/download/v0.9.0/adssh.tar.gz",
+            "https://evil.example/afterdarksys/adssh/releases/download/v0.9.0/a.tar.gz",
+            "https://github.com/afterdarksys/adssh/releases/latest/download/a.tar.gz",
+            "https://example.com/adssh.tar.gz",
+        )
+        for url in refused:
+            with self.subTest(url=url):
+                with self.assertRaises(BlunixError) as caught:
+                    tool_check_url(url)
+                self.assertEqual(str(caught.exception), "refused tool url")
+
+    def test_symlink_and_dotdot_refuse_the_whole_archive(self):
+        wanted = ["adssh_v0.9.0_linux_amd64/bin/adssh"]
+        symlink = _gzip_tar(
+            [
+                {"name": "adssh_v0.9.0_linux_amd64/bin/adssh", "data": b"adssh-bin"},
+                {
+                    "name": "adssh_v0.9.0_linux_amd64/bin/escape",
+                    "kind": "symlink",
+                    "link": "adssh",
+                },
+            ]
+        )
+        dotdot = _gzip_tar(
+            [
+                {"name": "adssh_v0.9.0_linux_amd64/bin/adssh", "data": b"adssh-bin"},
+                {"name": "adssh_v0.9.0_linux_amd64/../../etc/cron.d/adssh", "data": b"nope"},
+            ]
+        )
+        for blob in (symlink, dotdot):
+            with self.subTest(blob=hashlib.sha256(blob).hexdigest()[:8]):
+                with self.assertRaises(BlunixError) as caught:
+                    extract_named(blob, wanted)
+                self.assertEqual(str(caught.exception), "refused archive")
+                digest = "sha256:" + hashlib.sha256(blob).hexdigest()
+                model = parse_tools(
+                    _tools_doc(
+                        digest=digest,
+                        files=[{"archive": wanted[0], "dest": "adssh"}],
+                    )
+                )
+                with tempfile.TemporaryDirectory() as root:
+                    with self.assertRaises(BlunixError) as caught:
+                        install_tools(model, root, names=["adssh"], fetch=lambda _n, _u: blob)
+                    self.assertEqual(str(caught.exception), "refused archive")
+                    self.assertFalse(
+                        os.path.isdir(os.path.join(root, "var", "lib", "blunix", "tools", "bin"))
+                    )
+
+
+class GuiTests(unittest.TestCase):
+    def test_cloud_root_stages_the_theme_and_does_not_select_it(self):
+        with tempfile.TemporaryDirectory() as root:
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                code = main(["gui", "apply", "--root", root])
+            self.assertEqual(code, 0)
+            self.assertIn("graphical session absent", buf.getvalue())
+            self.assertFalse(apply_gui(root))
+            theme = os.path.join(root, "usr", "share", "themes", "Blunix")
+            self.assertTrue(os.path.isfile(os.path.join(theme, "index.theme")))
+            self.assertFalse(os.path.exists(os.path.join(root, "etc", "gtk-3.0", "settings.ini")))
+            self.assertFalse(os.path.exists(os.path.join(root, "etc", "profile.d", "blunix-gui.sh")))
+
+    def test_graphical_session_selects_the_blue_theme(self):
+        with tempfile.TemporaryDirectory() as root:
+            orca = os.path.join(root, "usr", "bin", "orca")
+            os.makedirs(os.path.dirname(orca))
+            open(orca, "wb").close()
+            self.assertTrue(apply_gui(root))
+            settings = os.path.join(root, "etc", "gtk-4.0", "settings.ini")
+            with open(settings, "r", encoding="utf-8") as handle:
+                text = handle.read()
+            self.assertIn("gtk-theme-name=Blunix", text)
+            self.assertIn("Sans 14", text)
+            self.assertIn("blunix-gui", text.splitlines()[0])
+            profile = os.path.join(root, "etc", "profile.d", "blunix-gui.sh")
+            with open(profile, "r", encoding="utf-8") as handle:
+                self.assertIn("export GTK_THEME=Blunix", handle.read())
+            css_path = os.path.join(root, "usr", "share", "themes", "Blunix", "gtk-4.0", "gtk.css")
+            with open(css_path, "r", encoding="utf-8") as handle:
+                css = handle.read()
+            for color in ("#12161a", "#f3efe6", "#1a4568", "#d2ee9a"):
+                self.assertIn(color, css)
+            self.assertGreaterEqual(_contrast("#f3efe6", "#12161a"), 7)
+            self.assertGreaterEqual(_contrast("#f3efe6", "#1a4568"), 7)
+
+    def test_removing_the_session_clears_only_our_files(self):
+        with tempfile.TemporaryDirectory() as root:
+            orca = os.path.join(root, "usr", "bin", "orca")
+            os.makedirs(os.path.dirname(orca))
+            open(orca, "wb").close()
+            self.assertTrue(apply_gui(root))
+            foreign = os.path.join(root, "etc", "gtk-4.0", "settings.ini")
+            kept = "[Settings]\ngtk-theme-name=Adwaita\n"
+            with open(foreign, "w", encoding="utf-8") as handle:
+                handle.write(kept)
+            os.remove(orca)
+            self.assertFalse(apply_gui(root))
+            with open(foreign, "r", encoding="utf-8") as handle:
+                self.assertEqual(handle.read(), kept)
+            self.assertFalse(os.path.exists(os.path.join(root, "etc", "profile.d", "blunix-gui.sh")))
+            self.assertTrue(
+                os.path.isfile(os.path.join(root, "usr", "share", "themes", "Blunix", "index.theme"))
+            )
+
+    def test_theme_css_contrast(self):
+        css_dir = os.path.join(ROOT, "image", "gui", "Blunix")
+        paths = (
+            os.path.join(css_dir, "gtk-3.0", "gtk.css"),
+            os.path.join(css_dir, "gtk-4.0", "gtk.css"),
+        )
+        with open(paths[0], "r", encoding="utf-8") as handle:
+            gtk3 = handle.read()
+        with open(paths[1], "r", encoding="utf-8") as handle:
+            gtk4 = handle.read()
+        self.assertEqual(gtk3, gtk4)
+        self.assertTrue(gtk4.startswith("/* blunix-gui */"))
+        for color in ("#12161a", "#1b2127", "#f3efe6", "#1a4568", "#8eb4d4", "#d2ee9a"):
+            self.assertIn(color, gtk4)
+        self.assertGreaterEqual(_contrast("#f3efe6", "#12161a"), 7)
+        self.assertGreaterEqual(_contrast("#f3efe6", "#1a4568"), 7)
+        self.assertGreaterEqual(_contrast("#d2ee9a", "#12161a"), 7)
+        self.assertGreaterEqual(_contrast("#8eb4d4", "#12161a"), 7)
+
+
+class BrandTests(unittest.TestCase):
+    def test_the_word_is_outlined_type_beside_the_mark(self):
+        for name in ("mark.jpg", "logo-mark.svg", "logo-horizontal.svg"):
+            self.assertTrue(os.path.isfile(os.path.join(ROOT, "brand", name)))
+        with open(os.path.join(ROOT, "brand", "wordmark.svg"), "r", encoding="utf-8") as handle:
+            svg = handle.read()
+        # Outlined to paths: no font dependency, no live text, no raster.
+        self.assertIn("<path", svg)
+        self.assertNotIn("<text", svg)
+        self.assertNotIn("<image", svg)
 
 
 class SourceTests(unittest.TestCase):

@@ -1,0 +1,71 @@
+# Deploys the public site (site/ -> Pages project blunix-io) and the portal
+# (portal/ -> Pages project build-blunix-io).
+#
+# Threats: a compromised third-party action (every action is pinned to a full
+# commit SHA), a token with more reach than a Pages deploy (the job token is
+# contents: read, and the Cloudflare token should be scoped to Pages edit on
+# this account only), and the shared stylesheet drifting between the two sites.
+#
+# Releases appear on blunix.io live through /releases.json without a deploy,
+# so a release does not trigger one.
+#
+# Production deploys run only from refs/heads/main, and only through the GitHub
+# Environment `production`. Ryan: in Settings > Environments > production, set
+# deployment branches to `main` only, add required reviewers, and keep the two
+# CLOUDFLARE_* secrets as environment secrets there, not repository secrets.
+
+name: site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "portal/**"
+      - "brand/**"
+      - ".github/workflows/site.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Shared stylesheet is identical
+        run: cmp site/css/site.css portal/css/site.css
+
+      - name: Site and portal tests
+        run: node --test tests/site/releases.test.mjs tests/site/portal.test.mjs
+
+      # Run from inside site/ so wrangler finds site/functions/.
+      - name: Deploy blunix.io
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.144.0"
+          workingDirectory: site
+          command: pages deploy . --project-name=blunix-io --branch=main --commit-dirty=true
+
+      - name: Deploy build.blunix.io
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.144.0"
+          workingDirectory: portal
+          command: pages deploy . --project-name=build-blunix-io --branch=main --commit-dirty=true

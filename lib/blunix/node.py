@@ -2,6 +2,10 @@
 after each renderer accepts the document. A refused document does not write
 node.yaml or bootstrap-complete.
 
+`network:` is a model name or an inline mapping checked by the same network
+parser. `target:` is optional and only names a disk for the installer; it is a
+kernel name or a serial, never a path.
+
 The document is unsigned in this spike. apply says so on the log callback.
 Signing is still open. This module does not invent a signature.
 """
@@ -9,6 +13,7 @@ Signing is still open. This module does not invent a signature.
 from __future__ import annotations
 
 import os
+import re
 
 import yaml
 
@@ -17,7 +22,7 @@ from blunix.ai import install_ai, load_ai
 from blunix.cmd import run_cmd
 from blunix.disk import load_disk, render_disk, write_disk
 from blunix.errors import BlunixError
-from blunix.network import load_network, write_network
+from blunix.network import parse_inline_network, resolve_network, write_network
 from blunix.schema import (
     load_bytes,
     load_path,
@@ -41,8 +46,25 @@ _NODE_KEYS = {
     "ai",
     "update",
     "sysexts",
+    "target",
 }
 _UPDATE_KEYS = {"url", "channel"}
+_TARGET = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}")
+
+
+def _network(value):
+    if isinstance(value, dict):
+        parse_inline_network(value)
+        return value
+    return require_name(value, "network")
+
+
+def _target(value):
+    if value is None:
+        return None
+    if not isinstance(value, str) or not _TARGET.fullmatch(value):
+        raise BlunixError("refused target")
+    return value
 
 
 def _update(value):
@@ -72,7 +94,7 @@ def parse_node(doc):
     name = require_name(doc.get("name"), "name")
     hostname = require_name(doc.get("hostname"), "hostname")
     disk = require_name(doc.get("disk"), "disk")
-    network = require_name(doc.get("network"), "network")
+    network = _network(doc.get("network"))
     access = require_name(doc.get("access"), "access")
     ai = require_name(doc.get("ai"), "ai")
     update = _update(doc.get("update"))
@@ -87,6 +109,7 @@ def parse_node(doc):
         "access": access,
         "ai": ai,
         "update": update,
+        "target": _target(doc.get("target")),
     }
 
 
@@ -126,12 +149,13 @@ def _save_boot_entry(root, entry, log):
         _say(log, "blunix: boot entry was not saved")
 
 
-def apply_node(doc, root, models=None, log=None):
+def check_node(doc, models=None):
+    """Parse the document and every model it names. Writes nothing."""
     original = coerce_doc(doc)
     parsed = parse_node(original)
     models = models_dir(models)
     disk = load_disk(models, parsed["disk"])
-    network = load_network(models, parsed["network"])
+    network = resolve_network(models, parsed["network"])
     access = load_access(models, parsed["access"])
     ai = load_ai(models, parsed["ai"])
     # Render before any write so a refusal leaves the tree untouched.
@@ -139,6 +163,24 @@ def apply_node(doc, root, models=None, log=None):
     dumped = yaml.safe_dump(original, sort_keys=False)
     if not isinstance(dumped, str) or "password" in dumped.lower():
         raise BlunixError("refused field")
+    return {
+        "parsed": parsed,
+        "disk": disk,
+        "network": network,
+        "access": access,
+        "ai": ai,
+        "dumped": dumped,
+    }
+
+
+def apply_node(doc, root, models=None, log=None):
+    checked = check_node(doc, models)
+    parsed = checked["parsed"]
+    disk = checked["disk"]
+    network = checked["network"]
+    access = checked["access"]
+    ai = checked["ai"]
+    dumped = checked["dumped"]
     write_disk(disk, os.path.join(root, "usr", "lib", "repart.d"))
     write_network(network, os.path.join(root, "run", "systemd", "network"))
     plan = apply_access(access, root, log=log)
@@ -163,7 +205,7 @@ def boot_node(root="/", models=None, log=None):
         return 0
     doc = load_path(path)
     parsed = parse_node(doc)
-    network = load_network(models_dir(models), parsed["network"])
+    network = resolve_network(models_dir(models), parsed["network"])
     write_network(network, os.path.join(root, "run", "systemd", "network"))
     if _live(root):
         run_cmd(["networkctl", "reload"], check=False)

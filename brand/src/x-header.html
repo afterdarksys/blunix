@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Blunix header</title><style>
+@font-face { font-family: Fraunces; src: url("fonts/fraunces-latin.woff2") format("woff2"); font-weight: 100 900; font-style: normal; }
+@font-face { font-family: Fraunces; src: url("fonts/fraunces-italic.woff2") format("woff2"); font-weight: 100 900; font-style: italic; }
+@font-face { font-family: Atkinson; src: url("fonts/atkinson-400.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: Atkinson; src: url("fonts/atkinson-700.woff2") format("woff2"); font-weight: 700; }
+:root {
+  --bg: #12161a; --raise: #1b2127; --ink: #f3efe6; --muted: #c9c3b6;
+  --line: #3a434d; --slate: #8e9aa8; --slate-text: #a9b4c1; --slate-2: #6f7c8b; --green: #d2ee9a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+@page { size: 8.5in 11in; margin: 0; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+html, body { width: 1500px; height: 500px; overflow: hidden; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: Atkinson, sans-serif; -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+.display { font-family: Fraunces, serif; font-weight: 500; letter-spacing: -0.012em; color: var(--ink); }
+.muted { color: var(--muted); }
+.abs { position: absolute; }
+.console {
+  font-family: Atkinson, sans-serif; color: var(--muted);
+  background: var(--raise); border-left: 4px solid var(--slate-2);
+  display: inline-block; white-space: nowrap;
+}
+.console b { color: var(--ink); font-weight: 700; }
+.glow { position: absolute; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(120, 140, 162, 0.16), rgba(120, 140, 162, 0.05) 55%, transparent); }
+.num { font-family: Fraunces, serif; font-weight: 500; color: var(--slate-text); font-variant-numeric: lining-nums; }
+</style></head><body>
+<div class="glow" style="left:980px;top:-150px;width:720px;height:720px"></div>
+<svg class="abs" style="right:150px;top:72.0px" width="295.8" height="360" viewBox="86.09185028076172 51.94340133666992 339.8162612915039 413.6076850891113" aria-hidden="true"><path fill="#8e9aa8" d="M253.01 465.08Q230.12 457.9 207.66 446.06Q180.51 431.76 158.75 413Q105.68 367.27 96.06 306.4Q96 306.01 95.97 305.61L86.12 179.57Q86 178 86.37 176.47L114.26 59.64Q115.23 55.61 118.76 53.45Q122.28 51.28 126.31 52.24Q128.58 52.78 130.38 54.27L206.79 117.68Q211.9 121.91 218.4 120.65Q237.2 117 256 117V465.55Q254.5 465.55 253.01 465.08Z"/><path fill="#6f7c8b" d="M256 465.55V117Q274.8 117 293.6 120.65Q300.1 121.91 305.21 117.68L381.62 54.27Q384.81 51.62 388.94 52.01Q393.06 52.39 395.7 55.58Q397.19 57.37 397.74 59.64L425.63 176.47Q426 178 425.88 179.57L416.03 305.61Q416 306.01 415.94 306.4Q406.32 367.27 353.25 413Q331.49 431.76 304.34 446.06Q281.88 457.9 258.99 465.08Q257.5 465.55 256 465.55Z"/><path fill="#12161a" d="M287.97 296.75C311.53 262.27 351.88 256.6 384.03 283.25C359.61 311.62 319.27 317.29 287.97 296.75ZM127.97 283.25C160.12 256.6 200.47 262.27 224.03 296.75C192.73 317.29 152.39 311.62 127.97 283.25Z"/><path fill="#d2ee9a" d="M292.43 296.12C314.19 267.62 350.79 262.47 379.57 283.88C357.11 307.39 320.51 312.54 292.43 296.12ZM132.43 283.88C161.21 262.47 197.81 267.62 219.57 296.12C191.49 312.54 154.89 307.39 132.43 283.88Z"/><path fill="#12161a" d="M176.64 271.65C181.69 284.69 181.3 295.7 175.36 308.35C170.31 295.31 170.7 284.3 176.64 271.65ZM335.36 271.65C341.3 284.3 341.69 295.31 336.64 308.35C330.7 295.7 330.31 284.69 335.36 271.65Z"/></svg>
+<div class="abs" style="left:470px;top:118px;width:600px">
+  <h1 class="display" style="font-size:60px;line-height:1.08">Speech before<br>questions.</h1>
+  <div class="console" style="margin-top:34px;font-size:23px;padding:12px 18px"><b>blunix:</b> hostname ada.blnx.io. Say yes to keep it.</div>
+</div>
+</body></html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.blunix.io; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Account, blunix</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="assets/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#12161a">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="blunix">
+  <meta property="og:title" content="Account, blunix">
+  <meta property="og:description" content="The blunix account registers a blnx.io label and publishes an age-encrypted node document. Sign-in is Authentik. The browser makes the key and uploads only ciphertext.">
+  <meta property="og:url" content="https://blunix.io/account.html">
+  <meta property="og:image" content="https://blunix.io/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="blunix: a quiet Debian host for cloud nodes.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="description" content="The blunix account registers a blnx.io label and publishes an age-encrypted node document. Sign-in is Authentik. The browser makes the key and uploads only ciphertext.">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="js/live.js"></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="wrap site-header">
+    <a class="brand" href="index.html">
+      <img src="assets/logo-mark.svg" width="40" height="48" alt="">
+      <span>blunix</span>
+    </a>
+    <nav aria-label="Primary">
+      <a href="index.html">Host</a>
+      <a href="install.html">Install</a>
+      <a href="access.html">Access</a>
+      <a href="log.html">Log</a>
+      <a href="account.html" aria-current="page">Account</a>
+      <a href="service.html">Service</a>
+      <a href="platform.html">Platform</a>
+      <a href="api.html">API</a>
+      <a href="https://build.blunix.io/">Portal</a>
+    </nav>
+  </header>
+  <main id="content" tabindex="-1">
+    <section class="wrap hero">
+      <div>
+        <p class="kicker">Account</p>
+        <h1>Register a name. Hand over the URL.</h1>
+        <p class="lede">An account signs in with an issuer, registers a label, and publishes an encrypted build document. The installer fetches that URL. This page describes the <a href="https://build.blunix.io/">portal</a>, which is where you will do it.</p>
+        <p class="lede">The portal and the API are built and tested, not deployed yet.</p>
+        <p class="portal-status" data-portal-status aria-live="polite"><span data-portal-words>The portal is not open yet.</span> Its address is <a href="https://build.blunix.io/">build.blunix.io</a>.</p>
+      </div>
+      <figure class="mark mark-small">
+        <img src="assets/logo-mark.svg" width="372" height="446" alt="">
+        <figcaption>For a label such as <span class="host">ada</span>, the installer URL is <span class="host">https://ada.blnx.io/</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Sign in</h2>
+        <p>People use an issuer. The platform is a relying party. It does not run an OAuth server, and it does not keep a password.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3>Authentik at adsas.id</h3>
+          <p>The first issuer. OpenID Connect authorization code with PKCE (S256), plus state and nonce. The API verifies the ID token and sets a session cookie. The client id, the secret, and the issuer URL are Worker secrets. None of them are in this site.</p>
+        </li>
+        <li>
+          <h3>Google, later</h3>
+          <p>OpenID Connect at <span class="host">https://accounts.google.com</span>. Authorization code with PKCE. The audience has to be our client id, once that client exists.</p>
+        </li>
+        <li>
+          <h3>GitHub, later</h3>
+          <p>GitHub user sign-in uses GitHub's OAuth 2.0 authorization-code endpoints. The same rules: allowlisted issuer, live expiry, matching audience, algorithm allowlist. <code>none</code> is rejected.</p>
+        </li>
+      </ol>
+      <p class="note">A token from any other issuer fails closed. Google and GitHub are later work. Only the portal's sign-in link starts a login.</p>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>The label</h2>
+        <p>One account can hold many labels. Each label is one installer URL and one current ciphertext.</p>
+      </div>
+      <ul class="props">
+        <li><strong>Shape.</strong> One ASCII DNS label. A letter, then lowercase letters, digits, or single hyphens, 2 to 32 characters, ending in a letter or digit. No punycode. Reserved: <span class="host">www</span>, <span class="host">api</span>, <span class="host">updates</span>, <span class="host">log</span>, <span class="host">mail</span>, <span class="host">build</span>, <span class="host">portal</span>, <span class="host">admin</span>, <span class="host">root</span>, <span class="host">blunix</span>, <span class="host">proxy</span>, <span class="host">status</span>, and any <span class="host">v</span> followed by digits. Twenty labels per account.</li>
+        <li><strong>Empty until you publish.</strong> <span class="host">GET /</span> is a 404 until ciphertext exists. The installer applies nothing.</li>
+        <li><strong>A separate domain.</strong> Build hosts live on <span class="host">blnx.io</span>, not under blunix.io, so a build file never shares cookies or an origin with this site, the portal at <span class="host">build.blunix.io</span>, or the API.</li>
+        <li><strong>Versions.</strong> Each upload is a new version. <span class="host">ada.blnx.io</span> serves the latest. <span class="host">v3.ada.blnx.io</span> serves version 3 until you delete it. Deleting the latest moves the name back to the highest remaining version. Releasing a label holds the name for 30 days.</li>
+        <li><strong>Guessable on purpose, when the label is public.</strong> You chose a name you can hand to someone. Anyone who can guess a public label can download the ciphertext. They still need the key. A bearer on that anonymous fetch would be a second secret. This draft does not add one.</li>
+        <li><strong>Visibility.</strong> A public label serves the ciphertext to anyone who can say the name. That is the spoken install. An enrolled label serves it only to a machine key bound to that profile. Enrolled labels are designed, not built. The <a href="service.html">service</a> design defaults new profiles to enrolled.</li>
+        <li><strong>Lookalikes.</strong> Labels that mimic another label are not rejected yet. That check is not built.</li>
+      </ul>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Publish</h2>
+        <p>The browser composes the node document, generates the key, encrypts, and uploads ciphertext. The key stays in the browser and on the install card you save.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3>The document is the build</h3>
+          <p>The machine hostname, the disk layout, the network (DHCP, or a static address, gateway, and DNS), the access profile, and the update channel, which is stable. The same schema the image accepts. Unknown fields are refused. A field named like key material is refused. A shell script is refused. The check happens before encrypt.</p>
+        </li>
+        <li>
+          <h3>A generated key, age passphrase mode</h3>
+          <p>You do not choose the key. The browser draws 100 bits from its CSPRNG and writes them as 20 characters in four groups of five. It encrypts with the <a href="https://age-encryption.org/v1">age specification</a>, stretched with scrypt, the way age defines it. There is no second cipher. The browser uses typage, served from this site. Debian <code>age</code> decrypts on the machine.</p>
+        </li>
+        <li>
+          <h3>The server stores ciphertext</h3>
+          <p>The key is not uploaded, not hashed, not stored, and not logged. The install card is shown once, with a text file and an offline bundle to download. A lost key means that version is gone. Publish again for a new one. The account can see the size, the time, and the sha256 of the ciphertext. It cannot read the document back.</p>
+        </li>
+        <li>
+          <h3>Hand the URL to the installer</h3>
+          <p>The machine fetches <span class="host">https://ada.blnx.io/</span> over TLS, asks for the key with echo off, and decrypts locally. The sequence on the box is the <a href="install.html">install</a> page.</p>
+        </li>
+      </ol>
+      <p class="note">Publishing again changes the file the next install fetches from the latest name. A pinned name keeps its version. Taking a later document on a machine that is already installed is the <a href="service.html">service</a>, which is designed, not built. A new image is a new release on the <a href="log.html">log</a>.</p>
+    </section>
+  </main>
+  <footer class="wrap site-footer">
+    <p>Built by people who keep cats. blunix.io is this project, and the source is <a href="https://github.com/afterdarksys/blunix">afterdarksys/blunix</a>. blunix.com is Blunix GmbH in Berlin, a different company.</p>
+  </footer>
+</body>
+</html>

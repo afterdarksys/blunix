@@ -1,6 +1,8 @@
 """Threats: a network model chooses addresses and which interfaces match.
 A match of `*`, a bridge, a veth, or a container NIC is refused. DHCP and a
-static address in the same model are refused. Rendering writes one
+static address in the same model are refused. A gateway outside the address's
+subnet is refused. An inline `network:` mapping in a node document goes
+through the same parser as a model file. Rendering writes one
 systemd-networkd unit and does not run a shell.
 
 v1 models do not emit a .link or a .netdev. A .link that matched every NIC
@@ -16,6 +18,7 @@ import re
 
 from blunix.errors import BlunixError
 from blunix.schema import (
+    API_VERSION,
     load_path,
     model_path,
     require_bool,
@@ -35,6 +38,8 @@ _NET_KEYS = {
     "gateway",
     "dns",
 }
+_INLINE_KEYS = {"dhcp", "match", "address", "gateway", "dns"}
+_INLINE_NAME = "inline"
 _SPECIFIC = re.compile(r"(en[a-z0-9]{1,14}|eth[0-9]{1,4})")
 _FILE = "10-blunix.network"
 
@@ -97,7 +102,9 @@ def parse_network(doc):
     if not isinstance(dns_raw, list) or not dns_raw or len(dns_raw) > 4:
         raise BlunixError("refused dns")
     dns = [_host(item, "dns") for item in dns_raw]
-    if ipaddress.ip_interface(address).ip == ipaddress.ip_address(gateway):
+    iface = ipaddress.ip_interface(address)
+    gw = ipaddress.ip_address(gateway)
+    if iface.ip == gw or gw.version != iface.version or gw not in iface.network:
         raise BlunixError("refused gateway")
     return {
         "name": name,
@@ -114,6 +121,26 @@ def load_network(models, name):
     if parsed["name"] != name:
         raise BlunixError("refused name")
     return parsed
+
+
+def parse_inline_network(value):
+    """The node document's inline form: match, and dhcp or address/gateway/dns.
+    Same rules as a model file, with no header and no name."""
+    if not isinstance(value, dict):
+        raise BlunixError("refused network")
+    require_keys(value, _INLINE_KEYS)
+    doc = dict(value)
+    doc["apiVersion"] = API_VERSION
+    doc["kind"] = "Network"
+    doc["name"] = _INLINE_NAME
+    return parse_network(doc)
+
+
+def resolve_network(models, value):
+    """A node's `network:` is a model name or an inline mapping."""
+    if isinstance(value, dict):
+        return parse_inline_network(value)
+    return load_network(models, value)
 
 
 def render_network(model):

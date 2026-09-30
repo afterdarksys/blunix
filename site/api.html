@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.blunix.io; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>API, blunix</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="assets/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#12161a">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="blunix">
+  <meta property="og:title" content="API, blunix">
+  <meta property="og:description" content="The blunix API registers build labels, publishes age ciphertext, and holds API keys. People sign in with Authentik. Programs use API keys.">
+  <meta property="og:url" content="https://blunix.io/api.html">
+  <meta property="og:image" content="https://blunix.io/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="blunix: a quiet Debian host for cloud nodes.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="description" content="The blunix API registers build labels, publishes age ciphertext, and holds API keys. People sign in with Authentik. Programs use API keys.">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="js/live.js"></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="wrap site-header">
+    <a class="brand" href="index.html">
+      <img src="assets/logo-mark.svg" width="40" height="48" alt="">
+      <span>blunix</span>
+    </a>
+    <nav aria-label="Primary">
+      <a href="index.html">Host</a>
+      <a href="install.html">Install</a>
+      <a href="access.html">Access</a>
+      <a href="log.html">Log</a>
+      <a href="account.html">Account</a>
+      <a href="service.html">Service</a>
+      <a href="platform.html">Platform</a>
+      <a href="api.html" aria-current="page">API</a>
+      <a href="https://build.blunix.io/">Portal</a>
+    </nav>
+  </header>
+  <main id="content" tabindex="-1">
+    <section class="wrap hero">
+      <div>
+        <p class="kicker">API</p>
+        <h1>Keys for programs. Issuers for people.</h1>
+        <p class="lede">The API the <a href="https://build.blunix.io/">portal</a> calls, and a program calls with a key. The installer itself does not use a key. It fetches the label URL. The install routes are built and tested, not deployed. The service and platform routes are designed, not built.</p>
+      </div>
+      <figure class="mark mark-small">
+        <img src="assets/logo-mark.svg" width="372" height="446" alt="">
+        <figcaption>API host: <span class="host">https://api.blunix.io/v1</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Three names</h2>
+        <p>The label host, the API host, and the update host are different names so a build URL cannot be mistaken for the API. The portal is <span class="host">https://build.blunix.io/</span>.</p>
+      </div>
+      <ul class="props">
+        <li><strong>Installer.</strong> <span class="host">https://{label}.blnx.io/</span> returns the latest age ciphertext, not cached. <span class="host">https://v{n}.{label}.blnx.io/</span> returns version n, cached for a year. Otherwise 404. <code>GET</code> and <code>HEAD</code> on <code>/</code> only. No query string. TLS required. Cap 256KiB. No key. The header <code>x-blunix-sha256</code> is the ciphertext digest. <span class="host">blnx.io</span> is a separate domain, so build files never share cookies with the site, the portal, or the API.</li>
+        <li><strong>API.</strong> <span class="host">https://api.blunix.io/v1</span> is where accounts and publishers write. A Cloudflare Worker, with the same Worker serving the build names.</li>
+        <li><strong>Updates.</strong> <span class="host">https://updates.blunix.io/blunix</span> will be the sysupdate manifest generated from the image log. Designed, not built. Releases are on GitHub today, and the <a href="log.html">log</a> page reads them live.</li>
+      </ul>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>API keys</h2>
+        <p>A key is for a program, such as the build-proxy. A person keeps using the issuer. A person mints and revokes keys in the <a href="https://build.blunix.io/">portal</a>.</p>
+      </div>
+      <ul class="props">
+        <li><strong>Drawn from the OS CSPRNG.</strong> Shown once. Stored only as a SHA-256 hash, compared in constant time. A key is high entropy, so it is not stretched the way a password is.</li>
+        <li><strong>Prefix <code>blx_</code>, then 43 base64url characters.</strong> Logs may store the hash as a fingerprint. They must not store the key.</li>
+        <li><strong>Scopes.</strong> <code>hosts:write</code> is the default: reserve labels and upload builds. <code>hosts:read</code> lists only. Keys are minted, listed, and revoked with a browser session, never with another key. Later scopes, such as <code>log:publish</code>, <code>machines:read</code>, and <code>troubleshoot:request</code>, belong to the <a href="service.html">service</a> and <a href="platform.html">platform</a> designs.</li>
+        <li><strong>Revocation is immediate.</strong> A revoked hash fails closed. Rotation is a new key, then revoke the old one.</li>
+        <li><strong>Header only.</strong> <code>Authorization: Bearer</code>. A <code>blx_</code> token is an account key. A <code>blx_join_</code> token is a join token for one enrollment, and in this pass it is a 401 everywhere. A JWT is an access token from an allowlisted issuer. A machine call is an Ed25519 signature, not a bearer key. Anything else is a 401. The key is never accepted in a query string.</li>
+      </ul>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Sign-in</h2>
+        <p>Authentik at adsas.id is the first issuer. Google and GitHub come later, under the same checks.</p>
+      </div>
+      <ul class="props">
+        <li><strong>Allowlist.</strong> Authentik at adsas.id, Google, GitHub. The adsas.id discovery URL is recorded at bind time. Google's issuer is <span class="host">https://accounts.google.com</span>. GitHub user login uses that product's OAuth 2.0 authorization-code endpoints.</li>
+        <li><strong>Browser.</strong> Authorization code with PKCE (S256), plus state and nonce. Redirect URLs are an exact https match. No wildcard redirect. The session is the cookie <code>__Host-blx_session</code>: Secure, HttpOnly, SameSite=Lax, 12 hours.</li>
+        <li><strong>Cross-site requests.</strong> A state-changing call with a session must send <code>x-blunix-csrf: 1</code> and come from the origin <span class="host">https://build.blunix.io</span>. A call with a bearer key needs neither.</li>
+        <li><strong>Token.</strong> Verified against the issuer's JWKS. Issuer, audience, and expiry are checked. The algorithm has to be RS256, ES256, or EdDSA. <code>none</code> is rejected. A failed check is a refusal, including a missing discovery document.</li>
+        <li><strong>No client secret in the tree.</strong> The client id, the secret, and the issuer URL are Worker secrets. They do not go in this website.</li>
+      </ul>
+    </section>
+
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>Routes</h2>
+        <p>JSON in and out, except the ciphertext upload. Errors are fixed strings, <code>{"error":"..."}</code>. The server does not echo a body back, and it does not decrypt.</p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <caption>The install routes in /v1. Built and tested, not deployed.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Call</th>
+              <th scope="col">Who</th>
+              <th scope="col">Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><code>GET /v1/health</code></th>
+              <td>anyone</td>
+              <td><code>{"ok":true}</code>. No cookie, no auth. CORS allows <span class="host">https://blunix.io</span> to read it, without credentials. This site uses it to say whether the portal is open.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>GET /v1/auth/login</code></th>
+              <td>anyone</td>
+              <td>Redirect to the issuer. The PKCE state is kept on the server for 10 minutes.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>GET /v1/auth/callback</code></th>
+              <td>the issuer</td>
+              <td>Verify, create or find the account, set the session cookie, and return to the portal.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>POST /v1/auth/logout</code></th>
+              <td>session</td>
+              <td>Delete the session.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>GET /v1/me</code></th>
+              <td>session or key</td>
+              <td>The account and its labels. No secrets.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>POST /v1/hosts</code></th>
+              <td>session, or <code>hosts:write</code></td>
+              <td>Reserve <code>{label}</code>. 201, 409 if taken, 400 if invalid or reserved. 20 labels per account.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>GET /v1/hosts</code></th>
+              <td>session, <code>hosts:read</code>, or <code>hosts:write</code></td>
+              <td>The account's labels, with the latest version of each.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>GET /v1/hosts/{label}</code></th>
+              <td>owner</td>
+              <td>The label, when it was made, and its versions: number, sha256, size, time.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>DELETE /v1/hosts/{label}</code></th>
+              <td>owner</td>
+              <td>The label and every version stop serving. The name is held 30 days.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>POST /v1/hosts/{label}/builds</code></th>
+              <td>owner</td>
+              <td>The body is raw age ciphertext, <code>application/octet-stream</code>. 201 with the version, sha256, size, and both URLs.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>DELETE /v1/hosts/{label}/builds/{n}</code></th>
+              <td>owner</td>
+              <td>That version stops serving. The latest moves back to the highest remaining version.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>POST /v1/keys</code></th>
+              <td>session only</td>
+              <td>Mint a key with <code>{name, scopes}</code>. The response is the only time the key appears.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>GET /v1/keys</code></th>
+              <td>session only</td>
+              <td>Fingerprints, names, and scopes. Never the key.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>DELETE /v1/keys/{fingerprint}</code></th>
+              <td>session only</td>
+              <td>Revoke that key. Immediate.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="props">
+        <li><strong>An upload is age, or it is refused.</strong> At most 256KiB. Age binary or age armor. Exactly one stanza in the header, and it is <code>scrypt</code>. A recipient-key stanza, plaintext, YAML, a shell script, and an empty body are <code>400 {"error":"refused ciphertext"}</code>.</li>
+        <li><strong>Rate limits.</strong> 10 label reservations and 30 uploads per account per hour. 60 login starts per address per hour.</li>
+        <li><strong>Audit.</strong> A row for each reserve, upload, delete, and key event: time, account, label, version, sha256, key fingerprint. Never a body, a key, or a token.</li>
+      </ul>
+      <div class="table-scroll">
+        <table>
+          <caption>Designed for later passes, not built.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Call</th>
+              <th scope="col">Who</th>
+              <th scope="col">Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><code>GET /v1/log</code></th>
+              <td>public</td>
+              <td>Rows for a channel. Same record as the <a href="log.html">log</a> page.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>POST /v1/log</code></th>
+              <td>publisher</td>
+              <td>Append one version, or one withdrawal. An existing version id is refused. Ordinary keys are refused.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>PUT /v1/hosts/{label}</code></th>
+              <td>account</td>
+              <td>Set visibility to <code>public</code> or <code>enrolled</code>.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>POST /v1/hosts/{label}/join-tokens</code></th>
+              <td>account</td>
+              <td>Mint a <code>blx_join_</code> token. Shown once. Expires. Use cap.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>DELETE /v1/join-tokens/{fingerprint}</code></th>
+              <td>account</td>
+              <td>Revoke that token. Immediate.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>POST /v1/machines</code></th>
+              <td>join token, once</td>
+              <td>Bind an Ed25519 public key to a hostname and a profile.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>POST /v1/machines/{hostname}/checkin</code></th>
+              <td>machine signature</td>
+              <td>Report the document sha256 and the image digest. Return the desired generation.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>GET /v1/machines/{hostname}/desired</code></th>
+              <td>machine signature</td>
+              <td>The same generation, for a machine that woke up.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>GET /v1/machines</code></th>
+              <td>account</td>
+              <td>Inventory. No secrets.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>POST /v1/machines/{hostname}/troubleshoots</code></th>
+              <td><code>troubleshoot:request</code></td>
+              <td>Open a collect. A shell scope and a command field are refused.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>GET /v1/machines/{hostname}/troubleshoots/{id}</code></th>
+              <td><code>troubleshoot:read</code>, or the machine</td>
+              <td>Status. No report body.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>DELETE /v1/machines/{hostname}/troubleshoots/{id}</code></th>
+              <td><code>troubleshoot:request</code></td>
+              <td>Cancel. A later result is refused.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>POST /v1/machines/{hostname}/troubleshoots/{id}/result</code></th>
+              <td>machine signature</td>
+              <td>One report, cap 64KiB. Closes the job.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>GET /v1/troubleshoots</code></th>
+              <td><code>troubleshoot:read</code></td>
+              <td>Open jobs for the account. No report bodies.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">A stolen API key can replace your ciphertext. It cannot produce a document that decrypts under a build key it does not hold. Revoke the API key. The build key is never a field on any of these calls. Machine routes and join tokens are the <a href="service.html">service</a> contract. Build, deploy, and the collect are the <a href="platform.html">platform</a> contract.</p>
+    </section>
+  </main>
+  <footer class="wrap site-footer">
+    <p>Built by people who keep cats. blunix.io is this project, and the source is <a href="https://github.com/afterdarksys/blunix">afterdarksys/blunix</a>. blunix.com is Blunix GmbH in Berlin, a different company.</p>
+  </footer>
+</body>
+</html>

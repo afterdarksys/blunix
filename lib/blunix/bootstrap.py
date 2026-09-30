@@ -1,7 +1,8 @@
 """Threats: the build passphrase stays on the machine. Fetch uses the default
-TLS verifier and refuses any URL that is not https://{assigned-host}/.
-A wrong passphrase, a shell script, or missing test guestinfo fails closed
-and does not apply.
+TLS verifier, TLS 1.2 or higher, a 256 KiB cap, and refuses any URL that is
+not https://{assigned-host}/, including on a redirect. A wrong passphrase, a
+shell script, or missing test guestinfo fails closed and does not apply. The
+typed key is canonicalized (keyfmt) and never logged.
 
 What it does not stop: the test image reads VMware guestinfo, which root in
 the guest can see. That path exists only for the fixture marker. Production
@@ -24,8 +25,14 @@ from blunix.age import decrypt_bytes, encrypt_bytes
 from blunix.cmd import run_cmd
 from blunix.console import console_line
 from blunix.errors import BlunixError, DecryptError
+from blunix.keyfmt import passphrase_candidates
 from blunix.node import apply_node
-from blunix.schema import MAX_DOCUMENT, load_bytes, require_build_host
+from blunix.schema import (
+    MAX_DOCUMENT,
+    expand_build_host,
+    load_bytes,
+    require_build_host,
+)
 
 FIXTURE_PATH = "/usr/share/blunix/bootstrap-fixture.age"
 MARKER_NAME = "test-image"
@@ -34,6 +41,8 @@ _GUESTINFO = re.compile(r"guestinfo\.blunix\.[a-z.]+")
 _INET = re.compile(r"^\d+:\s+(\S+)\s+inet\s+(\d+\.\d+\.\d+\.\d+/\d+)\b")
 _SPEECH = ("full-speech", "console-speech")
 _WRONG = "blunix-self-test-wrong"
+# Ciphertext cap on the wire. The plaintext cap is still MAX_DOCUMENT.
+MAX_CIPHER = 256 * 1024
 
 
 def _root_path(root, path):
@@ -106,25 +115,34 @@ class _Redirect(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def _read_cap(resp):
-    data = resp.read(MAX_DOCUMENT + 1)
+def read_cap(resp, cap=MAX_CIPHER):
+    data = resp.read(cap + 1)
     if not isinstance(data, (bytes, bytearray)):
         raise BlunixError("document fetch failed")
-    if len(data) > MAX_DOCUMENT:
+    if len(data) > cap:
         raise BlunixError("document too large")
     return bytes(data)
 
 
-def fetch_https(host, urlopen=None, context_factory=None, timeout=30):
-    url = document_url(host)
-    check_fetch_url(url, host)
+def tls_context(context_factory=None):
     if context_factory is None:
         context = ssl.create_default_context()
+        context.minimum_version = ssl.TLSVersion.TLSv1_2
     else:
         context = context_factory()
     verify = getattr(context, "verify_mode", None)
     if verify != ssl.CERT_REQUIRED or not getattr(context, "check_hostname", False):
         raise BlunixError("tls verify disabled")
+    minimum = getattr(context, "minimum_version", ssl.TLSVersion.TLSv1_2)
+    if minimum not in (ssl.TLSVersion.TLSv1_2, ssl.TLSVersion.TLSv1_3):
+        raise BlunixError("tls verify disabled")
+    return context
+
+
+def fetch_https(host, urlopen=None, context_factory=None, timeout=30):
+    url = document_url(host)
+    check_fetch_url(url, host)
+    context = tls_context(context_factory)
     req = urllib.request.Request(
         url,
         method="GET",
@@ -132,7 +150,11 @@ def fetch_https(host, urlopen=None, context_factory=None, timeout=30):
     )
     opener = None
     if urlopen is None:
-        opener = urllib.request.build_opener(_Redirect(host))
+        # No environment proxy: the only proxy is one the operator names.
+        opener = urllib.request.build_opener(
+            urllib.request.ProxyHandler({}),
+            _Redirect(host),
+        )
 
         def urlopen(request, timeout=timeout, context=context):
             return opener.open(request, timeout=timeout, context=context)
@@ -145,7 +167,7 @@ def fetch_https(host, urlopen=None, context_factory=None, timeout=30):
             raise
         except Exception:
             raise BlunixError("document fetch failed")
-        return _read_cap(resp)
+        return read_cap(resp)
     finally:
         close = getattr(resp, "close", None)
         if close is not None:
@@ -269,7 +291,7 @@ def _say(log, message):
 
 def ask_hostname(reader, log, speech, tries=3):
     for _ in range(tries):
-        _say(log, "blunix: hostname")
+        _say(log, "blunix: build hostname.")
         try:
             typed = reader()
         except (EOFError, OSError, BlunixError):
@@ -279,13 +301,12 @@ def ask_hostname(reader, log, speech, tries=3):
             _say(log, "blunix: refused hostname")
             continue
         try:
-            host = require_build_host(typed.strip())
+            host = expand_build_host(typed.strip().lower())
         except BlunixError:
             _say(log, "blunix: refused hostname")
             continue
         if speech:
-            _say(log, "blunix: hostname is " + host)
-            _say(log, "blunix: type yes to confirm")
+            _say(log, "blunix: hostname " + host + ". Say yes to keep it.")
             try:
                 answer = reader()
             except (EOFError, OSError, BlunixError):
@@ -299,7 +320,7 @@ def ask_hostname(reader, log, speech, tries=3):
 
 
 def read_passphrase(reader, log):
-    _say(log, "blunix: build passphrase")
+    _say(log, "blunix: key. Type it. It will not be spoken.")
     try:
         if reader is None:
             import getpass
@@ -312,6 +333,18 @@ def read_passphrase(reader, log):
     if not isinstance(value, str):
         return ""
     return value
+
+
+def decrypt_candidates(ciphertext, typed, decrypt=None):
+    """Try the canonical key, then the raw input. None if neither decrypts."""
+    if decrypt is None:
+        decrypt = decrypt_bytes
+    for candidate in passphrase_candidates(typed):
+        try:
+            return decrypt(ciphertext, candidate)
+        except DecryptError:
+            continue
+    return None
 
 
 def _read_cmdline(cmdline):
@@ -389,9 +422,8 @@ def _boot_fixture(root, marker, models, log, guestinfo_getter, ip_show, sleeper)
     if checked != marker["host"]:
         _say(log, "blunix: refused hostname")
         return 1
-    try:
-        plain = decrypt_bytes(ciphertext, passphrase)
-    except DecryptError:
+    plain = decrypt_candidates(ciphertext, passphrase)
+    if plain is None:
         _say(log, "could not decrypt")
         return 1
     _say(
@@ -433,15 +465,15 @@ def _boot_production(
         _say(log, "blunix: bootstrap failed closed")
         return 1
     passphrase = read_passphrase(passphrase_reader, log)
-    try:
-        ciphertext = fetch_https(
-            host,
-            urlopen=urlopen,
-            context_factory=context_factory,
-            timeout=fetch_timeout,
-        )
-        plain = decrypt_bytes(ciphertext, passphrase)
-    except DecryptError:
+    ciphertext = fetch_https(
+        host,
+        urlopen=urlopen,
+        context_factory=context_factory,
+        timeout=fetch_timeout,
+    )
+    plain = decrypt_candidates(ciphertext, passphrase)
+    passphrase = None
+    if plain is None:
         _say(log, "could not decrypt")
         return 1
     apply_node(plain, root, models=models, log=log)

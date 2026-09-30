@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://api.blunix.io; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action https://api.blunix.io">
+  <meta name="referrer" content="no-referrer">
+  <meta name="blunix-api" content="https://api.blunix.io/v1">
+  <title>Build, blunix</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="assets/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#12161a">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="blunix">
+  <meta property="og:title" content="Build, blunix">
+  <meta property="og:description" content="Reserve a build hostname, compose a node document, and publish it encrypted. The key is made in this browser and never leaves it.">
+  <meta property="og:url" content="https://build.blunix.io/">
+  <meta property="og:image" content="https://build.blunix.io/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="blunix: a quiet Debian host for cloud nodes.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="description" content="Reserve a build hostname, compose a node document, and publish it encrypted. The key is made in this browser and never leaves it.">
+  <link rel="stylesheet" href="css/site.css">
+  <link rel="stylesheet" href="portal.css">
+  <script type="module" src="portal.js"></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="wrap site-header">
+    <a class="brand" href="https://blunix.io/">
+      <img src="assets/logo-mark.svg" width="40" height="48" alt="">
+      <span>blunix</span>
+    </a>
+    <nav aria-label="Primary">
+      <a href="https://blunix.io/">Host</a>
+      <a href="https://blunix.io/install.html">Install</a>
+      <a href="https://blunix.io/access.html">Access</a>
+      <a href="https://blunix.io/log.html">Log</a>
+      <a href="https://blunix.io/account.html">Account</a>
+      <a href="https://blunix.io/service.html">Service</a>
+      <a href="https://blunix.io/platform.html">Platform</a>
+      <a href="https://blunix.io/api.html">API</a>
+      <a href="/" aria-current="page">Portal</a>
+    </nav>
+  </header>
+  <main id="content" tabindex="-1">
+    <section class="wrap portal-head">
+      <p class="kicker">Portal</p>
+      <h1>Build a host.</h1>
+      <p class="lede">Reserve a hostname. Compose the node document. This browser makes the key, encrypts the document with age, and uploads only the ciphertext. The key is shown once and never sent.</p>
+      <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true">blunix: checking sign-in.</p>
+      <noscript><p class="problem">The portal needs JavaScript. The key is made and used in this browser, so there is no server-side form.</p></noscript>
+    </section>
+
+    <section id="signed-out" class="wrap band" aria-labelledby="signin-h" hidden>
+      <div class="band-head">
+        <h2 id="signin-h">Sign in</h2>
+        <p>Authentik at adsas.id. The portal keeps no password. Signing in sets a session cookie for the API and returns you here.</p>
+      </div>
+      <p><a id="login" class="button" href="https://api.blunix.io/v1/auth/login">Sign in with Authentik</a></p>
+    </section>
+
+    <div id="signed-in" hidden>
+      <section class="wrap band" aria-labelledby="account-h">
+        <div class="band-head">
+          <h2 id="account-h">Account</h2>
+          <p id="who">Signed in.</p>
+        </div>
+        <button type="button" id="logout" class="button quiet">Sign out</button>
+      </section>
+
+      <section class="wrap band" aria-labelledby="hosts-h">
+        <div class="band-head">
+          <h2 id="hosts-h">Your hostnames</h2>
+          <p>Each label owns <span class="host">label.blnx.io</span>. Every upload is a new version, and the name always serves the newest one. Pinned addresses per version come later. blnx.io is a separate domain, so your build files never share cookies with this portal or the site.</p>
+        </div>
+        <div id="hosts-empty" class="empty-state"><img src="assets/logo-mark.svg" width="40" height="48" alt=""><p>No hostnames yet. The basket is empty and the cat is waiting. Reserve one below.</p></div>
+        <ul id="hosts" class="rows"></ul>
+      </section>
+
+      <section class="wrap band" aria-labelledby="reserve-h">
+        <div class="band-head">
+          <h2 id="reserve-h">Reserve a hostname</h2>
+          <p>2 to 32 characters. Lowercase letters, digits, and single hyphens. Starts with a letter. Twenty labels per account.</p>
+        </div>
+        <form id="reserve" class="form" novalidate>
+          <div class="field">
+            <label for="reserve-label">Label</label>
+            <input id="reserve-label" name="label" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="32" aria-describedby="reserve-label-hint reserve-label-problem" required>
+            <p id="reserve-label-hint" class="hint">The build host will be <span id="reserve-preview" class="host">label.blnx.io</span>.</p>
+            <p id="reserve-label-problem" class="problem" hidden></p>
+          </div>
+          <button type="submit" class="button">Reserve</button>
+        </form>
+      </section>
+
+      <section class="wrap band" aria-labelledby="build-h">
+        <div class="band-head">
+          <h2 id="build-h">Build</h2>
+          <p>The document names the disk, the network, and the access profile for one machine. It is checked here, then encrypted here. The server cannot read it.</p>
+        </div>
+        <form id="build" class="form" novalidate>
+          <div class="field">
+            <label for="build-label">Hostname to publish to</label>
+            <select id="build-label" name="label" aria-describedby="build-label-problem"></select>
+            <p id="build-label-problem" class="problem" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="build-hostname">Machine hostname, written to /etc/hostname</label>
+            <input id="build-hostname" name="hostname" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="63" aria-describedby="build-hostname-hint build-hostname-problem">
+            <p id="build-hostname-hint" class="hint">Empty means the label.</p>
+            <p id="build-hostname-problem" class="problem" hidden></p>
+          </div>
+
+          <fieldset id="build-disk" class="field" aria-describedby="build-disk-problem">
+            <legend>Disk layout</legend>
+            <label class="choice"><input type="radio" name="disk" value="cloud-vm" checked> cloud-vm: A and B read-only roots with verity, and a plain /var. For a VM or a cloud node.</label>
+            <label class="choice"><input type="radio" name="disk" value="metal-luks"> metal-luks: the same layout, with /var encrypted and bound to the TPM. For bare metal.</label>
+            <p id="build-disk-problem" class="problem" hidden></p>
+          </fieldset>
+
+          <fieldset id="build-network" class="field" aria-describedby="build-network-problem">
+            <legend>Network</legend>
+            <label class="choice"><input type="radio" name="netmode" value="dhcp" checked> DHCP</label>
+            <label class="choice"><input type="radio" name="netmode" value="static"> Static address</label>
+            <p id="build-network-problem" class="problem" hidden></p>
+            <div class="field">
+              <label for="build-match">Interfaces</label>
+              <input id="build-match" name="match" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" value="en*, eth*" aria-describedby="build-match-hint build-match-problem">
+              <p id="build-match-hint" class="hint">en*, eth*, or names like ens3. Separate with commas. At most 8.</p>
+              <p id="build-match-problem" class="problem" hidden></p>
+            </div>
+            <div id="static-fields" hidden>
+              <div class="field">
+                <label for="build-address">Address with prefix</label>
+                <input id="build-address" name="address" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="10.0.0.5/24" aria-describedby="build-address-problem">
+                <p id="build-address-problem" class="problem" hidden></p>
+              </div>
+              <div class="field">
+                <label for="build-gateway">Gateway</label>
+                <input id="build-gateway" name="gateway" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="10.0.0.1" aria-describedby="build-gateway-problem">
+                <p id="build-gateway-problem" class="problem" hidden></p>
+              </div>
+              <div class="field">
+                <label for="build-dns">DNS servers</label>
+                <input id="build-dns" name="dns" type="text" autocomplete="off" spellcheck="false" placeholder="10.0.0.53" aria-describedby="build-dns-hint build-dns-problem">
+                <p id="build-dns-hint" class="hint">One to four addresses, separated by commas.</p>
+                <p id="build-dns-problem" class="problem" hidden></p>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="build-access">Access profile</label>
+            <select id="build-access" name="access" aria-describedby="build-access-hint build-access-problem">
+              <option value="regular">regular: no speech, a quiet console</option>
+              <option value="full-speech">full-speech: speech and braille, and Orca if installed</option>
+              <option value="console-speech">console-speech: speech and braille on the console</option>
+              <option value="large-print">large-print: a large console font</option>
+              <option value="advanced">advanced: boot status shown</option>
+            </select>
+            <p id="build-access-hint" class="hint">The five profiles are on the <a href="https://blunix.io/access.html">access page</a>.</p>
+            <p id="build-access-problem" class="problem" hidden></p>
+          </div>
+
+          <p class="fixed">Update channel: stable. It is the only channel.</p>
+
+          <div class="field">
+            <h3 id="preview-h">Document preview</h3>
+            <p class="hint">This is the plaintext that gets encrypted. It updates as you type.</p>
+            <pre id="preview" class="preview" aria-labelledby="preview-h" tabindex="0"><code id="preview-code"></code></pre>
+          </div>
+
+          <p id="build-form-problem" class="problem" hidden></p>
+          <button type="submit" id="build-submit" class="button">Encrypt and publish</button>
+        </form>
+      </section>
+
+      <section id="card" class="wrap band card" aria-labelledby="card-h" hidden>
+        <h2 id="card-h" tabindex="-1">Install card</h2>
+        <p class="landed">Landed on all four feet: the server's sha256 matches the bytes this browser sent.</p>
+        <p class="warn">Save the key now. It is shown once. The server does not have it, and it cannot be recovered.</p>
+        <dl class="facts-list">
+          <div><dt>Latest URL</dt><dd><span id="card-latest" class="host"></span></dd></div>
+          <div id="card-pinned-row" hidden><dt>Pinned URL</dt><dd><span id="card-pinned" class="host"></span></dd></div>
+          <div><dt>Ciphertext sha256</dt><dd><code id="card-sha" class="sha"></code></dd></div>
+          <div><dt>Date</dt><dd id="card-date"></dd></div>
+        </dl>
+        <h3 id="key-h">Key</h3>
+        <ol id="card-key" class="key" aria-labelledby="key-h"></ol>
+        <p class="hint">At the installer, hyphens and spaces are optional. Letters i and l count as 1, and o counts as 0.</p>
+        <div class="actions">
+          <button type="button" id="copy-key" class="button" aria-describedby="clipboard-note">Copy key</button>
+          <button type="button" id="dl-card" class="button">Download install card</button>
+          <button type="button" id="dl-bundle" class="button quiet">Download offline bundle</button>
+          <button type="button" id="close-card" class="button quiet">I saved the key. Close the card.</button>
+        </div>
+        <p id="clipboard-note" class="hint">The clipboard is shared with other apps. Clear it after you paste.</p>
+      </section>
+
+      <section class="wrap band" aria-labelledby="keys-h">
+        <div class="band-head">
+          <h2 id="keys-h">API keys</h2>
+          <p>A key is for a program, such as <code>blunix proxy publish</code>. It is shown once. The server keeps only its hash. A key can replace your ciphertext. It cannot read a build.</p>
+        </div>
+        <form id="mint" class="form" novalidate>
+          <div class="field">
+            <label for="mint-name">Key name</label>
+            <input id="mint-name" name="name" type="text" autocomplete="off" maxlength="64" aria-describedby="mint-name-problem">
+            <p id="mint-name-problem" class="problem" hidden></p>
+          </div>
+          <div class="field">
+            <label for="mint-scope">Scope</label>
+            <select id="mint-scope" name="scope">
+              <option value="hosts:write">hosts:write: reserve and publish</option>
+              <option value="hosts:read">hosts:read: list only</option>
+            </select>
+          </div>
+          <button type="submit" class="button">Mint key</button>
+        </form>
+        <div id="minted" class="minted" hidden>
+          <h3 id="minted-h" tabindex="-1">New key</h3>
+          <p class="warn">Copy it now. It is shown once.</p>
+          <pre class="preview"><code id="minted-key"></code></pre>
+          <p>Fingerprint: <code id="minted-fp"></code></p>
+          <div class="actions">
+            <button type="button" id="copy-minted" class="button">Copy API key</button>
+            <button type="button" id="close-minted" class="button quiet">I saved it. Hide the key.</button>
+          </div>
+        </div>
+        <h3 id="keylist-h">Keys on this account</h3>
+        <p id="keys-empty">No keys. Quiet, the way it should be until a program needs one.</p>
+        <ul id="keys" class="rows" aria-labelledby="keylist-h"></ul>
+      </section>
+    </div>
+  </main>
+  <footer class="wrap site-footer">
+    <p>Built by people who keep cats. <a href="https://blunix.io/">blunix.io</a> is this project, and build.blunix.io is its portal. blunix.com is Blunix GmbH in Berlin, a different company. age encryption in this page is <a href="vendor/VENDOR.md">typage</a>, served from this site. Fonts: Fraunces and Atkinson Hyperlegible, SIL Open Font License, files in <code>fonts/</code>.</p>
+  </footer>
+</body>
+</html>

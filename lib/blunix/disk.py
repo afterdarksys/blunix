@@ -149,6 +149,11 @@ def parse_disk(doc):
     return {"name": name, "partitions": parsed}
 
 
+def min_bytes(model):
+    """The smallest disk this layout fits on: every partition at its floor."""
+    return sum(part["size"] for part in model["partitions"])
+
+
 def load_disk(models, name):
     doc = load_path(model_path(models, "disk", name))
     parsed = parse_disk(doc)
