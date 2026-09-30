@@ -1,3 +1,9 @@
+> Current personal-build flow: new portal builds capture the target disk, erase
+> approval, packages, administrator, and reboot choices before encryption. The
+> installer uses DHCP and asks only for build address and build password. The
+> diagrams below describe the earlier/legacy confirmation flow; see
+> [Personal builds](personal-builds.md) for the current contract and community API.
+
 # Architecture
 
 How the Blunix install plane fits together, drawn from the code as it stands on 2026-09-30. The same drawings and walk-throughs are on `site/architecture.html`. The walk-through under each drawing says everything the drawing says.

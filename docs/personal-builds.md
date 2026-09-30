@@ -112,8 +112,8 @@ account attributes. Sharing UI asks permission for other members to use and adap
 
 ## Operations and rollout
 
-1. Review and merge the branch. Reconcile the independent site/branding changes in
-   the original checkout; this implementation was developed in an isolated worktree.
+1. Review and merge the branch. It was developed in an isolated worktree and rebased
+   onto the independently updated main branch to preserve branding/licensing work.
 2. Configure D1 database ID, R2 bucket, OIDC issuer/client ID/secret, and the Authentik
    application's exact callback (`https://api.blunix.io/v1/auth/callback`). Enable
    self-service enrollment with verified email and appropriate abuse controls in

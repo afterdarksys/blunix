@@ -6,8 +6,8 @@
 - Repository: `https://github.com/afterdarksys/blunix`
 - Implementation worktree: `/Users/ryan/development/.worktrees/blunix-personal-builds`
 - Original checkout: `/Users/ryan/development/blunix`, on `main`. Independent website, branding, and licensing work
-  was committed there during implementation; the feature branch is being integrated
-  against that updated base.
+  was committed there during implementation; the feature branch was rebased onto `de8d94a`, preserving
+  the updated branding and licensing changes.
 - No production deployment, production migration, release upload, or merge was
   performed as part of this work.
 
@@ -55,9 +55,10 @@ installation contract, and ordered rollout instructions.
   CSRF, session-only template operations, public/private visibility, exact revision
   forks, concurrent revision conflicts, atomic quota enforcement, publication
   rate limits, reports, and the existing OIDC/host/build/key suites.
-- Linux: **230 tests passed** in Debian 13 with real `age`, zstd, and filesystem
+- Linux: **231 tests passed** in Debian 13 with real `age`, zstd, and filesystem
   tools; no skipped tests in that run. Includes the two-input flow, pre-write
-  refusals, provisioning failure, and original release scanners/proxy tests.
+  refusals, provisioning failure, and original release scanners/proxy tests. The
+  four source-manifest tests added on main also passed separately after integration.
 - Website/composer: **18 tests passed**, including browser-generated YAML checked
   by the actual Python schema and exclusion of personal data from shared recipes.
 - Headless Chromium: reserve → configure → save → share → fork → revise → publish;
@@ -124,7 +125,8 @@ CI runs verification on PRs and feature-branch pushes; deployment remains main-o
 - Sharing is for reusable package/access templates, not private machine documents.
   Forks remain with their owners after the source is unpublished or deleted.
 - Community comments/profiles/follows, automated moderation, sponsor billing, and
-  paid plans remain future work. The landing page does not claim those exist.
+  community subscription plans remain future work. Commercial code licensing is
+  covered separately by the existing `COMMERCIAL.md`. The landing page does not claim those exist.
 
 ## Suggested next review
 
