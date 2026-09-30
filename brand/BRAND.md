@@ -60,65 +60,80 @@ Don't: recolour the head, or add gradients, glows, strokes, or shadows to the ma
 
 ## Mascot: Blubie, the Blunix cat
 
-Blubie is the Blunix cat, a Russian Blue, drawn in Blunix's own flat editorial vector style. It is the same cat as the mark's head: slate coat, green eyes, nothing loud. In alt text, say "Blubie, the Blunix cat" the first time on a page and "Blubie" after that.
+Blubie is the Blunix cat, a Russian Blue. It is the same cat as the mark's head: slate coat, green eyes, nothing loud. In alt text, say "Blubie, the Blunix cat" the first time on a page and "Blubie" after that, and describe what the picture actually shows.
+
+Since v7 (2026-09-30) Blubie comes in two looks. The v6 flat-vector SVGs are archived in `mascot/final/` and are no longer on the site.
+
+### The two looks
+
+| Look | Model | Used for |
+|---|---|---|
+| Storybook (main) | Recraft V3 `digital_illustration` with a created style (`style_id` in `prompts.json`) | Site scene art: the home hero, the three rules, the page heroes (Install, Account, Log, Service, Platform) and the "Blubie at work" gallery; the README banner |
+| 3D (secondary) | FLUX.1 Kontext [pro], conditioned on `mascot/ref/3d-approved.png` | The 404 (site and portal), the Access hero, the home trait spots, the portal's empty state, the social card |
+
+Storybook scenes carry their own charcoal backdrop with a soft oval glow, so the site shows them as framed tiles: `--radius` (16px) corners, a 1px Line border, Raise behind while loading. The 3D spots and the empty state are cut out (BiRefNet) and sit straight on Night; the 3D 404 and Access art are framed like the storybook tiles.
 
 ### Identity lock
 
-The one source of truth is `mascot/prompts.json` (versioned, with a dated drift log). Every scene prompt is the scene text plus the same `identity` and `style_lock`.
+The one source of truth is `mascot/prompts.json` (version 7: both looks, every scene, and a dated drift log). Every prompt is the look's template with the same `cat` string.
 
-- A Russian Blue. One solid, even silver-blue-grey coat. No white patches, no bib, no stripes, not a tabby, not black, not a hairless Sphynx.
-- Lime-green almond eyes with thin dark pupils. Never white or grey eyes.
-- Slender, upright, elegant. Large wide-set pointed ears. Dark slate nose. Calm and faintly amused.
-- A real cat on four legs. No clothing, no collar, no accessories.
-- Style: Recraft V3 `vector_illustration/segmented_colors`, true SVG output. Flat colour fields and fine linework.
-- `mascot/finish.py` locks the palette after generation. It drops the background and any backdrop panel touching three canvas edges (so the art sits on Night with no box), then snaps every colour to the slate ramp (`#12161a` to `#c9d0d8`, the mark's own `#8e9aa8` / `#6f7c8b` / `#56626f` in the middle). Green (`#d2ee9a`, `#8fae5c`) survives only on small shapes: eyes and indicator lights. Ink survives only on glints.
+- A Russian Blue. One solid, even silver-blue-grey coat. Short and plush: a Russian Blue is not long-haired. No white patches, no bib, no stripes, not a tabby, not black.
+- Lime-green eyes. Pale yellow, white or grey eyes are a reject.
+- Slender and composed in the storybook look; the 3D look keeps the approved render's rounder, younger face. Calm, faintly amused. Dark slate nose (storybook), small pink nose (3D, as approved).
+- A real cat on four legs. No clothes, no collar, no straps, no human hands, never standing like a person.
+- Tail of normal length, smooth. Not a long wavy plume (the fix Ryan asked for on the reference).
 
 ### Do / don't
 
-Do: use one scene per page, next to the text it illustrates. Keep art on Night or Raise. Give every meaningful image real alt text; spot art beside a labelled list item is decorative (`alt=""`). Set `width`, `height`, and `decoding="async"`; use `loading="lazy"` below the fold.
+Do: use one scene per page, next to the text it illustrates. Keep art on Night or Raise. Serve every image through `<picture>` (AVIF, WebP, then JPEG or PNG) with `width`, `height` and `decoding="async"`, and `loading="lazy"` below the fold. Spot art beside a labelled list item is decorative (`alt=""`).
 
-Don't: put words, numbers, or UI text inside an illustration (screens and scrolls stay blank). Don't recolour the cat, add green outside the eyes and small lights, or add glows and drop shadows. Don't use the art in place of the logo mark: the mark stays in the header. Don't stack several cats on one screen outside the gallery. No speech bubbles, no puns in status text.
+Don't: ship a render with any text, letters, pseudo-text, signature, watermark or corner mark (screens, scrolls, books and cans stay blank). Don't ship wrong-coat or wrong-eye renders, extra or missing limbs, ears or tails. Don't mix the looks inside one component (the trait list is all 3D, the gallery all storybook). Don't recolour the cat or add glows and drop shadows. Don't use the art in place of the logo mark: the mark stays in the header. No speech bubbles, no puns in status text.
 
 ### Pipeline
 
-1. `python3 mascot/generate.py [ids]`: reads `prompts.json`, writes candidates to `mascot/raw/<id>-<n>.svg`, and records model, style, prompt and time in `mascot/provenance.json` (no key; Recraft returns no seed). It skips files that exist: delete a file to re-roll it, or raise the scene's `n`. The fal.ai key is read at run time from the env file in `$BLUNIX_FAL_ENV`, and only ever sent as the `Authorization` header.
-2. Review every candidate on Night, then record the pick in `mascot/picks.json`.
-3. `mascot/export.sh`: runs `finish.py` on each pick, optimises with svgo, writes `mascot/final/` and copies the files to `site/assets/cat/` (and the portal's two to `portal/assets/cat/`).
-4. `mascot/sheet.sh`: renders `mascot/mascot-sheet.png`.
+1. `python3 mascot/generate_v2.py [ids]`: reads `prompts.json`, writes candidates to `mascot/raw-v2/<look>-<id>-<n>.png` (gitignored) and records model, prompt, style_id or reference, seed and time in `mascot/provenance.json`. It skips files that exist: delete one to re-roll it, or raise the scene's `n`. `--create-style a.png b.png ...` makes a Recraft style from up to five PNGs; `--cutout in.png out.png` removes a background. The fal.ai key is read at run time from the env file in `$BLUNIX_FAL_ENV` and only ever sent as the `Authorization` header.
+2. Look at every candidate on Night, reject against the lists above, log the reasons in `prompts.json` `_log`, and record the pick in `mascot/picks-v2.json`.
+3. `python3 mascot/export_v2.py`: writes the masters to `mascot/final-storybook/` and `mascot/final-3d/`, and the web copies (`<name>-<w>.avif/.webp/.jpg|.png` at 1x and 2x: hero 560/1100, scenes and gallery 320/640, 404 300/600, spots 96/192, empty state 128/256) to `site/assets/cat/` and the portal's two to `portal/assets/cat/`.
+4. `mascot/sheet.sh`: renders `mascot/mascot-sheet.png` (both looks, labelled). The promo cards render from `src/` with the Playwright headless shell.
+
+References: `mascot/ref/storybook-approved.png` (the approved storybook test), `mascot/ref/storybook-approved-dark.png` (the same with the white surround filled charcoal and the corner mark patched out, used as a style reference), `mascot/ref/3d-approved.png` (the approved 3D test, the Kontext identity reference).
 
 ### File index
 
 | File | Source | Size | Used on |
 |---|---|---|---|
-| `mascot/final/hero.svg` | `raw/hero-2.svg` | 33 KB | Home hero, beside the headline (the header keeps the logo mark) |
-| `mascot/final/quiet.svg` | `raw/quiet-1.svg` | 20 KB | Home, "Quiet by default" trait spot |
-| `mascot/final/held-still.svg` | `raw/held-still-3.svg` | 12 KB | Home, "Debian, held still" rule |
-| `mascot/final/shell.svg` | `raw/shell-2.svg` | 12 KB | Home, "A shell when it is sick" rule; Service hero |
-| `mascot/final/speech.svg` | `raw/speech-3.svg` | 12 KB | Home, "Speech before questions" rule; Access hero |
-| `mascot/final/lands-on-feet.svg` | `raw/lands-on-feet-2.svg` | 11 KB | Home, "Lands on its feet" trait spot |
-| `mascot/final/install.svg` | `raw/install-3.svg` | 16 KB | Install hero |
-| `mascot/final/key.svg` | `raw/key-4.svg` | 15 KB | Account hero |
-| `mascot/final/log.svg` | `raw/log-2.svg` | 18 KB | Log hero |
-| `mascot/final/proxy.svg` | `raw/proxy-3.svg` | 21 KB | Platform hero |
-| `mascot/final/404.svg` | `raw/404-1.svg` | 12 KB | Site 404 and portal 404 |
-| `mascot/final/empty-basket.svg` | `raw/empty-basket-4.svg` | 61 KB | Portal, empty hostnames state |
-| `mascot/final/sticker-sit.svg` | `raw/sticker-sit-1.svg` | 22 KB | Home, "Small footprint" trait spot |
-| `mascot/final/sticker-paw.svg` | `raw/sticker-paw-3.svg` | 16 KB | Home, "Speaks when you ask" trait spot |
-| `mascot/final/sticker-stretch.svg` | `raw/sticker-stretch-2.svg` | 14 KB | Home, "Nine lives" trait spot |
-| `mascot/final/sticker-sleep.svg` | `raw/sticker-sleep-1.svg` | 10 KB | Spare spot (empty states, social) |
-| `mascot/final/gallery/at-computer.svg` | `raw/at-computer-4.svg` | 13 KB | Home, "Blubie at work" gallery |
-| `mascot/final/gallery/debugging.svg` | `raw/debugging-3.svg` | 11 KB | Home, "Blubie at work" gallery |
-| `mascot/final/gallery/cloud.svg` | `raw/cloud-2.svg` | 18 KB | Home, "Blubie at work" gallery |
-| `mascot/final/gallery/packing.svg` | `raw/packing-2.svg` | 9 KB | Home, "Blubie at work" gallery |
-| `mascot/final/gallery/stargazing.svg` | `raw/stargazing-2.svg` | 33 KB | Home, "Blubie at work" gallery |
-| `mascot/final/sticker-peek.svg` | `raw/sticker-peek-5.svg` | 12 KB | Home, "Watchful" trait spot |
-| `mascot/final/gallery/reading-docs.svg` | `raw/reading-docs-4.svg` | 14 KB | Home, "Blubie at work" gallery |
-| `mascot/final/gallery/braille.svg` | `raw/braille-8.svg` | 41 KB | Home, "Blubie at work" gallery |
-| `mascot/final/gallery/coffee-no.svg` | `raw/coffee-no-2.svg` | 13 KB | Home, "Blubie at work" gallery |
+| `mascot/final-storybook/hero.jpg` | `raw-v2/storybook-hero-6.png` | 441 KB | Home hero, beside the headline (the header keeps the logo mark); README banner |
+| `mascot/final-storybook/held-still.jpg` | `raw-v2/storybook-held-still-3.png` | 339 KB | Home, "Debian, held still" rule |
+| `mascot/final-storybook/shell.jpg` | `raw-v2/storybook-shell-1.png` | 384 KB | Home, "A shell when it is sick" rule; Service hero |
+| `mascot/final-storybook/speech.jpg` | `raw-v2/storybook-speech-3.png` | 336 KB | Home, "Speech before questions" rule |
+| `mascot/final-storybook/install.jpg` | `raw-v2/storybook-install-1.png` | 333 KB | Install hero |
+| `mascot/final-storybook/key.jpg` | `raw-v2/storybook-key-4.png` | 339 KB | Account hero |
+| `mascot/final-storybook/log.jpg` | `raw-v2/storybook-log-1.png` | 342 KB | Log hero |
+| `mascot/final-storybook/proxy.jpg` | `raw-v2/storybook-proxy-6.png` | 387 KB | Platform hero |
+| `mascot/final-storybook/quiet.jpg` | `raw-v2/storybook-quiet-6.png` | 361 KB | Brand library only (the trait list uses the 3D sleep spot) |
+| `mascot/final-storybook/lands-on-feet.jpg` | `raw-v2/storybook-lands-on-feet-4.png` | 323 KB | Brand library only (the trait list uses the 3D land spot) |
+| `mascot/final-storybook/at-computer.jpg` | `raw-v2/storybook-at-computer-2.png` | 336 KB | Home, "Blubie at work" gallery |
+| `mascot/final-storybook/reading-docs.jpg` | `raw-v2/storybook-reading-docs-1.png` | 336 KB | Home gallery |
+| `mascot/final-storybook/debugging.jpg` | `raw-v2/storybook-debugging-4.png` | 374 KB | Home gallery |
+| `mascot/final-storybook/coffee-no.jpg` | `raw-v2/storybook-coffee-no-3.png` | 375 KB | Home gallery |
+| `mascot/final-storybook/braille.jpg` | `raw-v2/storybook-braille-5.png` | 377 KB | Home gallery |
+| `mascot/final-storybook/cloud.jpg` | `raw-v2/storybook-cloud-2.png` | 331 KB | Home gallery |
+| `mascot/final-storybook/packing.jpg` | `raw-v2/storybook-packing-2.png` | 337 KB | Home gallery |
+| `mascot/final-storybook/stargazing.jpg` | `raw-v2/storybook-stargazing-4.png` | 371 KB | Home gallery |
+| `mascot/final-3d/404.jpg` | `raw-v2/3d-404-2.png` | 125 KB | Site 404 and portal 404 |
+| `mascot/final-3d/access.jpg` | `raw-v2/3d-access-3.png` | 121 KB | Access hero |
+| `mascot/final-3d/social.jpg` | `raw-v2/3d-social-2.png` | 94 KB | promo/mascot-social-1200x630.png |
+| `mascot/final-3d/empty-basket.png` | `raw-v2/3d-empty-basket-2.png (cut out)` | 580 KB | Portal, empty hostnames state |
+| `mascot/final-3d/spot-sleep.png` | `raw-v2/3d-spot-sleep-2.png (cut out)` | 553 KB | Home, "Quiet by default" trait spot |
+| `mascot/final-3d/spot-sit.png` | `raw-v2/3d-spot-sit-1.png (cut out)` | 522 KB | Home, "Small footprint" trait spot |
+| `mascot/final-3d/spot-paw.png` | `raw-v2/3d-spot-paw-1.png (cut out)` | 582 KB | Home, "Speaks when you ask" trait spot |
+| `mascot/final-3d/spot-peek.png` | `raw-v2/3d-spot-peek-3.png (cut out, slate ledge added)` | 265 KB | Home, "Watchful" trait spot |
+| `mascot/final-3d/spot-land.png` | `raw-v2/3d-spot-land-1.png (cut out)` | 450 KB | Home, "Lands on its feet" trait spot |
+| `mascot/final-3d/spot-stretch.png` | `raw-v2/3d-spot-stretch-4.png (cut out)` | 477 KB | Home, "Nine lives, within reason" trait spot |
 
-Also: `mascot/prompts.json` (identity lock and drift log), `mascot/picks.json`, `mascot/provenance.json`, `mascot/raw/` (every candidate, kept as the record of what was rejected), `mascot/mascot-sheet.png` (contact sheet). The site copies live in `site/assets/cat/`; the portal carries `404.svg` and `empty-basket.svg` in `portal/assets/cat/`.
+Also: `mascot/prompts.json` (identity lock, both looks, drift log; the v6 prompts live under `legacy_v6` for `generate.py`), `mascot/picks-v2.json`, `mascot/provenance.json`, `mascot/mascot-sheet.png`. Archived v6: `mascot/final/*.svg`, `mascot/picks.json`, `mascot/generate.py`, `mascot/finish.py`, `mascot/export.sh`.
 
-Promo: `promo/mascot-social-1200x630.png` (sources `src/mascot-social-1200x630.html`) and `promo/readme-banner-1280x400.png` (`src/readme-banner-1280x400.html`). Render with `src/tools/render.sh`; set `CH` to a headless Chromium.
+Promo: `promo/mascot-social-1200x630.png` (3D, from `src/mascot-social-1200x630.html`) and `promo/readme-banner-1280x400.png` (storybook hero, from `src/readme-banner-1280x400.html`).
 
 ## File index
 

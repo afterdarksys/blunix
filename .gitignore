@@ -5,3 +5,5 @@ __pycache__/
 .wrangler/
 .omc/
 brand/mascot/raw/
+brand/mascot/raw-v2/
+brand/mascot/*.lock

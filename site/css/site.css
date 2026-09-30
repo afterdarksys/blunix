@@ -7,6 +7,7 @@
   --green: #d2ee9a;
   --shadow: rgba(0, 0, 0, 0.45);
   --measure: 68ch;
+  --radius: 16px;
   color-scheme: dark;
 }
 
@@ -537,19 +538,27 @@ pre code { font-size: 0.95rem; }
   margin-bottom: 2rem;
 }
 
-/* Blubie, the Blunix cat. Flat SVG scenes with a transparent ground, so they
-   sit on Night with no box. Art never carries words; the text around it keeps
-   the contrast rules above. */
+/* Blubie, the Blunix cat. Two looks: storybook scenes carry their own
+   charcoal backdrop, so they sit in a framed tile (radius and a 1px Line
+   border); 3D spots and the empty state are cut out on a transparent ground
+   and sit straight on Night. Art never carries words; the text around it
+   keeps the contrast rules above. */
+
+picture { display: contents; }
 
 .scene { margin: 0; }
 
-.scene img {
+.scene img,
+.lost .scene-art {
   display: block;
   width: 100%;
   height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raise);
 }
 
-.mark.scene { width: min(100%, 400px); }
+.mark.scene { width: min(100%, 460px); }
 .mark.scene img { max-width: none; filter: none; }
 .mark-small.scene img { max-width: 300px; margin-inline: auto; }
 
@@ -590,6 +599,9 @@ pre code { font-size: 0.95rem; }
   width: 100%;
   height: auto;
   aspect-ratio: 1;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raise);
 }
 
 .gallery figcaption {
@@ -611,7 +623,7 @@ pre code { font-size: 0.95rem; }
 
 @media (max-width: 800px) {
   .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 1rem; }
-  .mark.scene { width: min(100%, 300px); }
+  .mark.scene { width: min(100%, 360px); }
   .traits li { padding-left: 4rem; min-height: 4.2rem; }
   .traits .spot { width: 3rem; height: 3rem; top: 0.9rem; }
   .mark.scene img { max-width: 100%; }

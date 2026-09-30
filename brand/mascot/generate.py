@@ -95,6 +95,7 @@ def save_prov(prov):
 
 def main():
     spec = json.load(open(PROMPTS))
+    spec = spec.get("legacy_v6", spec)  # v7 moved the flat-vector prompts here
     prov = json.load(open(PROV)) if os.path.exists(PROV) else {"candidates": {}}
     want = set(sys.argv[1:])
     os.makedirs(RAW, exist_ok=True)
