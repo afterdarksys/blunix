@@ -195,7 +195,7 @@ cp -a /src/lib/blunix/*.py "$ROOTFS/usr/lib/blunix-python/blunix/"
 rm -rf "$ROOTFS/usr/share/blunix/models"
 mkdir -p "$ROOTFS/usr/share/blunix"
 cp -a /src/models "$ROOTFS/usr/share/blunix/models"
-for launcher in /src/apply/blunix /src/apply/blunix-*; do
+for launcher in /src/apply/blunix /src/apply/blunix-* /src/apply/gitbuild; do
   install -m 0755 "$launcher" "$ROOTFS/usr/bin/$(basename "$launcher")"
 done
 mkdir -p "$ROOTFS/etc/systemd/system"

@@ -542,11 +542,12 @@ def _open_release(url, urlopen, context_factory, timeout=60):
     )
     if urlopen is None:
         opener = urllib.request.build_opener(
-            urllib.request.ProxyHandler({}), _ReleaseRedirect()
+            urllib.request.ProxyHandler({}), _ReleaseRedirect(),
+            urllib.request.HTTPSHandler(context=context),
         )
 
         def urlopen(request, timeout=timeout, context=context):
-            return opener.open(request, timeout=timeout, context=context)
+            return opener.open(request, timeout=timeout)
 
     try:
         return urlopen(req, timeout=timeout, context=context)

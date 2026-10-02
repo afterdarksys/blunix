@@ -154,10 +154,11 @@ def fetch_https(host, urlopen=None, context_factory=None, timeout=30):
         opener = urllib.request.build_opener(
             urllib.request.ProxyHandler({}),
             _Redirect(host),
+            urllib.request.HTTPSHandler(context=context),
         )
 
         def urlopen(request, timeout=timeout, context=context):
-            return opener.open(request, timeout=timeout, context=context)
+            return opener.open(request, timeout=timeout)
 
     resp = None
     try:

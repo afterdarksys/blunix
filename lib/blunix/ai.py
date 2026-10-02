@@ -129,12 +129,14 @@ def default_fetch(name, url, timeout=60):
     context = ssl.create_default_context()
     if context.verify_mode != ssl.CERT_REQUIRED or not context.check_hostname:
         raise BlunixError("tls verify disabled")
-    opener = urllib.request.build_opener(_Redirect(REDIRECT_HOSTS[name]))
+    opener = urllib.request.build_opener(
+        _Redirect(REDIRECT_HOSTS[name]), urllib.request.HTTPSHandler(context=context)
+    )
     req = urllib.request.Request(url, method="GET", headers={"User-Agent": "blunix-ai"})
     if host != urllib.parse.urlsplit(url).hostname:
         raise BlunixError("refused tool url")
     try:
-        with opener.open(req, timeout=timeout, context=context) as resp:
+        with opener.open(req, timeout=timeout) as resp:
             return _read_limited(resp, MAX_ARTIFACT)
     except BlunixError:
         raise

@@ -136,7 +136,10 @@ class ScanRawTests(unittest.TestCase):
     @unittest.skipUnless(HAVE_ZSTD, "zstd not installed")
     def test_zst_stream_is_decompressed(self):
         with tempfile.TemporaryDirectory() as folder:
-            path = self._blob(folder, _age_key())
+            # Seed a repeated, non-secret prefix so zstd encodes the real key's
+            # prefix as a match. Random surrounding bytes alone sometimes make
+            # zstd store the entire key literally, making this assertion flaky.
+            path = self._blob(folder, b"AGE-SECRET-KEY-0" * 1024 + _age_key())
             subprocess.run(["zstd", "-q", "-f", "-o", path + ".zst", path], check=True)
             with open(path + ".zst", "rb") as handle:
                 self.assertNotIn(b"AGE-SECRET-KEY-1", handle.read())

@@ -178,6 +178,15 @@ def _dispatch(argv):
         raise BlunixError("refused command")
     if argv and argv[0] == "proxy":
         return _proxy(argv[1:])
+    if argv and argv[0] == "gitbuild":
+        from blunix.gitbuild import main as gitbuild_main
+
+        return gitbuild_main(argv[1:])
+    if argv and (argv[0] in {"doctor", "security", "integrity", "admin", "support"}
+                 or argv[:2] == ["disk", "inspect"]):
+        from blunix.ops import main as ops_main
+
+        return ops_main(argv)
     positional, opts = _parse(argv)
     if not positional or positional[0] == "bootstrap":
         if positional and positional[0] == "bootstrap" and len(positional) != 1:
