@@ -69,7 +69,7 @@
       <ol class="steps">
         <li>
           <h3>After Dark Systems SSO</h3>
-          <p>Our issuer, at adsas.id, and the only one today. The portal button says "Sign in with After Dark Systems SSO". It is OpenID Connect: authorization code with PKCE (S256), plus state and nonce. The scopes are <code>openid email profile</code>. The API checks the signed ID token against the issuer's keys, then sets a session cookie. The cookie is HttpOnly, Secure, and SameSite=Lax, and it lasts 12 hours. Signing out deletes the session. The client id, the secret, and the issuer URL are Worker secrets. None of them are in this site.</p>
+          <p>Our issuer, at adsas.id, and the only one today. The portal button says "Sign in with After Dark Systems SSO". It is OpenID Connect: authorization code with PKCE (S256), plus state and nonce. The scopes are <code>openid email profile</code>. The API checks the signed ID token against the issuer's keys, then sets a session cookie. The cookie is HttpOnly, Secure, and SameSite=Lax, and it lasts 12 hours. Signing out deletes the session. The client id and the issuer URL are public settings. The client secret is a Worker secret. It is not in this site or in the source.</p>
         </li>
         <li>
           <h3>Google, designed for later</h3>
