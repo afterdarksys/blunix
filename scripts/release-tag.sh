@@ -35,6 +35,13 @@ git rev-parse -q --verify "refs/tags/$tag" >/dev/null && die "tag $tag already e
 [[ -z "$(git ls-remote --tags origin "refs/tags/$tag")" ]] || die "tag $tag already exists on GitHub"
 gpg --list-secret-keys "$FPR" >/dev/null 2>&1 || die "the release secret key is not in this keyring"
 
+# gpg's terminal pinentry needs to know which tty to prompt on, or it fails with
+# "Inappropriate ioctl for device".
+if [[ -z "${GPG_TTY:-}" ]] && tty -s; then
+  GPG_TTY=$(tty)
+  export GPG_TTY
+fi
+
 echo "release-tag: signing $tag on $(git rev-parse --short HEAD) with $FPR"
 git -c gpg.format=openpgp tag -s -u "$FPR" -m "blunix $tag" "$tag"
 
