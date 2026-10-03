@@ -53,7 +53,7 @@
         <p class="kicker">Tools</p>
         <h1>Small tools that say what they checked.</h1>
         <p class="lede">These are the commands that ship with blunix. Each one does one job. Each one says what it did not check. Most print JSON, so a screen reader reads the same words a script parses.</p>
-        <p class="lede">Every output on this page came from running the tool. Where a command needs Linux and we ran it on a Mac, the page says so and shows what the Mac printed. Local paths are shortened.</p>
+        <p class="lede">Every output on this page came from running the tool. We captured them on Debian 10 and on a Mac, and each block says which. Local paths are shortened.</p>
       </div>
       <figure class="mark mark-small scene">
         <picture><source type="image/avif" srcset="assets/cat/debugging-320.avif 320w, assets/cat/debugging-640.avif 640w" sizes="(max-width: 800px) 240px, 300px"><source type="image/webp" srcset="assets/cat/debugging-320.webp 320w, assets/cat/debugging-640.webp 640w" sizes="(max-width: 800px) 240px, 300px"><img src="assets/cat/debugging-640.jpg" srcset="assets/cat/debugging-320.jpg 320w, assets/cat/debugging-640.jpg 640w" sizes="(max-width: 800px) 240px, 300px" width="640" height="640" alt="Blubie, the Blunix cat, sits beside a round magnifying glass on a stand, ready to look closer." decoding="async"></picture>
@@ -68,11 +68,26 @@
       </div>
       <h3>Run from a checkout</h3>
       <p>You need Python 3.9 or later and PyYAML. Commands that encrypt or decrypt use Debian's <code>age</code>. The disk and service checks use Linux tools such as <code>lsblk</code> and <code>systemctl</code>. Missing tools are reported as unavailable, not as errors.</p>
+      <p>Debian 10 ships Python 3.7, which is too old. On Debian 10, use a newer Python. We tested with Python 3.11 in a private venv, with no system changes. Debian 11 ships Python 3.9 and Debian 12 ships 3.11, so on Debian 11 and later the system Python works.</p>
       <pre><code>git clone https://github.com/afterdarksys/blunix-utils.git
 cd blunix-utils
 ./apply/blunix doctor
 ./apply/gitbuild --help</code></pre>
-      <p class="note">There is no top-level help. <code>blunix --help</code> prints <code>blunix: refused command</code>, because the main command refuses every flag it does not know. Ask a subcommand instead, for example <code>blunix doctor --help</code> or <code>blunix proxy help</code>.</p>
+      <p><code>blunix --help</code>, <code>blunix -h</code>, and <code>blunix help</code> print the command list and exit 0. Bare <code>blunix</code> with no command runs the installer bootstrap. Output, captured on Debian 10:</p>
+      <pre tabindex="0" aria-label="Output of blunix --help"><code>usage: blunix COMMAND
+  doctor [--root ROOT]                executables available and filesystem capacity
+  security audit [--root ROOT]        protected-path ownership and permission checks
+  integrity check [PRODUCT] [--root ROOT]
+                                      Gitbuild file and link drift
+  admin status                        selected systemd service states
+  disk inspect                        read-only block device and mount metadata
+  support collect --output FILE [--root ROOT]
+                                      mode-0600 JSON report, no secrets, logs or addresses
+  proxy help                          build-proxy for static-address and netboot LANs
+  gitbuild --help                     source builds and installed product checks
+  disk check|render, net render, access boot|render, ai apply, gui apply,
+  tools apply, node apply|boot        image and installer steps (see blunix.io/tools)
+With no command, blunix runs the installer bootstrap.</code></pre>
 
       <h3>Install as a package with Gitbuild</h3>
       <p>The repository carries its own Gitbuild recipe. Gitbuild builds one explicit ref and records the commit it resolved. It installs under <code>/usr/local/afterdarksys/blunix-utils</code> and links the commands into <code>/usr/local/bin</code>. The repository has no release tags yet, so name a full commit.</p>
@@ -94,24 +109,24 @@ gitbuild verify blunix-utils</code></pre>
       <p>Says which helper programs exist on the machine running the check, and how much space and how many inodes are free under the root you name.</p>
       <pre><code>blunix doctor [--root ROOT]</code></pre>
       <p>It does not test whether those programs work, and it is not a health check. The program list is about the machine you run it on, even with <code>--root</code>. Only the free space follows <code>--root</code>.</p>
-      <p>Output, captured on the Mac. Most Linux tools show <code>false</code> there, as expected.</p>
+      <p>Output, captured on Debian 10 as an ordinary user. <code>age</code> and <code>git</code> were not installed on that machine.</p>
       <pre tabindex="0" aria-label="Output of blunix doctor"><code>{
   "status": "ok",
-  "root": "/work/demo-root",
+  "root": "/",
   "tools_on_operator_host": {
     "age": false,
-    "git": true,
-    "lsblk": false,
-    "findmnt": false,
-    "systemctl": false,
-    "ip": false,
+    "git": false,
+    "lsblk": true,
+    "findmnt": true,
+    "systemctl": true,
+    "ip": true,
     "ss": true,
-    "journalctl": false,
+    "journalctl": true,
     "sha256sum": true
   },
-  "root_free_bytes": 27605442560,
-  "root_free_inodes": 269584400,
-  "note": "Availability and capacity checks; not a full system health assessment."
+  "root_free_bytes": 10180431872,
+  "root_free_inodes": 908565,
+  "note": "Tools are checked on the machine running this command; --root changes only the free-space figures. Not a full system health assessment."
 }</code></pre>
 
       <h3 id="security-audit"><code>blunix security audit</code></h3>
@@ -142,6 +157,7 @@ gitbuild verify blunix-utils</code></pre>
     }
   ]
 }</code></pre>
+      <p>Run as an ordinary user on a live host, some protected paths cannot be read at all. The audit does not crash. It reports each one as a finding, such as <code>{"path": "/root/.ssh", "issue": "unreadable metadata"}</code>, sets the status to <code>findings</code>, and exits 1. <code>blunix support collect</code> carries the same finding in its report. Run as root for a full answer.</p>
 
       <h3 id="integrity-check"><code>blunix integrity check</code></h3>
       <p>Compares every product that Gitbuild installed against its install receipt. It reports changed, missing, and extra files, and command links that no longer point where they should. Name one product to check only that one.</p>
@@ -153,48 +169,76 @@ gitbuild verify blunix-utils</code></pre>
   "scope": "gitbuild packages only; receipts are local baselines, not signatures",
   "products": []
 }</code></pre>
-      <p>Asking for a product that is not installed gives <code>"status": "error"</code> for that product and exit code 1. The report does not say why. <code>gitbuild verify</code> gives the reason, as shown in the Gitbuild section.</p>
+      <p>Asking for a product that is not installed gives <code>"status": "error"</code> for that product, a <code>reason</code> that says why, and exit code 1. Output of <code>blunix integrity check not-a-product</code>, captured on Debian 10:</p>
+      <pre tabindex="0" aria-label="Output of blunix integrity check for a product that is not installed"><code>{
+  "status": "findings",
+  "scope": "gitbuild packages only; receipts are local baselines, not signatures",
+  "products": [
+    {
+      "product": "not-a-product",
+      "status": "error",
+      "reason": "gitbuild: product is not installed"
+    }
+  ]
+}</code></pre>
 
       <h3 id="admin-status"><code>blunix admin status</code></h3>
       <p>Reads the state of five services through <code>systemctl show</code>: <code>ssh</code>, <code>systemd-resolved</code>, <code>systemd-networkd</code>, <code>blunix-bootstrap</code>, and <code>blunix-access</code>. For each it keeps <code>LoadState</code>, <code>ActiveState</code>, <code>SubState</code>, and <code>Result</code>. A failed unit is a finding.</p>
       <pre><code>blunix admin status</code></pre>
       <p>It does not start, stop, or restart anything. It does not read the journal. It always looks at the running host, so it takes no <code>--root</code>.</p>
-      <p>Output, captured on the Mac, which has no <code>systemctl</code>. On a blunix host each service carries its four properties instead.</p>
-      <pre tabindex="0" aria-label="Output of blunix admin status on a machine without systemctl"><code>{
+      <p>Output, captured on Debian 10, trimmed after the first two services. That machine is plain Debian, so <code>blunix-bootstrap</code> and <code>blunix-access</code> are not installed. Each shows <code>"LoadState": "not-found"</code> and <code>"status": "unavailable"</code>, which makes the overall status <code>unavailable</code> and the exit code 1. On a blunix host those two services exist.</p>
+      <pre tabindex="0" aria-label="Output of blunix admin status on Debian 10, trimmed"><code>{
   "status": "unavailable",
   "services": {
     "ssh.service": {
-      "status": "unavailable",
-      "tool": "systemctl"
+      "status": "ok",
+      "properties": {
+        "Result": "success",
+        "LoadState": "loaded",
+        "ActiveState": "active",
+        "SubState": "running"
+      }
     },
     "systemd-resolved.service": {
-      "status": "unavailable",
-      "tool": "systemctl"
+      "status": "ok",
+      "properties": {
+        "Result": "success",
+        "LoadState": "loaded",
+        "ActiveState": "inactive",
+        "SubState": "dead"
+      }
     },
-    "systemd-networkd.service": {
-      "status": "unavailable",
-      "tool": "systemctl"
-    },
-    "blunix-bootstrap.service": {
-      "status": "unavailable",
-      "tool": "systemctl"
-    },
-    "blunix-access.service": {
-      "status": "unavailable",
-      "tool": "systemctl"
-    }
-  }
-}</code></pre>
+  ...</code></pre>
 
       <h3 id="disk-inspect"><code>blunix disk inspect</code></h3>
       <p>Lists block devices through <code>lsblk</code>: kernel name, type, size in bytes, read-only flag, removable flag, and mount points.</p>
       <pre><code>blunix disk inspect</code></pre>
       <p>It does not read SMART data, check a filesystem, or touch a partition table. It takes no <code>--root</code>, because disks belong to the running host.</p>
-      <p>Output, captured on the Mac, which has no <code>lsblk</code>.</p>
-      <pre tabindex="0" aria-label="Output of blunix disk inspect on a machine without lsblk"><code>{
-  "status": "unavailable",
-  "tool": "lsblk"
-}</code></pre>
+      <p>It works with the older <code>lsblk</code> on Debian 10 and 11. Each device always has a <code>mountpoints</code> list, with <code>null</code> when nothing is mounted. Output, captured on Debian 10 in a throwaway VM, trimmed after the first two devices. The rest were the root partition, swap, and a CD drive.</p>
+      <pre tabindex="0" aria-label="Output of blunix disk inspect on Debian 10, trimmed"><code>{
+  "status": "ok",
+  "devices": [
+    {
+      "kname": "sda",
+      "type": "disk",
+      "size": 21474836480,
+      "ro": false,
+      "rm": false,
+      "mountpoints": [
+        null
+      ]
+    },
+    {
+      "kname": "sda1",
+      "type": "part",
+      "size": 536870912,
+      "ro": false,
+      "rm": false,
+      "mountpoints": [
+        "/boot/efi"
+      ]
+    },
+  ...</code></pre>
 
       <h3 id="support-collect"><code>blunix support collect</code></h3>
       <p>Writes one JSON report that you can send to someone helping you. It holds the doctor, security audit, and integrity check results. Nothing else.</p>
@@ -233,6 +277,10 @@ Build and manage After Dark source packages
 positional arguments:
   {prepare,build,install,remove,list,verify,doctor}
     prepare (build)     check out a GitHub ref and create an install bundle
+    install             install a prepared bundle and record its file baseline
+    remove              remove an installed product
+    list                list installed products
+    verify              compare an installed product with its baseline
     doctor              report available build tools
 
 options:
@@ -291,7 +339,7 @@ gitbuild: product is not installed</code></pre>
   blunix proxy plan SITE.yaml [--check]
   blunix proxy publish SITE.yaml [--out DIR]
   blunix proxy serve [--site SITE.yaml] [--media DIR [--sums PATH]] [--listen HOST:PORT] [--advertise HOST:PORT]
-  blunix proxy dnsmasq SITE.yaml [--interface IF] [--range START,END] [--proxy HOST:PORT]
+  blunix proxy dnsmasq SITE.yaml [--interface IF] [--range START,END] [--proxy HOST:PORT] [--tftp-root DIR]
 All commands take --config PATH (default ~/.config/blunix/proxy.yaml).
 The account key is read from its key file, never from the command line.</code></pre>
       <ul class="props">
@@ -313,7 +361,7 @@ blunix proxy: publish would reserve each label, encrypt one document per machine
     <section class="wrap band" aria-labelledby="h-image">
       <div class="band-head">
         <h2 id="h-image">Image helpers</h2>
-        <p>Scripts in <code>image/</code> that the release build runs. They are source-tree tools, not part of the installed package. The scanners print a fixed line on failure. They never print the secret, the path, or the byte offset they found.</p>
+        <p>Scripts in <code>image/</code> that the release build runs. They are source-tree tools, not part of the installed package. The scanners print a fixed line on failure. They never print a secret, or the path or byte offset in the image where they found one.</p>
       </div>
       <div class="table-scroll" tabindex="0" role="region" aria-label="Image helpers table, scrolls sideways on a narrow screen">
         <table>
@@ -350,9 +398,10 @@ blunix proxy: publish would reserve each label, encrypt one document per machine
           </tbody>
         </table>
       </div>
-      <p>The scanners fail closed. On a checkout without the build's test secrets, they cannot know what to look for, so they refuse. Captured on the Mac:</p>
-      <pre tabindex="0" aria-label="Output of scan-root on a checkout without the test secrets"><code>$ image/scan-root.py /work/clean-root
-blunix: scan failed</code></pre>
+      <p>The scanners fail closed. On a checkout without the build's test secrets, they cannot know what to look for, so they refuse. Captured on Debian 10, exit code 1:</p>
+      <pre tabindex="0" aria-label="Output of scan-root on a checkout without the test secrets"><code>$ python3 image/scan-root.py /
+blunix: scan failed: build/root-password is missing or unreadable</code></pre>
+      <p>The message names the build secret file that is missing, never its contents. <code>scan-raw.py</code> prints the same kind of line.</p>
       <p>On a build machine, the failure lines are fixed sentences, taken from the code and its tests: <code>plaintext secret leaked into the image</code>, <code>vendor binary in image</code>, <code>test fixture in a release image</code>, <code>unlocked account in a release image</code>, and others of the same shape. A clean scan prints nothing and exits 0.</p>
       <p>Output of <code>gpl-sources.py</code>, captured on the Mac from a two-package status file we wrote for the example. The version number is only an example.</p>
       <pre tabindex="0" aria-label="Output of gpl-sources.py"><code># Source for Blunix 0.2.0
