@@ -15,15 +15,15 @@
       "binding": "DB",
       "database_name": "blunix-install-plane",
       // Set from `wrangler d1 create blunix-install-plane`.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "cc4d259d-8a8c-42fc-9839-15c74c059df0",
       "migrations_dir": "migrations"
     }
   ],
   "r2_buckets": [{ "binding": "BUILDS", "bucket_name": "blunix-builds" }],
   "vars": {
     // Empty means sign-in answers 503 until the Authentik app exists.
-    "OIDC_ISSUER": "",
-    "OIDC_CLIENT_ID": "",
+    "OIDC_ISSUER": "https://adsas.id/application/o/blunix-build/",
+    "OIDC_CLIENT_ID": "blunix-build",
     "PORTAL_ORIGIN": "https://build.blunix.io",
     // Extra CORS and CSRF origins for wrangler dev, such as http://localhost:8765. Empty in production.
     "DEV_ORIGINS": "",
