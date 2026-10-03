@@ -15,12 +15,13 @@ Website: [blunix.io](https://blunix.io). How the pieces fit: [docs/architecture.
   - the disk image
   - netboot media
   - `SHA256SUMS`
-- **Built and tested, not deployed yet.**
-  - The web portal at build.blunix.io. It makes your key in the browser and encrypts your build with [age](https://age-encryption.org).
+- **Live.**
+  - The web portal at [build.blunix.io](https://build.blunix.io). It makes your key in the browser and encrypts your build with [age](https://age-encryption.org). Sign in with After Dark Systems SSO.
   - The API at api.blunix.io.
-  - Build hosts at `{label}.blnx.io`.
-  - The `blunix proxy` for static-address and netboot LANs.
-- **Designed, not built.** Image signing, A/B rollback, enrolled machines, and the troubleshoot collector. The design docs are in [docs/designs/](docs/designs/).
+  - Build hosts at `{label}.blnx.io` (latest version only; pinned `v{n}.{label}.blnx.io` hosts come later).
+- **Release builds.** A separate build server builds official images only from tags signed by the release key, and holds no signing key itself. It stages images unsigned; signing happens offline. The release key is [keys/blunix-releases.asc](keys/blunix-releases.asc), fingerprint `62F7 36BE A2AB 2E1F A16D  5138 BCB3 426C 090A DF92`. The first signed release is next.
+- **Built and tested.** The `blunix proxy` for static-address and netboot LANs, and the host tools (`blunix doctor`, `security audit`, `integrity check`, `support collect`, `gitbuild`). See [blunix.io/tools](https://blunix.io/tools.html).
+- **Designed, not built.** A/B rollback, enrolled machines, and the troubleshoot collector. The design docs are in [docs/designs/](docs/designs/).
 
 ## Install, in two prompts
 
@@ -38,7 +39,12 @@ sha256sum -c --ignore-missing SHA256SUMS      # Linux
 shasum -a 256 -c SHA256SUMS                   # macOS
 ```
 
-Every line must say OK. Nothing is signed yet; the checksum proves the bytes match the build, not who built it.
+Every line must say OK. v0.1.0 is unsigned, so its checksum proves the bytes match the build, not who built it. From the first signed release on, check the signature first:
+
+```
+gpg --import keys/blunix-releases.asc
+gpg --verify SHA256SUMS.asc SHA256SUMS   # must name 62F7 36BE A2AB 2E1F A16D  5138 BCB3 426C 090A DF92
+```
 
 ## Layout
 

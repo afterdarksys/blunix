@@ -14,14 +14,14 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="blunix">
   <meta property="og:title" content="Account, blunix">
-  <meta property="og:description" content="The blunix account registers a blnx.io label and publishes an age-encrypted node document. Sign-in is Authentik. The browser makes the key and uploads only ciphertext.">
+  <meta property="og:description" content="The blunix account registers a blnx.io label and publishes an age-encrypted node document. Sign-in is After Dark Systems SSO. The browser makes the key and uploads only ciphertext.">
   <meta property="og:url" content="https://blunix.io/account.html">
   <meta property="og:image" content="https://blunix.io/assets/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="blunix: a quiet Debian host for cloud nodes.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="description" content="The blunix account registers a blnx.io label and publishes an age-encrypted node document. Sign-in is Authentik. The browser makes the key and uploads only ciphertext.">
+  <meta name="description" content="The blunix account registers a blnx.io label and publishes an age-encrypted node document. Sign-in is After Dark Systems SSO. The browser makes the key and uploads only ciphertext.">
   <link rel="stylesheet" href="css/site.css">
   <script type="module" src="js/live.js"></script>
 </head>
@@ -36,6 +36,7 @@
       <a href="index.html">Host</a>
       <a href="install.html">Install</a>
       <a href="access.html">Access</a>
+      <a href="tools.html">Tools</a>
       <a href="log.html">Log</a>
       <a href="account.html" aria-current="page">Account</a>
       <a href="service.html">Service</a>
@@ -51,7 +52,7 @@
         <p class="kicker">Account</p>
         <h1>Register a name. Hand over the URL.</h1>
         <p class="lede">An account signs in with an issuer, registers a label, and publishes an encrypted build document. The installer fetches that URL. This page describes the <a href="https://build.blunix.io/">portal</a>, which is where you will do it.</p>
-        <p class="lede">The portal and the API are built and tested, not deployed yet.</p>
+        <p class="lede">The portal and the API are live.</p>
         <p class="portal-status" data-portal-status aria-live="polite"><span data-portal-words>The portal is not open yet.</span> Its address is <a href="https://build.blunix.io/">build.blunix.io</a>.</p>
       </div>
       <figure class="mark mark-small scene">
@@ -67,19 +68,19 @@
       </div>
       <ol class="steps">
         <li>
-          <h3>Authentik at adsas.id</h3>
-          <p>The first issuer. OpenID Connect authorization code with PKCE (S256), plus state and nonce. The API verifies the ID token and sets a session cookie. The client id, the secret, and the issuer URL are Worker secrets. None of them are in this site.</p>
+          <h3>After Dark Systems SSO</h3>
+          <p>Our issuer, at adsas.id, and the only one today. The portal button says "Sign in with After Dark Systems SSO". It is OpenID Connect: authorization code with PKCE (S256), plus state and nonce. The scopes are <code>openid email profile</code>. The API checks the signed ID token against the issuer's keys, then sets a session cookie. The cookie is HttpOnly, Secure, and SameSite=Lax, and it lasts 12 hours. Signing out deletes the session. The client id, the secret, and the issuer URL are Worker secrets. None of them are in this site.</p>
         </li>
         <li>
-          <h3>Google, later</h3>
+          <h3>Google, designed for later</h3>
           <p>OpenID Connect at <span class="host">https://accounts.google.com</span>. Authorization code with PKCE. The audience has to be our client id, once that client exists.</p>
         </li>
         <li>
-          <h3>GitHub, later</h3>
+          <h3>GitHub, designed for later</h3>
           <p>GitHub user sign-in uses GitHub's OAuth 2.0 authorization-code endpoints. The same rules: allowlisted issuer, live expiry, matching audience, algorithm allowlist. <code>none</code> is rejected.</p>
         </li>
       </ol>
-      <p class="note">A token from any other issuer fails closed. Google and GitHub are later work. Only the portal's sign-in link starts a login.</p>
+      <p class="note">A token from any other issuer fails closed. Google and GitHub are not built. Only the portal's sign-in link starts a login.</p>
     </section>
 
     <section class="wrap band">
@@ -91,8 +92,9 @@
         <li><strong>Shape.</strong> One ASCII DNS label. A letter, then lowercase letters, digits, or single hyphens, 2 to 32 characters, ending in a letter or digit. No punycode. Reserved: <span class="host">www</span>, <span class="host">api</span>, <span class="host">updates</span>, <span class="host">log</span>, <span class="host">mail</span>, <span class="host">build</span>, <span class="host">portal</span>, <span class="host">admin</span>, <span class="host">root</span>, <span class="host">blunix</span>, <span class="host">proxy</span>, <span class="host">status</span>, and any <span class="host">v</span> followed by digits. Twenty labels per account.</li>
         <li><strong>Empty until you publish.</strong> <span class="host">GET /</span> is a 404 until ciphertext exists. The installer applies nothing.</li>
         <li><strong>A separate domain.</strong> Build hosts live on <span class="host">blnx.io</span>, not under blunix.io, so a build file never shares cookies or an origin with this site, the portal at <span class="host">build.blunix.io</span>, or the API.</li>
-        <li><strong>Versions.</strong> Each upload is a new version. <span class="host">ada.blnx.io</span> serves the latest. <span class="host">v3.ada.blnx.io</span> serves version 3 until you delete it. Deleting the latest moves the name back to the highest remaining version. Releasing a label holds the name for 30 days.</li>
-        <li><strong>Guessable on purpose, when the label is public.</strong> You chose a name you can hand to someone. Anyone who can guess a public label can download the ciphertext. They still need the key. A bearer on that anonymous fetch would be a second secret. This draft does not add one.</li>
+        <li><strong>Versions.</strong> Each upload is a new version. <span class="host">ada.blnx.io</span> serves the latest. Deleting the latest moves the name back to the highest remaining version. A version number is never used twice. Releasing a label holds the name for 30 days.</li>
+        <li><strong>Pinned names, not on yet.</strong> <span class="host">v3.ada.blnx.io</span> is meant to serve version 3 until you delete it. Those names have no certificates yet, so the portal and the API do not hand them out. Use the latest name for now.</li>
+        <li><strong>Guessable on purpose, when the label is public.</strong> You chose a name you can hand to someone. Anyone who can guess a public label can download the ciphertext. They still need the key. A bearer on that anonymous fetch would be a second secret. The build host does not ask for one.</li>
         <li><strong>Visibility.</strong> A public label serves the ciphertext to anyone who can say the name. That is the spoken install. An enrolled label serves it only to a machine key bound to that profile. Enrolled labels are designed, not built. The <a href="service.html">service</a> design defaults new profiles to enrolled.</li>
         <li><strong>Lookalikes.</strong> Labels that mimic another label are not rejected yet. That check is not built.</li>
       </ul>
@@ -110,7 +112,7 @@
         </li>
         <li>
           <h3>A generated key, age passphrase mode</h3>
-          <p>You do not choose the key. The browser draws 100 bits from its CSPRNG and writes them as 20 characters in four groups of five. It encrypts with the <a href="https://age-encryption.org/v1">age specification</a>, stretched with scrypt, the way age defines it. There is no second cipher. The browser uses typage, served from this site. Debian <code>age</code> decrypts on the machine.</p>
+          <p>You do not choose the key. The browser draws 100 bits from its CSPRNG and writes them as 20 characters in four groups of five. It encrypts with the <a href="https://age-encryption.org/v1">age specification</a>, stretched with scrypt, the way age defines it. There is no second cipher. The browser uses typage, served from the portal itself. Debian <code>age</code> decrypts on the machine.</p>
         </li>
         <li>
           <h3>The server stores ciphertext</h3>
@@ -121,7 +123,21 @@
           <p>The machine fetches <span class="host">https://ada.blnx.io/</span> over TLS, asks for the key with echo off, and decrypts locally. The sequence on the box is the <a href="install.html">install</a> page.</p>
         </li>
       </ol>
-      <p class="note">Publishing again changes the file the next install fetches from the latest name. A pinned name keeps its version. Taking a later document on a machine that is already installed is the <a href="service.html">service</a>, which is designed, not built. A new image is a new release on the <a href="log.html">log</a>.</p>
+      <p class="note">Publishing again changes the file the next install fetches from the latest name. Taking a later document on a machine that is already installed is the <a href="service.html">service</a>, which is designed, not built. A new image is a new release on the <a href="log.html">log</a>.</p>
+    </section>
+    <section class="wrap band">
+      <div class="band-head">
+        <h2>What we keep</h2>
+        <p>Only what the portal needs to work. Never your build key, your document in the clear, or a password.</p>
+      </div>
+      <ul class="props">
+        <li><strong>The account.</strong> The issuer and the subject from your ID token, which is who you are to us. A display name for "Signed in as": the token's name, else its username, else its email. It is refreshed each time you sign in, and nothing grants access by it. The time the account was made.</li>
+        <li><strong>Sessions.</strong> A SHA-256 of the session cookie, with its start and end time. Expired sessions are deleted. During a sign-in, the state, nonce, and PKCE verifier are kept for up to 10 minutes, then deleted.</li>
+        <li><strong>Labels and builds.</strong> Each label and when you reserved it. For each version: the number, sha256, size, and time, and the ciphertext itself. Deleting a version or a label deletes its ciphertext. The label and version rows stay, marked deleted, so the 30-day hold and the numbering hold.</li>
+        <li><strong>API keys.</strong> The SHA-256 of each key, its name, its scopes, and when it was made or revoked. Never the key.</li>
+        <li><strong>Audit.</strong> One row per reserve, upload, delete, and key event: time, account, event, label, version, sha256, key fingerprint. Never a body, a key, or a token.</li>
+        <li><strong>Rate limits.</strong> Hourly counters. A login counter is keyed by a SHA-256 of the address, not the address. Old counters are deleted.</li>
+      </ul>
     </section>
   </main>
   <footer class="wrap site-footer">

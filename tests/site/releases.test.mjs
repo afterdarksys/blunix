@@ -153,3 +153,11 @@ test("live.js formats sizes and dates", () => {
   assert.equal(day("2026-09-30T12:00:00Z"), "30 September 2026");
   assert.equal(day("nonsense"), "date unknown");
 });
+
+test("the site serves the same release key the repo pins", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const repo = await readFile(new URL("../../keys/blunix-releases.asc", import.meta.url));
+  const site = await readFile(new URL("../../site/keys/blunix-releases.asc", import.meta.url));
+  assert.ok(repo.length > 0);
+  assert.deepEqual(site, repo, "copy keys/blunix-releases.asc to site/keys/ after any key change");
+});

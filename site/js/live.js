@@ -94,8 +94,8 @@ function failSentence() {
 }
 
 function emptySentence() {
-  return el("p", {}, document.createTextNode("No release is published yet. The first one is being cut: an unsigned test image and the installer ISO. When it lands on GitHub, it shows up here without a redeploy. "),
-    repoLink("The releases page on GitHub"), document.createTextNode(" is where it will be."));
+  return el("p", {}, document.createTextNode("The release list did not load just now. Every release, and its SHA256SUMS, is on "),
+    repoLink("the releases page on GitHub"), document.createTextNode("."));
 }
 
 function fillLatest(region, releases) {

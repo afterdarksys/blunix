@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.blunix.io; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Tools, blunix</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="assets/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#12161a">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="blunix">
+  <meta property="og:title" content="Tools, blunix">
+  <meta property="og:description" content="How to use the blunix tools: the read-only host checks, Gitbuild, the build-proxy, the image helpers, and how to verify a release. Every output shown is real.">
+  <meta property="og:url" content="https://blunix.io/tools.html">
+  <meta property="og:image" content="https://blunix.io/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="blunix: a quiet Debian host for cloud nodes.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="description" content="How to use the blunix tools: the read-only host checks, Gitbuild, the build-proxy, the image helpers, and how to verify a release. Every output shown is real.">
+  <link rel="canonical" href="https://blunix.io/tools.html">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="js/live.js"></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="wrap site-header">
+    <a class="brand" href="index.html">
+      <img src="assets/logo-mark.svg" width="40" height="48" alt="">
+      <span>blunix</span>
+    </a>
+    <nav aria-label="Primary">
+      <a href="index.html">Host</a>
+      <a href="install.html">Install</a>
+      <a href="access.html">Access</a>
+      <a href="tools.html" aria-current="page">Tools</a>
+      <a href="log.html">Log</a>
+      <a href="account.html">Account</a>
+      <a href="service.html">Service</a>
+      <a href="platform.html">Platform</a>
+      <a href="api.html">API</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="https://build.blunix.io/">Portal</a>
+    </nav>
+  </header>
+  <main id="content" tabindex="-1">
+    <section class="wrap hero">
+      <div>
+        <p class="kicker">Tools</p>
+        <h1>Small tools that say what they checked.</h1>
+        <p class="lede">These are the commands that ship with blunix. Each one does one job. Each one says what it did not check. Most print JSON, so a screen reader reads the same words a script parses.</p>
+        <p class="lede">Every output on this page came from running the tool. Where a command needs Linux and we ran it on a Mac, the page says so and shows what the Mac printed. Local paths are shortened.</p>
+      </div>
+      <figure class="mark mark-small scene">
+        <picture><source type="image/avif" srcset="assets/cat/debugging-320.avif 320w, assets/cat/debugging-640.avif 640w" sizes="(max-width: 800px) 240px, 300px"><source type="image/webp" srcset="assets/cat/debugging-320.webp 320w, assets/cat/debugging-640.webp 640w" sizes="(max-width: 800px) 240px, 300px"><img src="assets/cat/debugging-640.jpg" srcset="assets/cat/debugging-320.jpg 320w, assets/cat/debugging-640.jpg 640w" sizes="(max-width: 800px) 240px, 300px" width="640" height="640" alt="Blubie, the Blunix cat, sits beside a round magnifying glass on a stand, ready to look closer." decoding="async"></picture>
+        <figcaption>Look closer. Say what you saw. Change nothing.</figcaption>
+      </figure>
+    </section>
+
+    <section class="wrap band" aria-labelledby="h-get">
+      <div class="band-head">
+        <h2 id="h-get">Get them</h2>
+        <p>The tools live in <a href="https://github.com/afterdarksys/blunix-utils">the blunix-utils repository on GitHub</a>. A copy is synced into <a href="https://github.com/afterdarksys/blunix">the blunix distribution repository</a>, and new images include the launchers.</p>
+      </div>
+      <h3>Run from a checkout</h3>
+      <p>You need Python 3.9 or later and PyYAML. Commands that encrypt or decrypt use Debian's <code>age</code>. The disk and service checks use Linux tools such as <code>lsblk</code> and <code>systemctl</code>. Missing tools are reported as unavailable, not as errors.</p>
+      <pre><code>git clone https://github.com/afterdarksys/blunix-utils.git
+cd blunix-utils
+./apply/blunix doctor
+./apply/gitbuild --help</code></pre>
+      <p class="note">There is no top-level help. <code>blunix --help</code> prints <code>blunix: refused command</code>, because the main command refuses every flag it does not know. Ask a subcommand instead, for example <code>blunix doctor --help</code> or <code>blunix proxy help</code>.</p>
+
+      <h3>Install as a package with Gitbuild</h3>
+      <p>The repository carries its own Gitbuild recipe. Gitbuild builds one explicit ref and records the commit it resolved. It installs under <code>/usr/local/afterdarksys/blunix-utils</code> and links the commands into <code>/usr/local/bin</code>. The repository has no release tags yet, so name a full commit.</p>
+      <pre><code>./apply/gitbuild prepare afterdarksys/blunix-utils --ref FULL_COMMIT_SHA --output ./build/blunix-utils
+# Read build/blunix-utils/bundle.json before you install.
+sudo ./apply/gitbuild install ./build/blunix-utils
+gitbuild verify blunix-utils</code></pre>
+      <p class="note">The image builders are not part of this package. They stay as scripts in the source tree.</p>
+    </section>
+
+    <section class="wrap band" aria-labelledby="h-checks">
+      <div class="band-head">
+        <h2 id="h-checks">Host checks</h2>
+        <p>Six read-only commands. They print JSON with a <code>status</code> field. The exit code is 0 when the status is <code>ok</code> and 1 for anything else. They are narrow on purpose. None of them is a full hardening audit, a signature check, a hardware test, or a repair tool. None of them changes the system.</p>
+      </div>
+      <p>The examples below ran on a macOS workstation against a scratch directory we made to stand in for a mounted image. In it, <code>etc/shadow</code> had mode 0644 and was owned by an ordinary user, so there is something to find. The scratch path is shown as <code>/work/demo-root</code>.</p>
+
+      <h3 id="doctor"><code>blunix doctor</code></h3>
+      <p>Says which helper programs exist on the machine running the check, and how much space and how many inodes are free under the root you name.</p>
+      <pre><code>blunix doctor [--root ROOT]</code></pre>
+      <p>It does not test whether those programs work, and it is not a health check. The program list is about the machine you run it on, even with <code>--root</code>. Only the free space follows <code>--root</code>.</p>
+      <p>Output, captured on the Mac. Most Linux tools show <code>false</code> there, as expected.</p>
+      <pre tabindex="0" aria-label="Output of blunix doctor"><code>{
+  "status": "ok",
+  "root": "/work/demo-root",
+  "tools_on_operator_host": {
+    "age": false,
+    "git": true,
+    "lsblk": false,
+    "findmnt": false,
+    "systemctl": false,
+    "ip": false,
+    "ss": true,
+    "journalctl": false,
+    "sha256sum": true
+  },
+  "root_free_bytes": 27605442560,
+  "root_free_inodes": 269584400,
+  "note": "Availability and capacity checks; not a full system health assessment."
+}</code></pre>
+
+      <h3 id="security-audit"><code>blunix security audit</code></h3>
+      <p>Checks the owner and permission bits of four protected paths: <code>/etc/shadow</code> and <code>/etc/gshadow</code> (at most 0640), <code>/root/.ssh</code> (at most 0700), and <code>/usr/local/afterdarksys</code> (at most 0755). Each must be owned by root.</p>
+      <pre><code>blunix security audit [--root ROOT]</code></pre>
+      <p>It reads metadata only, never file contents. A symlink anywhere in a protected path is reported and not followed, so a mounted image cannot point the check outside itself. A path that does not exist is skipped. If none of the four exist, the status is <code>unavailable</code>.</p>
+      <p>Output, captured on the Mac against the scratch root. Exit code 1.</p>
+      <pre tabindex="0" aria-label="Output of blunix security audit"><code>{
+  "status": "findings",
+  "scope": "permission and ownership checks only; no configuration bodies read",
+  "checked": [
+    "/etc/shadow",
+    "/root/.ssh"
+  ],
+  "findings": [
+    {
+      "path": "/etc/shadow",
+      "issue": "excess permissions",
+      "mode": "0o644"
+    },
+    {
+      "path": "/etc/shadow",
+      "issue": "not owned by root"
+    },
+    {
+      "path": "/root/.ssh",
+      "issue": "not owned by root"
+    }
+  ]
+}</code></pre>
+
+      <h3 id="integrity-check"><code>blunix integrity check</code></h3>
+      <p>Compares every product that Gitbuild installed against its install receipt. It reports changed, missing, and extra files, and command links that no longer point where they should. Name one product to check only that one.</p>
+      <pre><code>blunix integrity check [PRODUCT] [--root ROOT]</code></pre>
+      <p>It covers Gitbuild products only, not Debian packages. The receipt is a local baseline written at install time. It is not a signature. Someone who can rewrite the product and its receipt together can pass this check.</p>
+      <p>Output, captured on the Mac. With nothing installed, the list is empty and the status is <code>ok</code>.</p>
+      <pre tabindex="0" aria-label="Output of blunix integrity check with nothing installed"><code>{
+  "status": "ok",
+  "scope": "gitbuild packages only; receipts are local baselines, not signatures",
+  "products": []
+}</code></pre>
+      <p>Asking for a product that is not installed gives <code>"status": "error"</code> for that product and exit code 1. The report does not say why. <code>gitbuild verify</code> gives the reason, as shown in the Gitbuild section.</p>
+
+      <h3 id="admin-status"><code>blunix admin status</code></h3>
+      <p>Reads the state of five services through <code>systemctl show</code>: <code>ssh</code>, <code>systemd-resolved</code>, <code>systemd-networkd</code>, <code>blunix-bootstrap</code>, and <code>blunix-access</code>. For each it keeps <code>LoadState</code>, <code>ActiveState</code>, <code>SubState</code>, and <code>Result</code>. A failed unit is a finding.</p>
+      <pre><code>blunix admin status</code></pre>
+      <p>It does not start, stop, or restart anything. It does not read the journal. It always looks at the running host, so it takes no <code>--root</code>.</p>
+      <p>Output, captured on the Mac, which has no <code>systemctl</code>. On a blunix host each service carries its four properties instead.</p>
+      <pre tabindex="0" aria-label="Output of blunix admin status on a machine without systemctl"><code>{
+  "status": "unavailable",
+  "services": {
+    "ssh.service": {
+      "status": "unavailable",
+      "tool": "systemctl"
+    },
+    "systemd-resolved.service": {
+      "status": "unavailable",
+      "tool": "systemctl"
+    },
+    "systemd-networkd.service": {
+      "status": "unavailable",
+      "tool": "systemctl"
+    },
+    "blunix-bootstrap.service": {
+      "status": "unavailable",
+      "tool": "systemctl"
+    },
+    "blunix-access.service": {
+      "status": "unavailable",
+      "tool": "systemctl"
+    }
+  }
+}</code></pre>
+
+      <h3 id="disk-inspect"><code>blunix disk inspect</code></h3>
+      <p>Lists block devices through <code>lsblk</code>: kernel name, type, size in bytes, read-only flag, removable flag, and mount points.</p>
+      <pre><code>blunix disk inspect</code></pre>
+      <p>It does not read SMART data, check a filesystem, or touch a partition table. It takes no <code>--root</code>, because disks belong to the running host.</p>
+      <p>Output, captured on the Mac, which has no <code>lsblk</code>.</p>
+      <pre tabindex="0" aria-label="Output of blunix disk inspect on a machine without lsblk"><code>{
+  "status": "unavailable",
+  "tool": "lsblk"
+}</code></pre>
+
+      <h3 id="support-collect"><code>blunix support collect</code></h3>
+      <p>Writes one JSON report that you can send to someone helping you. It holds the doctor, security audit, and integrity check results. Nothing else.</p>
+      <pre><code>blunix support collect --output report.json [--root ROOT]</code></pre>
+      <p>The report never contains configuration file bodies, journal logs, credentials, environment variables, process arguments, or network addresses. The report lists those omissions inside itself, so the reader knows they were left out on purpose. The file is created with mode 0600. It will not overwrite an existing file, and it will not follow a symlink at that name. Reports over 1 MiB are refused.</p>
+      <p>Output, captured on the Mac against the scratch root. The command prints a short receipt.</p>
+      <pre tabindex="0" aria-label="Output of blunix support collect"><code>{
+  "status": "ok",
+  "output": "/work/report.json",
+  "bytes": 1413
+}</code></pre>
+      <p>The file mode, and the end of the report:</p>
+      <pre tabindex="0" aria-label="File mode of the report and its omitted list"><code>-rw-------  1 you  staff  1413 Oct  3 06:17 report.json
+
+  "omitted": [
+    "configuration bodies",
+    "journal logs",
+    "credentials",
+    "environment variables",
+    "process arguments",
+    "network addresses"
+  ]</code></pre>
+      <p>Running it again with the same name refuses, rather than replacing the first report:</p>
+      <pre tabindex="0" aria-label="Second run with the same output name"><code>blunix: diagnostic failed (FileExistsError)</code></pre>
+    </section>
+
+    <section class="wrap band" aria-labelledby="h-gitbuild">
+      <div class="band-head">
+        <h2 id="h-gitbuild">Gitbuild</h2>
+        <p>Builds software from source at one named Git ref, then installs it as a product with a receipt. It handles Python, Go, Rust, Bash, Node, PHP, and custom recipes. Run it as <code>gitbuild</code> or <code>blunix gitbuild</code>. The full guide is <a href="https://github.com/afterdarksys/blunix-utils/blob/main/docs/gitbuild.md">docs/gitbuild.md in blunix-utils</a>.</p>
+      </div>
+      <pre tabindex="0" aria-label="Output of gitbuild --help"><code>usage: gitbuild [-h] {prepare,build,install,remove,list,verify,doctor} ...
+
+Build and manage After Dark source packages
+
+positional arguments:
+  {prepare,build,install,remove,list,verify,doctor}
+    prepare (build)     check out a GitHub ref and create an install bundle
+    doctor              report available build tools
+
+options:
+  -h, --help            show this help message and exit</code></pre>
+
+      <h3 id="gitbuild-prepare"><code>gitbuild prepare</code></h3>
+      <p>Checks out a repository, builds the ref you name, and writes a bundle: <code>bundle.json</code> plus a <code>payload/</code> tree with a SHA-256 and mode for every file. A tag or branch is resolved to a commit, and the commit is recorded. <code>build</code> is another name for the same command.</p>
+      <pre><code>gitbuild prepare OWNER/REPO --ref REF --output DIR [--manifest RECIPE.yaml]</code></pre>
+      <p>It accepts only repositories owned by <code>afterdarksys</code> or <code>straticus1</code>. It refuses to run as root. The output directory must not exist, and a failed build leaves no bundle. It does run the repository's build code with your permissions and network access, so build untrusted code in a disposable machine. Bundles are integrity checked, not signed.</p>
+      <p>Output, captured on the Mac. A repository outside the two owners is refused before anything is fetched.</p>
+      <pre tabindex="0" aria-label="Output of gitbuild prepare for a repository outside the allowed owners"><code>gitbuild: repository must belong to straticus1 or afterdarksys</code></pre>
+
+      <h3 id="gitbuild-install"><code>gitbuild install</code></h3>
+      <p>Installs a bundle under <code>/usr/local/afterdarksys/PRODUCT</code> and publishes relative links in <code>/usr/local/bin</code>, <code>sbin</code>, <code>lib/PRODUCT</code>, and <code>etc/PRODUCT</code>. It checks the file inventory before writing and again after copying. Installing a newer bundle is the upgrade. Local edits to configuration survive. A new default for an edited file is saved beside it as <code>.gitbuild-new</code>.</p>
+      <pre><code>gitbuild install BUNDLE [--root ROOT]</code></pre>
+      <p>It runs no code from the repository and no install hooks. It does not start services or write systemd units. It refuses to overwrite files it does not own, special permission bits, and links that leave the product. With <code>--root</code> it assembles a target filesystem instead of the running system.</p>
+
+      <h3 id="gitbuild-list"><code>gitbuild list</code> and <code>gitbuild verify</code></h3>
+      <p><code>list</code> shows installed products with their repository, commit, and status. <code>verify</code> compares one product with its receipt and exits 1 if anything differs.</p>
+      <pre><code>gitbuild list [--root ROOT]
+gitbuild verify PRODUCT [--root ROOT]</code></pre>
+      <p>Output, captured on the Mac against the empty scratch root:</p>
+      <pre tabindex="0" aria-label="Output of gitbuild list and gitbuild verify on an empty root"><code>$ gitbuild list --root /work/demo-root
+[]
+$ gitbuild verify example --root /work/demo-root
+gitbuild: product is not installed</code></pre>
+      <p>On a real product, <code>verify</code> prints <code>product</code>, a <code>changed</code> list, and a <code>links_changed</code> list. In the project's test fixture, one file is edited and one command link is deleted after install. <code>verify</code> then names <code>bin/demo</code> under <code>changed</code> and <code>sbin/demod</code> under <code>links_changed</code>, and exits 1.</p>
+
+      <h3 id="gitbuild-remove"><code>gitbuild remove</code></h3>
+      <p>Removes a product and its links. Configuration stays, and the product is listed as <code>config-only</code>. Add <code>--purge</code> to delete the configuration too.</p>
+      <pre><code>gitbuild remove PRODUCT [--purge] [--root ROOT]</code></pre>
+      <p>If a step fails, the product and links are rolled back. That covers errors, not a power cut. It is not a multi-version rollback system.</p>
+
+      <h3 id="gitbuild-doctor"><code>gitbuild doctor</code></h3>
+      <p>Says whether the programs a build system needs are on the path.</p>
+      <pre><code>gitbuild doctor [--system {bash,custom,go,node,php,python,rust}]</code></pre>
+      <p>It checks that programs exist, and that <code>python3 -m pip</code> runs for Python. It does not check versions or native libraries. Output, captured on the Mac:</p>
+      <pre tabindex="0" aria-label="Output of gitbuild doctor for Go"><code>{
+  "tools": {
+    "git": "/usr/local/bin/git",
+    "go": "/usr/local/bin/go",
+    "python3": "/usr/local/bin/python3"
+  },
+  "missing": [],
+  "note": "Checks executable availability; recipes may need additional headers and tools."
+}</code></pre>
+    </section>
+
+    <section class="wrap band" aria-labelledby="h-proxy">
+      <div class="band-head">
+        <h2 id="h-proxy">blunix proxy</h2>
+        <p>The build-proxy, for a LAN of machines with static addresses or netboot. You describe the machines in one site file. It publishes one encrypted build per machine and serves those installs on the LAN. The <a href="architecture.html#build-proxy">build-proxy drawing on the architecture page</a> shows how the parts connect.</p>
+      </div>
+      <pre tabindex="0" aria-label="Output of blunix proxy help"><code>usage:
+  blunix proxy init [--api URL] [--key-file PATH] [--listen HOST:PORT]
+  blunix proxy plan SITE.yaml [--check]
+  blunix proxy publish SITE.yaml [--out DIR]
+  blunix proxy serve [--site SITE.yaml] [--media DIR [--sums PATH]] [--listen HOST:PORT] [--advertise HOST:PORT]
+  blunix proxy dnsmasq SITE.yaml [--interface IF] [--range START,END] [--proxy HOST:PORT]
+All commands take --config PATH (default ~/.config/blunix/proxy.yaml).
+The account key is read from its key file, never from the command line.</code></pre>
+      <ul class="props">
+        <li><strong>init</strong> saves the API address, the listen address, and the path to your account key file. The key is read from a mode 0600 file or typed at a hidden prompt. Putting it on the command line is refused.</li>
+        <li><strong>plan</strong> reads the site file and says, one sentence per machine, what publish would do. It sends nothing. Add <code>--check</code> to ask the API which labels are already yours.</li>
+        <li><strong>publish</strong> makes a new key for each machine, encrypts that machine's document with age, and uploads only the ciphertext. Each key is written to <code>keys.txt</code> (mode 0600) before its upload, so a lost answer from the server never loses a key. It stops if a label belongs to another account.</li>
+        <li><strong>serve</strong> relays build documents for <code>blnx.io</code> build hosts only, and serves netboot files. It never serves keys. With <code>--media</code> it checks the media against <code>SHA256SUMS</code> first.</li>
+        <li><strong>dnsmasq</strong> prints a dnsmasq configuration with one address reservation per machine. It prints to standard output and changes nothing.</li>
+      </ul>
+      <p class="note">What it does not stop: a person who can read <code>keys.txt</code>. Print the install cards and delete the file. Netboot is for trusted LANs until images are signed.</p>
+      <p>Output of <code>plan</code>, captured on the Mac. The site file had two DHCP machines, <span class="host">ada</span> and <span class="host">grace</span>, with example MAC addresses.</p>
+      <pre tabindex="0" aria-label="Output of blunix proxy plan"><code>blunix proxy: machine 00:50:56:aa:bb:01 gets label ada (https://ada.blnx.io/), hostname ada-1, network by dhcp, disk metal-luks, access regular.
+blunix proxy: machine 00:50:56:aa:bb:02 gets label grace (https://grace.blnx.io/), hostname grace-1, network by dhcp, disk metal-luks, access full-speech.
+blunix proxy: publish would reserve each label, encrypt one document per machine with a new key, upload it as a new version, and write the keys to keys.txt. Running publish again uploads new versions.</code></pre>
+      <p>Trying to pass a key as a flag, also captured on the Mac:</p>
+      <pre tabindex="0" aria-label="Output when a key is passed on the command line"><code>blunix proxy: the account key is read from its key file, never from the command line</code></pre>
+    </section>
+
+    <section class="wrap band" aria-labelledby="h-image">
+      <div class="band-head">
+        <h2 id="h-image">Image helpers</h2>
+        <p>Scripts in <code>image/</code> that the release build runs. They are source-tree tools, not part of the installed package. The scanners print a fixed line on failure. They never print the secret, the path, or the byte offset they found.</p>
+      </div>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Image helpers table, scrolls sideways on a narrow screen">
+        <table>
+          <caption>The five image helpers, how to run them, and what they do.</caption>
+          <thead>
+            <tr><th scope="col">Helper</th><th scope="col">Command</th><th scope="col">What it does</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">scan-root</th>
+              <td><code>image/scan-root.py [--release] MOUNTED_ROOT</code></td>
+              <td>Walks a mounted image for the build's test secrets and for vendor AI binaries. It does not follow links out of the mount. With <code>--release</code> it also refuses the test fixture, any unlocked account, a root SSH key, an sshd that allows root or password login, a shipped sshd host key, and an image with sshd but no host key generation.</td>
+            </tr>
+            <tr>
+              <th scope="row">scan-raw</th>
+              <td><code>image/scan-raw.py DISK.raw</code> or <code>DISK.raw.zst</code></td>
+              <td>Reads every byte of the disk image, free space included, because a deleted file keeps its bytes. It refuses private key bodies, age secret keys, the test fixture's age header, and the test secrets.</td>
+            </tr>
+            <tr>
+              <th scope="row">seal-root</th>
+              <td><code>image/seal-root.py MOUNTED_ROOT</code></td>
+              <td>Test images only. Puts the encrypted test fixture and the test root password onto a mounted root. It reads both secrets from files, never from arguments or the environment.</td>
+            </tr>
+            <tr>
+              <th scope="row">redact-serial</th>
+              <td><code>image/redact-serial.py [--check] VM_DIR</code></td>
+              <td>Removes test secrets from a VM's serial and boot logs, then keeps only the expected boot lines in <code>summary.txt</code>. With <code>--check</code> it only reports whether the boot evidence is complete.</td>
+            </tr>
+            <tr>
+              <th scope="row">gpl-sources</th>
+              <td><code>image/gpl-sources.py VERSION STATUS...</code></td>
+              <td>Turns the dpkg status files of a release into <code>SOURCES.md</code>: every Debian source package at its exact version, a snapshot.debian.org link for each, and the written source offer. It reads files only and fetches nothing.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The scanners fail closed. On a checkout without the build's test secrets, they cannot know what to look for, so they refuse. Captured on the Mac:</p>
+      <pre tabindex="0" aria-label="Output of scan-root on a checkout without the test secrets"><code>$ image/scan-root.py /work/clean-root
+blunix: scan failed</code></pre>
+      <p>On a build machine, the failure lines are fixed sentences, taken from the code and its tests: <code>plaintext secret leaked into the image</code>, <code>vendor binary in image</code>, <code>test fixture in a release image</code>, <code>unlocked account in a release image</code>, and others of the same shape. A clean scan prints nothing and exits 0.</p>
+      <p>Output of <code>gpl-sources.py</code>, captured on the Mac from a two-package status file we wrote for the example. The version number is only an example.</p>
+      <pre tabindex="0" aria-label="Output of gpl-sources.py"><code># Source for Blunix 0.2.0
+
+The Blunix 0.2.0 installer ISO, disk image and netboot media contain binary packages from Debian 13 (trixie). Those packages keep their own licenses, many of them the GNU GPL. Blunix's own code is licensed separately; see LICENSE in the repository.
+
+## Where the source is
+
+Every source package below is in the Debian archive at the exact version shipped. The link opens that version on snapshot.debian.org. On a Debian system, `apt-get source NAME=VERSION` fetches the same thing.
+
+## Written offer
+
+For at least three years after this release, and for as long as we offer support for it, After Dark Systems will give anyone a complete copy of the corresponding source code for any GPL- or LGPL-licensed package in this release, on request, for no more than our cost of physically performing the distribution. Ask through https://github.com/afterdarksys/blunix/issues and name the release and the package.
+
+## Source packages (2)
+
+| Source package | Version | In |
+|---|---|---|
+| [bash](https://snapshot.debian.org/package/bash/5.2.37-2/) | `5.2.37-2` | disk |
+| [glibc](https://snapshot.debian.org/package/glibc/2.41-12/) | `2.41-12` | disk |</code></pre>
+    </section>
+
+    <section class="wrap band" aria-labelledby="h-verify">
+      <div class="band-head">
+        <h2 id="h-verify">Verify a release</h2>
+        <p>Release signing is set up. The first signed release is next. v0.1.0 is an unsigned test release: its checksums prove the bytes match, not who built them.</p>
+      </div>
+      <p>From the first signed release on, <code>SHA256SUMS</code> comes with <code>SHA256SUMS.asc</code>, a detached signature made with the release key. Signing happens offline, on the maintainer's machine. The build server never holds the key.</p>
+      <ol class="steps">
+        <li>
+          <h3>Get the public key</h3>
+          <p>Download it from <a href="/keys/blunix-releases.asc">blunix.io/keys/blunix-releases.asc</a>. The same file is <code>keys/blunix-releases.asc</code> in <a href="https://github.com/afterdarksys/blunix/blob/main/keys/blunix-releases.asc">the blunix repository</a> and in blunix-utils, so you can check one against the other.</p>
+          <pre><code>curl -fsSLO https://blunix.io/keys/blunix-releases.asc
+gpg --show-keys --fingerprint blunix-releases.asc
+gpg --import blunix-releases.asc</code></pre>
+        </li>
+        <li>
+          <h3>Check the fingerprint</h3>
+          <p>Compare it with this page and with the repository. They must match in full: <span class="host">62F7 36BE A2AB 2E1F A16D 5138 BCB3 426C 090A DF92</span>. This is what <code>gpg --show-keys --fingerprint</code> printed for the file:</p>
+          <pre tabindex="0" aria-label="Fingerprint of the release key"><code>pub   ed25519 2026-10-02 [SC] [expires: 2028-10-01]
+      62F7 36BE A2AB 2E1F A16D  5138 BCB3 426C 090A DF92
+uid                      Blunix Release Signing &lt;sign-releases@blunix.io&gt;</code></pre>
+        </li>
+        <li>
+          <h3>Check the signature</h3>
+          <p>Download <code>SHA256SUMS</code> and <code>SHA256SUMS.asc</code> from the release, next to the files you want.</p>
+          <pre><code>gpg --verify SHA256SUMS.asc SHA256SUMS</code></pre>
+          <p>Accept it only if gpg reports a good signature and names the fingerprint above. Anything else means stop.</p>
+        </li>
+        <li>
+          <h3>Check the files</h3>
+          <pre><code>sha256sum -c --ignore-missing SHA256SUMS</code></pre>
+          <p>Each file you downloaded must say OK. The installer also checks the disk image against its sha256 before it writes a disk.</p>
+        </li>
+      </ol>
+      <p class="note">There is no signed release yet, so there is no signature output to show here. The releases are listed on the <a href="log.html">release log</a>.</p>
+    </section>
+
+    <section class="wrap band" aria-labelledby="h-different">
+      <div class="band-head">
+        <h2 id="h-different">What is different here</h2>
+        <p>Plain facts about how these tools and the install around them behave. Each one is in the code today.</p>
+      </div>
+      <ul class="props">
+        <li><strong>Access starts at the boot menu.</strong> Entries 1 to 5: full speech, console speech, large print, regular, advanced. Both speech entries also turn on braille. The <a href="access.html">access page</a> has the details.</li>
+        <li><strong>Prompts are one sentence.</strong> <q>blunix: build hostname.</q> <q>blunix: key. Type it. It will not be spoken.</q> The hostname is read back, and silence does not fetch.</li>
+        <li><strong>The build key is made in your browser.</strong> Only ciphertext is uploaded. A wrong key says <q>blunix: could not decrypt. Nothing applied.</q></li>
+        <li><strong>Secrets stay off the command line.</strong> <code>blunix</code> refuses <code>--passphrase</code>. <code>blunix proxy</code> refuses an account key as an argument and reads it from a 0600 file.</li>
+        <li><strong>Release builds come only from signed tags.</strong> The build server pulls from GitHub, accepts no inbound connections except admin SSH, and holds no signing key. Unsigned tags are refused.</li>
+        <li><strong>Release images are scanned before they ship.</strong> The mounted root and every raw byte of the disk, free space included.</li>
+        <li><strong>Support reports leave the private parts out.</strong> No configuration bodies, logs, credentials, environment, process arguments, or network addresses. The report says so inside itself.</li>
+        <li><strong>Every Gitbuild product can be checked.</strong> Its receipt records each file's SHA-256 and mode, and <code>blunix integrity check</code> compares them on demand.</li>
+        <li><strong>Every release carries its GPL source list.</strong> <code>SOURCES.md</code> names each Debian source package and version, with a written offer.</li>
+        <li><strong>The checks say what they are not.</strong> Every report carries its scope, so nobody mistakes a permission check for a full audit.</li>
+      </ul>
+    </section>
+  </main>
+  <footer class="wrap site-footer">
+    <p>Built by people who keep cats. blunix.io is this project, and the source is <a href="https://github.com/afterdarksys/blunix">afterdarksys/blunix</a>. blunix.com is Blunix GmbH in Berlin, a different company.</p>
+  </footer>
+</body>
+</html>

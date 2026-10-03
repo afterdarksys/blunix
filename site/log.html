@@ -36,6 +36,7 @@
       <a href="index.html">Host</a>
       <a href="install.html">Install</a>
       <a href="access.html">Access</a>
+      <a href="tools.html">Tools</a>
       <a href="log.html" aria-current="page">Log</a>
       <a href="account.html">Account</a>
       <a href="service.html">Service</a>
@@ -69,7 +70,57 @@
       <div id="release-table" aria-live="polite" aria-busy="false">
         <p>The release table loads from GitHub when JavaScript runs. Without it, <a href="https://github.com/afterdarksys/blunix/releases">read the releases on GitHub</a>.</p>
       </div>
-      <p class="note">No release is signed yet. Signing is designed, not built. Check a download before you use it: put it beside the release's <code>SHA256SUMS</code> and run <code>sha256sum --check --ignore-missing SHA256SUMS</code>.</p>
+      <p class="note">No release is signed yet. Release signing is set up, and the first signed release is next. Check a download before you use it: put it beside the release's <code>SHA256SUMS</code> and run <code>sha256sum -c --ignore-missing SHA256SUMS</code>. On an unsigned release, that proves the bytes match. It does not prove who built them.</p>
+    </section>
+
+    <section class="wrap band" aria-labelledby="news-h">
+      <div class="band-head">
+        <div>
+          <span class="kicker">News</span>
+          <h2 id="news-h">What changed</h2>
+        </div>
+        <p>Changes to the service, newest first. Releases are in the table above.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3><time datetime="2026-10-03">3 October 2026</time>: the portal is live</h3>
+          <p>The portal at <a href="https://build.blunix.io/">build.blunix.io</a> is open. The API at <span class="host">api.blunix.io</span> answers. The build hosts on <span class="host">blnx.io</span> serve the latest document for each label. Pinned version hosts are not on yet. Sign-in is After Dark Systems SSO. A release build server now builds official images from signed tags. The release signing key is published below. The first signed release is next.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="wrap band" aria-labelledby="verify-h">
+      <div class="band-head">
+        <div>
+          <span class="kicker">Check it yourself</span>
+          <h2 id="verify-h">Verify a release</h2>
+        </div>
+        <p>A signed release carries <code>SHA256SUMS.asc</code>, a detached signature over <code>SHA256SUMS</code>. Check the signature first, then the files.</p>
+      </div>
+      <ul class="props">
+        <li><strong>The key.</strong> Blunix Release Signing, <span class="host">sign-releases@blunix.io</span>. OpenPGP, ed25519. It expires on 1 October 2028. Download it from <a href="/keys/blunix-releases.asc">blunix.io/keys/blunix-releases.asc</a>. The same file is <a href="https://github.com/afterdarksys/blunix/blob/main/keys/blunix-releases.asc">keys/blunix-releases.asc</a> in the source repository, so you can check one against the other.</li>
+        <li><strong>The fingerprint.</strong> <code>62F7 36BE A2AB 2E1F A16D  5138 BCB3 426C 090A DF92</code>. Compare all of it. A short key ID is not enough.</li>
+        <li><strong>Step 1.</strong> Import the key: <code>curl -fsSLO https://blunix.io/keys/blunix-releases.asc</code>, then <code>gpg --import blunix-releases.asc</code>.</li>
+        <li><strong>Step 2.</strong> Check the signature: <code>gpg --verify SHA256SUMS.asc SHA256SUMS</code>. It must say the signature is good and name the fingerprint above. Anything else, stop.</li>
+        <li><strong>Step 3.</strong> Check the files: <code>sha256sum -c --ignore-missing SHA256SUMS</code>. Every file you downloaded must say OK.</li>
+      </ul>
+      <p class="note">v0.1.0 is an unsigned test release, so it has no <code>SHA256SUMS.asc</code>. For it, only step 3 applies.</p>
+    </section>
+
+    <section class="wrap band" aria-labelledby="built-h">
+      <div class="band-head">
+        <div>
+          <span class="kicker">How releases are built</span>
+          <h2 id="built-h">Built in one place, signed in another</h2>
+        </div>
+        <p>Official images come from a dedicated build server. Signing happens somewhere else.</p>
+      </div>
+      <ul class="props">
+        <li><strong>Signed tags only.</strong> The build server builds git tags of <a href="https://github.com/afterdarksys/blunix">afterdarksys/blunix</a> that are signed by the pinned release key. An unsigned or lightweight tag is refused.</li>
+        <li><strong>Pull only.</strong> It checks GitHub every 10 minutes. Nothing on the internet can connect to it, apart from restricted admin access.</li>
+        <li><strong>No keys on the build server.</strong> It holds no signing key. Its only credential can write to one staging bucket. Builds there expire after 30 days.</li>
+        <li><strong>Signed offline.</strong> The maintainer pulls a build from staging, checks it, signs <code>SHA256SUMS</code> with the release key, and publishes the GitHub release.</li>
+      </ul>
     </section>
 
     <section class="wrap band" aria-labelledby="designed-h">
@@ -110,7 +161,7 @@
         <p>An image is a release. The build document for one machine is ciphertext on a label, such as <span class="host">https://ada.blnx.io/</span>. Republishing a label changes the next install from it. It does not rewrite a machine that already applied a document.</p>
       </div>
       <ul class="props">
-        <li><strong>Next install.</strong> A new publish replaces what the next install from that label will decrypt. The build hosts are built and tested, not deployed.</li>
+        <li><strong>Next install.</strong> A new publish replaces what the next install from that label will decrypt. The build hosts are live.</li>
         <li><strong>Already installed.</strong> Taking a new document on a running machine is the job of the <a href="service.html">service</a> client, which is designed, not built.</li>
       </ul>
       <p class="note">The account that registers a label is on the <a href="account.html">account</a> page. The routes are on the <a href="api.html">API</a> page.</p>

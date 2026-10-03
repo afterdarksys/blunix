@@ -14,14 +14,14 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="blunix">
   <meta property="og:title" content="Install, blunix">
-  <meta property="og:description" content="How a blunix install will fetch an encrypted build document from an assigned blnx.io host and decrypt it on the machine.">
+  <meta property="og:description" content="How a blunix install fetches an encrypted build document from its blnx.io host and decrypts it on the machine.">
   <meta property="og:url" content="https://blunix.io/install.html">
   <meta property="og:image" content="https://blunix.io/assets/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="blunix: a quiet Debian host for cloud nodes.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="description" content="How a blunix install will fetch an encrypted build document from an assigned blnx.io host and decrypt it on the machine.">
+  <meta name="description" content="How a blunix install fetches an encrypted build document from its blnx.io host and decrypts it on the machine.">
   <link rel="stylesheet" href="css/site.css">
   <script type="module" src="js/live.js"></script>
 </head>
@@ -36,6 +36,7 @@
       <a href="index.html">Host</a>
       <a href="install.html" aria-current="page">Install</a>
       <a href="access.html">Access</a>
+      <a href="tools.html">Tools</a>
       <a href="log.html">Log</a>
       <a href="account.html">Account</a>
       <a href="service.html">Service</a>
@@ -51,7 +52,7 @@
         <p class="kicker">Install</p>
         <h1>Two prompts, then it builds.</h1>
         <p class="lede">An account gets a hostname. That host serves an encrypted build document. The machine downloads the file, decrypts it locally, and applies it. The key is made in the browser that encrypts and typed at the machine that decrypts. It is never sent to the server.</p>
-        <p class="lede">The installer is built and boots in a VM. The portal, the API, and the build hosts are built and tested, not deployed yet.</p>
+        <p class="lede">The installer is built and boots in a VM. The portal, the API, and the build hosts are live.</p>
         <p class="portal-status" data-portal-status aria-live="polite"><span data-portal-words>The portal is not open yet.</span> Its address is <a href="https://build.blunix.io/">build.blunix.io</a>.</p>
       </div>
       <figure class="mark mark-small scene">
@@ -68,7 +69,7 @@
       <ol class="steps">
         <li>
           <h3>Sign in</h3>
-          <p>Authentik at adsas.id. Google and GitHub come later. There is no password stored here. The build key is a second secret, made later, in the browser.</p>
+          <p>Sign in with After Dark Systems SSO. Google and GitHub come later. No password is stored here. The portal shows your name once you are signed in. The build key is a second secret, made later, in the browser.</p>
         </li>
         <li>
           <h3>Register a label</h3>
@@ -76,7 +77,7 @@
         </li>
         <li>
           <h3>Publish the build file</h3>
-          <p>The browser generates the key at publish time: 20 characters, 100 bits, shown as four groups of five, in the shape <span class="host">xxxxx-xxxxx-xxxxx-xxxxx</span>. It encrypts the build document with <a href="https://age-encryption.org/v1">age passphrase mode</a> and uploads only the ciphertext. Each upload is a new version. <span class="host">https://ada.blnx.io/</span> serves the latest, and <span class="host">https://v3.ada.blnx.io/</span> is pinned to version 3. The install card is shown once, with a download. The server cannot read the file and cannot reset the key. Lose it, and that version is gone.</p>
+          <p>The browser generates the key at publish time: 20 characters, 100 bits, shown as four groups of five, in the shape <span class="host">xxxxx-xxxxx-xxxxx-xxxxx</span>. It encrypts the build document with <a href="https://age-encryption.org/v1">age passphrase mode</a> and uploads only the ciphertext. Each upload is a new version. <span class="host">https://ada.blnx.io/</span> serves the latest. A pinned host such as <span class="host">https://v3.ada.blnx.io/</span> will serve version 3 only. Pinned hosts are not on yet, so use the latest name for now. The install card is shown once, with a download. The server cannot read the file and cannot reset the key. Lose it, and that version is gone.</p>
         </li>
       </ol>
     </section>
@@ -93,15 +94,15 @@
         </li>
         <li>
           <h3>The system boots</h3>
-          <p>Quiet services. A break-glass shell stays. The image is not signed yet; a signed boot is designed, not built.</p>
+          <p>Quiet services. A break-glass shell stays. No release is signed yet. Release signing is set up, and the first signed release is next. A signed boot is designed, not built.</p>
         </li>
         <li>
           <h3>The network comes up</h3>
-          <p>Every wired interface tries DHCP for 30 seconds. With no lease, the console asks for an address, a gateway, and a DNS server, and tries again until one works. On a netboot LAN, the build-proxy's dnsmasq reservation hands out the address. A proxy named on the kernel line changes only where the document is fetched from. The static address in the document applies after install.</p>
+          <p>Every wired interface tries DHCP for 30 seconds. With no lease, the console asks for an address, a gateway, and a DNS server, and tries again until one works. On a netboot LAN, the <a href="tools.html">build-proxy</a>'s dnsmasq reservation hands out the address. A proxy named on the kernel line changes only where the document is fetched from. The static address in the document applies after install.</p>
         </li>
         <li>
           <h3>Say the build hostname</h3>
-          <p>The prompt is <q>blunix: build hostname.</q> Type <span class="host">ada.blnx.io</span>, or <span class="host">v3.ada.blnx.io</span> for one version. A bare <span class="host">ada</span> expands to the full name. It reads the name back and waits: <q>blunix: hostname ada.blnx.io. Say yes to keep it.</q> A typo must not hit someone else's host. Silence does not fetch.</p>
+          <p>The prompt is <q>blunix: build hostname.</q> Type <span class="host">ada.blnx.io</span>. A pinned name such as <span class="host">v3.ada.blnx.io</span> is accepted, but pinned hosts are not on yet. A bare <span class="host">ada</span> expands to the full name. It reads the name back and waits: <q>blunix: hostname ada.blnx.io. Say yes to keep it.</q> A typo must not hit someone else's host. Silence does not fetch.</p>
         </li>
         <li>
           <h3>Type the key</h3>
@@ -124,6 +125,7 @@
         <li><strong>A swapped file still needs the key.</strong> Replacing the ciphertext does not produce a document that decrypts.</li>
         <li><strong>Debian stays Debian.</strong> The file selects layouts and pins inside the image. It does not paste a remote script onto the host.</li>
         <li><strong>Images ship on GitHub.</strong> The installer checks the image against its sha256 before it writes a disk. The per-machine instructions come from the assigned hostname. The releases are on the <a href="log.html">log</a>.</li>
+        <li><strong>Check the installer before you boot it.</strong> Put the ISO beside the release's <code>SHA256SUMS</code> and run <code>sha256sum -c --ignore-missing SHA256SUMS</code>. On a signed release, check the signature first. The <a href="log.html#verify-h">log</a> has the key fingerprint and the commands.</li>
       </ul>
       <p class="note">Publishing again changes the next install. Taking a later document on a machine that is already installed is the <a href="service.html">service</a> client, which is designed, not built. A new image is a new release on the <a href="log.html">log</a>.</p>
     </section>

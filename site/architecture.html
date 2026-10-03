@@ -37,6 +37,7 @@
       <a href="index.html">Host</a>
       <a href="install.html">Install</a>
       <a href="access.html">Access</a>
+      <a href="tools.html">Tools</a>
       <a href="log.html">Log</a>
       <a href="account.html">Account</a>
       <a href="service.html">Service</a>
@@ -50,7 +51,7 @@
     <section class="wrap arch-hero">
       <p class="kicker">Architecture</p>
       <h1>How it fits together</h1>
-      <p class="lede">Six drawings of the install plane, made from the code as it stands on 30 September 2026, not from the plan. Where the code and the plan disagree, the drawing follows the code.</p>
+      <p class="lede">Six drawings of the install plane, made from the code and the running services as they stand on 3 October 2026, not from the plan. Where the code and the plan disagree, the drawing follows the code.</p>
       <p class="lede">Each drawing has a numbered walk-through under it that says everything the drawing says. The text is the full account; the drawing illustrates it. On a narrow screen, a drawing scrolls sideways inside its frame.</p>
     </section>
 
@@ -62,15 +63,15 @@
       <ul class="arch-legend">
         <li>
           <svg class="swatch" viewBox="0 0 56 32" width="56" height="32" aria-hidden="true" focusable="false"><rect x="2" y="2" width="52" height="28" rx="6" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/><circle cx="14" cy="16" r="5" fill="#a9b4c1"/></svg>
-          <span><strong>Deployed, live today.</strong> A heavy solid border and a filled dot. Live: the blunix.io website and its <code>/releases.json</code> function (no release is published yet), the GitHub repo, and Authentik at adsas.id.</span>
+          <span><strong>Deployed, live today.</strong> A heavy solid border and a filled dot. Live: the blunix.io website and its <code>/releases.json</code> function, the build.blunix.io portal, the api.blunix.io Worker with D1 and R2, the <code>{label}.blnx.io</code> build hosts, sign-in with After Dark Systems SSO, the GitHub repo, and the separate release build server. v0.1.0 is an unsigned test release.</span>
         </li>
         <li>
           <svg class="swatch" viewBox="0 0 56 32" width="56" height="32" aria-hidden="true" focusable="false"><rect x="2" y="2" width="52" height="28" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/><rect x="9" y="11" width="10" height="10" fill="none" stroke="#a9b4c1" stroke-width="2"/></svg>
-          <span><strong>Built and tested in the repo.</strong> A thin solid border and a hollow square. The portal, the API Worker and the <code>{label}.blnx.io</code> build hosts are built and not deployed: build.blunix.io and api.blunix.io answer placeholders, and blnx.io has no DNS yet. The installer, the first-boot bootstrap, the build scripts and <code>blunix proxy</code> are built; the installer boots in a VM.</span>
+          <span><strong>Built and tested in the repo.</strong> A thin solid border and a hollow square. The installer, the first-boot bootstrap, the build scripts and <code>blunix proxy</code> are built; the installer boots in a VM. Release signing is set up: the release key exists and the signing script is built. The first signed release is next.</span>
         </li>
         <li>
           <svg class="swatch" viewBox="0 0 56 32" width="56" height="32" aria-hidden="true" focusable="false"><rect x="2" y="2" width="52" height="28" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="8 5"/><rect x="9" y="11" width="10" height="10" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/></svg>
-          <span><strong>Designed, not built.</strong> A dashed border and a dashed square. The offline image signing key, enrolled machines and blunixservice, the Blunix Log, sysupdate from the log, and troubleshoot collect.</span>
+          <span><strong>Designed, not built.</strong> A dashed border and a dashed square. Enrolled machines and blunixservice, the Blunix Log, sysupdate from the log with A/B rollback, and troubleshoot collect. Pinned version hosts, <code>v{n}.{label}.blnx.io</code>, are not on yet.</span>
         </li>
         <li>
           <svg class="swatch" viewBox="0 0 56 32" width="56" height="32" aria-hidden="true" focusable="false"><path d="M4 16 H52" stroke="#8e9aa8" stroke-width="9"/><path d="M3 16 H53" stroke="#12161a" stroke-width="3.5"/></svg>
@@ -87,16 +88,32 @@
       </ul>
     </section>
 
+    <section class="wrap band" id="where-it-runs" aria-labelledby="h-where">
+      <div class="band-head">
+        <h2 id="h-where">Where things run</h2>
+        <p>Two places. Cloudflare runs everything a person or a machine talks to. A separate build server makes the release images. They do not share a credential.</p>
+      </div>
+      <ul class="props">
+        <li><strong>Cloudflare.</strong> The blunix.io website and its <code>/releases.json</code> function. The build.blunix.io portal. The api.blunix.io Worker, with a D1 database for records and an R2 bucket for build documents. The <code>{label}.blnx.io</code> build hosts, served by the same Worker. Cloudflare holds records and ciphertext, never a key.</li>
+        <li><strong>A separate release build server.</strong> It builds official release images and nothing else. It builds only git tags of <code>afterdarksys/blunix</code> that carry a signature from a pinned release key. An unsigned or lightweight tag is refused.</li>
+        <li><strong>It is pull-only.</strong> It asks GitHub for new tags every 10 minutes. Nothing on the internet can connect to it, except admin SSH from a short list of addresses.</li>
+        <li><strong>It holds no signing key.</strong> It also holds no Cloudflare account token and no sign-in secrets. Its one credential can write to one staging bucket.</li>
+        <li><strong>Images leave it unsigned.</strong> It uploads them to the staging bucket, where objects expire after 30 days.</li>
+        <li><strong>Signing is offline.</strong> The maintainer pulls the images from staging, verifies them, signs <code>SHA256SUMS</code> with the release key on their own machine, and publishes the GitHub release.</li>
+      </ul>
+      <p class="note">Why the split: the image build needs a privileged container, for loop devices and mounts. A privileged container can take over its host. So the build server is treated as untrusted. It builds only signed tags, and it holds nothing worth stealing. If it were taken, it could not sign a release or touch the portal and the API.</p>
+    </section>
+
     <section class="wrap band" id="ecosystem" aria-labelledby="h-eco">
       <div class="band-head">
         <h2 id="h-eco">1. Who talks to whom</h2>
-        <p>Every place Blunix runs, what each one holds, and the fifteen connections between them.</p>
+        <p>Every place Blunix runs, what each one holds, and the sixteen connections between them.</p>
       </div>
       <figure class="diagram" tabindex="0" aria-label="Diagram 1, the ecosystem. It scrolls sideways on a narrow screen. The walk-through follows.">
 <!-- diagram:01-ecosystem -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 1200" width="1120" height="1200" role="img" aria-labelledby="eco-title eco-desc" font-family="Atkinson, &#x27;Atkinson Hyperlegible&#x27;, &#x27;Helvetica Neue&#x27;, Arial, sans-serif">
 <title id="eco-title">Blunix ecosystem: who talks to whom</title>
-<desc id="eco-desc">Zones for the operator&#x27;s browser, adsas.id, Cloudflare, GitHub, our servers, the offline signing key, the customer LAN and the machine at the console, joined by 15 numbered connections. Only blunix.io, its releases function, the GitHub repo and Authentik run today; the portal, API, build hosts, installer and proxy are built and tested; the signing key is designed, not built. The numbered walk-through after this figure says everything the diagram shows.</desc>
+<desc id="eco-desc">Zones for the operator&#x27;s browser, After Dark Systems SSO at adsas.id, Cloudflare, GitHub, the release build server, the offline signing key, the customer LAN and the machine at the console, joined by 16 numbered connections. The website, portal, API, build hosts, sign-in, GitHub repo and release build server run today; the installer and proxy are built and tested; the release signing key is set up, and no signed release exists yet. The numbered walk-through after this figure says everything the diagram shows.</desc>
 <defs><marker id="eco-head" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
 <defs><marker id="eco-bighead" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="22" markerHeight="22" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
 <rect width="1120" height="1200" fill="#12161a"/>
@@ -110,7 +127,7 @@
 <rect x="790" y="100" width="290" height="330" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
 <text x="804.0" y="126.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">GITHUB</text>
 <rect x="790" y="470" width="290" height="175" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
-<text x="804.0" y="496.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">OUR SERVERS</text>
+<text x="804.0" y="496.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">RELEASE BUILD SERVER</text>
 <rect x="790" y="685" width="290" height="175" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
 <text x="804.0" y="711.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">OFFLINE</text>
 <rect x="20" y="880" width="520" height="205" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
@@ -141,16 +158,17 @@
 <path d="M250.0 925.0 L250.0 860.0 L330.0 860.0 L330.0 530.0 L356.0 530.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#eco-bighead)"/>
 <path d="M754.0 235.0 L780.0 235.0 L780.0 360.0 L806.0 360.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
 <path d="M806.0 190.0 L754.0 190.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
-<path d="M1000.0 512.0 L1000.0 415.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
+<path d="M1000.0 415.0 L1000.0 512.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
 <path d="M1064.0 1000.0 L1100.0 1000.0 L1100.0 360.0 L1064.0 360.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
-<path d="M1000.0 727.0 L1000.0 627.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#eco-head)"/>
+<path d="M1000.0 627.0 L1000.0 727.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
+<path d="M1064.0 790.0 L1086.0 790.0 L1086.0 395.0 L1064.0 395.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#eco-head)"/>
 <text x="28.0" y="44.0" font-size="26" fill="#f3efe6" font-weight="700">Blunix ecosystem: who talks to whom</text>
-<text x="28.0" y="72.0" font-size="16" fill="#c9c3b6">As the code stands on 2026-09-30. Numbers match the walk-through.</text>
-<rect x="36" y="150" width="268" height="159" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
-<rect x="50.5" y="167.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="28.0" y="72.0" font-size="16" fill="#c9c3b6">As it stands on 2026-10-03. Numbers match the walk-through.</text>
+<rect x="36" y="150" width="268" height="159" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="55.5" cy="173.0" r="5.5" fill="#a9b4c1"/>
 <rect x="188.9" y="160.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
 <text x="201.9" y="178.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
-<text x="67.0" y="179.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="67.0" y="179.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">LIVE</text>
 <text x="50.0" y="205.0" font-size="18" fill="#f3efe6" font-weight="700">Operator&#x27;s browser</text>
 <text x="50.0" y="228.0" font-size="16" fill="#c9c3b6">Runs the portal&#x27;s JavaScript.</text>
 <text x="50.0" y="250.0" font-size="16" fill="#c9c3b6">Composes the node document,</text>
@@ -159,25 +177,25 @@
 <rect x="36" y="425" width="268" height="137" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
 <circle cx="55.5" cy="448.0" r="5.5" fill="#a9b4c1"/>
 <text x="67.0" y="454.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">RUNS TODAY</text>
-<text x="50.0" y="480.0" font-size="18" fill="#f3efe6" font-weight="700">Authentik (OIDC)</text>
+<text x="50.0" y="480.0" font-size="18" fill="#f3efe6" font-weight="700">After Dark Systems SSO</text>
 <text x="50.0" y="503.0" font-size="16" fill="#c9c3b6">Signs the operator in.</text>
-<text x="50.0" y="525.0" font-size="16" fill="#c9c3b6">Blunix client not set up yet:</text>
-<text x="50.0" y="547.0" font-size="16" fill="#c9c3b6">OIDC_ISSUER is empty.</text>
+<text x="50.0" y="525.0" font-size="16" fill="#c9c3b6">OpenID Connect with PKCE.</text>
+<text x="50.0" y="547.0" font-size="16" fill="#c9c3b6">The Blunix client is live.</text>
 <rect x="356" y="160" width="398" height="115" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
 <circle cx="375.5" cy="183.0" r="5.5" fill="#a9b4c1"/>
 <text x="387.0" y="189.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DEPLOYED</text>
 <text x="370.0" y="215.0" font-size="18" fill="#f3efe6" font-weight="700">blunix.io website (Pages)</text>
 <text x="370.0" y="238.0" font-size="16" fill="#c9c3b6">Function /releases.json reads GitHub.</text>
 <text x="370.0" y="260.0" font-size="16" fill="#c9c3b6">Its page asks api.blunix.io/v1/health.</text>
-<rect x="356" y="290" width="398" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
-<rect x="370.5" y="307.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="387.0" y="319.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<rect x="356" y="290" width="398" height="115" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="375.5" cy="313.0" r="5.5" fill="#a9b4c1"/>
+<text x="387.0" y="319.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DEPLOYED</text>
 <text x="370.0" y="345.0" font-size="18" fill="#f3efe6" font-weight="700">build.blunix.io portal (Pages)</text>
 <text x="370.0" y="368.0" font-size="16" fill="#c9c3b6">A separate Pages project. Same-site</text>
 <text x="370.0" y="390.0" font-size="16" fill="#c9c3b6">with the API, so the cookie rides fetch.</text>
-<rect x="356" y="420" width="398" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
-<rect x="370.5" y="437.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="387.0" y="449.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<rect x="356" y="420" width="398" height="115" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="375.5" cy="443.0" r="5.5" fill="#a9b4c1"/>
+<text x="387.0" y="449.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DEPLOYED</text>
 <text x="370.0" y="475.0" font-size="18" fill="#f3efe6" font-weight="700">api.blunix.io Worker (/v1)</text>
 <text x="370.0" y="498.0" font-size="16" fill="#c9c3b6">Sign-in, labels, builds, API keys.</text>
 <text x="370.0" y="520.0" font-size="16" fill="#c9c3b6">Checks the age header. Never decrypts.</text>
@@ -193,9 +211,9 @@
 <text x="575.0" y="646.0" font-size="16" fill="#c9c3b6">the age binary,</text>
 <text x="575.0" y="668.0" font-size="16" fill="#c9c3b6">sha256 checked</text>
 <text x="575.0" y="690.0" font-size="16" fill="#c9c3b6">before serving</text>
-<rect x="356" y="716" width="398" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
-<rect x="370.5" y="733.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="387.0" y="745.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED: NO DNS YET</text>
+<rect x="356" y="716" width="398" height="93" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="375.5" cy="739.0" r="5.5" fill="#a9b4c1"/>
+<text x="387.0" y="745.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DEPLOYED: LATEST VERSION ONLY</text>
 <text x="370.0" y="771.0" font-size="18" fill="#f3efe6" font-weight="700">{label}.blnx.io (the same Worker)</text>
 <text x="370.0" y="794.0" font-size="16" fill="#c9c3b6">GET / only. A separate registrable domain.</text>
 <rect x="806" y="150" width="258" height="137" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
@@ -207,27 +225,27 @@
 <text x="820.0" y="272.0" font-size="16" fill="#c9c3b6">deploys site/ and portal/.</text>
 <rect x="806" y="300" width="258" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
 <rect x="820.5" y="317.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="837.0" y="329.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">v0.1.0 PUBLISHED</text>
+<text x="837.0" y="329.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">v0.1.0: UNSIGNED TEST</text>
 <text x="820.0" y="355.0" font-size="18" fill="#f3efe6" font-weight="700">Releases</text>
 <text x="820.0" y="378.0" font-size="16" fill="#c9c3b6">ISO, blunix.raw.zst, netboot</text>
 <text x="820.0" y="400.0" font-size="16" fill="#c9c3b6">media, SHA256SUMS.</text>
-<rect x="806" y="512" width="258" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
-<rect x="820.5" y="529.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="837.0" y="541.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SCRIPTS BUILT</text>
-<text x="820.0" y="567.0" font-size="18" fill="#f3efe6" font-weight="700">Image builder</text>
-<text x="820.0" y="590.0" font-size="16" fill="#c9c3b6">Privileged Docker scripts.</text>
-<text x="820.0" y="612.0" font-size="16" fill="#c9c3b6">No builder host set up yet.</text>
-<rect x="806" y="727" width="258" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
-<rect x="820.5" y="744.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
-<text x="837.0" y="756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
-<text x="820.0" y="782.0" font-size="18" fill="#f3efe6" font-weight="700">Image signing key</text>
-<text x="820.0" y="805.0" font-size="16" fill="#c9c3b6">Never on the builder or on</text>
-<text x="820.0" y="827.0" font-size="16" fill="#c9c3b6">Cloudflare. Nothing is signed.</text>
+<rect x="806" y="512" width="258" height="115" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="825.5" cy="535.0" r="5.5" fill="#a9b4c1"/>
+<text x="837.0" y="541.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">RUNS TODAY</text>
+<text x="820.0" y="567.0" font-size="18" fill="#f3efe6" font-weight="700">Release builder</text>
+<text x="820.0" y="590.0" font-size="16" fill="#c9c3b6">Signed tags only. No keys.</text>
+<text x="820.0" y="612.0" font-size="16" fill="#c9c3b6">Unsigned images to staging.</text>
+<rect x="806" y="727" width="258" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="820.5" y="744.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="837.0" y="756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SET UP, NOT USED YET</text>
+<text x="820.0" y="782.0" font-size="18" fill="#f3efe6" font-weight="700">Release signing key</text>
+<text x="820.0" y="805.0" font-size="16" fill="#c9c3b6">Held by the maintainer.</text>
+<text x="820.0" y="827.0" font-size="16" fill="#c9c3b6">No signed release yet.</text>
 <rect x="36" y="925" width="488" height="137" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
 <rect x="50.5" y="942.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
 <rect x="408.9" y="935.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
 <text x="421.9" y="953.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
-<text x="67.0" y="954.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<text x="67.0" y="954.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT AND TESTED</text>
 <text x="50.0" y="980.0" font-size="18" fill="#f3efe6" font-weight="700">blunix proxy (operator&#x27;s Linux or Mac)</text>
 <text x="50.0" y="1003.0" font-size="16" fill="#c9c3b6">publish: encrypts per machine, uploads ciphertext.</text>
 <text x="50.0" y="1025.0" font-size="16" fill="#c9c3b6">serve: relays *.blnx.io, netboot media, boot.ipxe.</text>
@@ -254,11 +272,9 @@
 <path d="M294 1154 L338 1154" stroke="#8e9aa8" stroke-width="9"/>
 <path d="M293 1154 L339 1154" stroke="#1b2127" stroke-width="3.5"/>
 <text x="348.8" y="1160.0" font-size="16" fill="#f3efe6">Ciphertext only</text>
-<path d="M484 1154 L528 1154" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7"/>
-<text x="538.7" y="1160.0" font-size="16" fill="#f3efe6">Designed path</text>
-<rect x="671.3" y="1141.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
-<text x="684.3" y="1159.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
-<text x="786.4" y="1160.0" font-size="16" fill="#f3efe6">The key exists here</text>
+<rect x="484.7" y="1141.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
+<text x="497.7" y="1159.5" font-size="15" fill="#d2ee9a" font-weight="700" letter-spacing="1.00">KEY HERE</text>
+<text x="599.8" y="1160.0" font-size="16" fill="#f3efe6">The key exists here</text>
 <circle cx="330.0" cy="300.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
 <text x="330.0" y="305.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">1</text>
 <circle cx="330.0" cy="405.0" r="14" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
@@ -289,6 +305,8 @@
 <text x="1100.0" y="685.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">14</text>
 <circle cx="1000.0" cy="665.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
 <text x="1000.0" y="670.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">15</text>
+<circle cx="1086.0" cy="560.0" r="16" fill="#12161a" stroke="#a9b4c1" stroke-width="2.5"/>
+<text x="1086.0" y="565.5" font-size="16" font-weight="700" fill="#f3efe6" text-anchor="middle">16</text>
 </svg>
 <!-- /diagram:01-ecosystem -->
         <figcaption>Diagram 1. <a href="assets/diagrams/01-ecosystem.png">Open it as a large image</a>.</figcaption>
@@ -297,15 +315,15 @@
 <!-- walk:01-ecosystem -->
 <h3>What each zone holds</h3>
 <ul>
-  <li><strong>Operator&#x27;s device.</strong> The operator&#x27;s browser runs the portal&#x27;s JavaScript (built). It composes the node document, makes the key, and encrypts with age. The key exists here. The browser sends only ciphertext.</li>
-  <li><strong>adsas.id.</strong> Authentik, the OIDC issuer, runs today. The Blunix client is not set up yet: <code>OIDC_ISSUER</code> is empty in <code>platform/api/wrangler.jsonc</code>, so sign-in answers 503 until it is.</li>
+  <li><strong>Operator&#x27;s device.</strong> The operator&#x27;s browser runs the portal&#x27;s JavaScript, which is live. It composes the node document, makes the key, and encrypts with age. The key exists here. The browser sends only ciphertext.</li>
+  <li><strong>adsas.id.</strong> After Dark Systems SSO, the OpenID Connect identity provider, runs today, and the Blunix client on it is live. It signs the operator in to the portal.</li>
   <li><strong>Cloudflare</strong> holds records and ciphertext, never a key. The blunix.io website on Pages is deployed. Its function <code>/releases.json</code> reads GitHub, and its page asks <code>api.blunix.io/v1/health</code> whether the API is up.</li>
-  <li><strong>Cloudflare, continued.</strong> The build.blunix.io portal is a separate Pages project, built and not deployed; today that name answers a placeholder. It is same-site with the API, so the session cookie rides the portal&#x27;s <code>fetch</code> calls.</li>
-  <li><strong>Cloudflare, continued.</strong> The api.blunix.io Worker (<code>/v1</code>) is built and not deployed; today that name answers a placeholder. It handles sign-in, labels, builds and API keys. It checks the age header and never decrypts. D1 holds accounts, labels, versions, hashed sessions and hashed API keys, audit rows and rate limits. R2 holds each build at <code>builds/{label id}/{version}</code> as the binary age file, and its sha256 is checked before it is served.</li>
-  <li><strong>Cloudflare, continued.</strong> <code>{label}.blnx.io</code> is the same Worker: <code>GET</code> and <code>HEAD</code> on <code>/</code> only. blnx.io is a separate registrable domain, so build hosts never share cookies with the site, the portal or the API. Built, not deployed: blnx.io has no DNS yet.</li>
-  <li><strong>GitHub.</strong> The repo <code>afterdarksys/blunix</code> is live. Its Actions job, in the <code>production</code> environment, deploys <code>site/</code> and <code>portal/</code>. Releases will hold the ISO, <code>blunix.raw.zst</code>, the netboot media and <code>SHA256SUMS</code>; none is published yet.</li>
-  <li><strong>Our servers.</strong> The image builder. The build scripts are built and run in privileged Docker. No builder host is set up in the tree yet.</li>
-  <li><strong>Offline.</strong> The image signing key: designed, not built. It is never on the builder and never on Cloudflare. Nothing is signed today.</li>
+  <li><strong>Cloudflare, continued.</strong> The build.blunix.io portal is a separate Pages project, and it is live. It is same-site with the API, so the session cookie rides the portal&#x27;s <code>fetch</code> calls.</li>
+  <li><strong>Cloudflare, continued.</strong> The api.blunix.io Worker (<code>/v1</code>) is live. <code>/v1/health</code> answers, and the site&#x27;s portal status line comes from that check. It handles sign-in, labels, builds and API keys. It checks the age header and never decrypts. D1 holds accounts, labels, versions, hashed sessions and hashed API keys, audit rows and rate limits. R2 holds each build at <code>builds/{label id}/{version}</code> as the binary age file, and its sha256 is checked before it is served.</li>
+  <li><strong>Cloudflare, continued.</strong> <code>{label}.blnx.io</code> is the same Worker: <code>GET</code> and <code>HEAD</code> on <code>/</code> only. blnx.io is a separate registrable domain, so build hosts never share cookies with the site, the portal or the API. Live, with wildcard DNS and TLS. Only the latest version is served for now: pinned version hosts, <code>v{n}.{label}.blnx.io</code>, have no certificates yet.</li>
+  <li><strong>GitHub.</strong> The repo <code>afterdarksys/blunix</code> is live. Its Actions job, in the <code>production</code> environment, deploys <code>site/</code> and <code>portal/</code>. Releases hold the ISO, <code>blunix.raw.zst</code>, the netboot media and <code>SHA256SUMS</code>. v0.1.0 is an unsigned test release on Debian 13: its checksums prove the bytes match, not who built them.</li>
+  <li><strong>Release build server.</strong> A separate server, not on Cloudflare. It builds only tags signed by the pinned release key, in a privileged <code>debian:trixie-slim</code> container pinned by digest. It is pull-only and holds no signing key. It uploads the images, unsigned, to a staging bucket where objects expire after 30 days.</li>
+  <li><strong>Offline.</strong> The release signing key, an OpenPGP ed25519 key, on the maintainer&#x27;s machine. It is never on the build server and never on Cloudflare. It is set up; the first signed release is next.</li>
   <li><strong>Customer LAN.</strong> <code>blunix proxy</code> on the operator&#x27;s Linux or Mac, built. <code>publish</code> encrypts per machine and uploads ciphertext. <code>serve</code> relays <code>*.blnx.io</code> and serves netboot media and <code>boot.ipxe</code>. The keys are in <code>keys.txt</code>, mode 0600, on this computer. The key exists here.</li>
   <li><strong>The machine at the console.</strong> The installer (ISO, USB or netboot) or the first-boot bootstrap (raw image), built and booting in a VM. It asks the hostname, then the key with echo off, fetches, decrypts on the machine, and applies. The key exists here while it is typed.</li>
 </ul>
@@ -313,8 +331,8 @@
 <ol>
   <li>The browser loads the portal page from build.blunix.io.</li>
   <li>The browser calls api.blunix.io with the session cookie (<code>credentials: &#x27;include&#x27;</code>). The build upload on this path is ciphertext only.</li>
-  <li>The browser and Authentik: the OIDC sign-in redirects, both ways.</li>
-  <li>The Worker and Authentik: the Worker trades the code and the PKCE verifier for an ID token, and fetches the JWKS to check it.</li>
+  <li>The browser and After Dark Systems SSO: the sign-in redirects, both ways.</li>
+  <li>The Worker and After Dark Systems SSO: the Worker trades the code and the PKCE verifier for an ID token, and fetches the JWKS to check it.</li>
   <li>The Worker reads and writes D1 and R2.</li>
   <li>The build hosts read D1 and R2.</li>
   <li><code>{label}.blnx.io</code> to the machine: HTTPS <code>GET /</code> over verified TLS. Ciphertext only.</li>
@@ -323,9 +341,10 @@
   <li>The proxy to the Worker: <code>publish</code> reserves labels and uploads ciphertext with a <code>blx_</code> API key.</li>
   <li>The site&#x27;s <code>/releases.json</code> function reads the GitHub Releases API and each release&#x27;s <code>SHA256SUMS</code>.</li>
   <li>GitHub Actions deploys the site and the portal to Cloudflare Pages.</li>
-  <li>The builder&#x27;s assets reach Releases only when a person runs <code>gh release upload</code>. The build does not upload.</li>
+  <li>The release build server polls GitHub every 10 minutes and fetches new tags. It builds a tag only if its signature checks against the pinned release key.</li>
   <li>The installer streams the image from a GitHub release when its medium carries only a release pin. The stream&#x27;s sha256 must match the pin.</li>
-  <li>Designed, not built: the offline key signs the builder&#x27;s digests.</li>
+  <li>The build server uploads the unsigned images to the staging bucket. The maintainer pulls them from there, verifies them, and signs <code>SHA256SUMS</code> offline.</li>
+  <li>The maintainer publishes the signed GitHub release. The build server cannot publish.</li>
 </ol>
 <!-- /walk:01-ecosystem -->
       </div>
@@ -340,7 +359,7 @@
 <!-- diagram:02-web-bootstrap -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 2372" width="1120" height="2372" role="img" aria-labelledby="seq-title seq-desc" font-family="Atkinson, &#x27;Atkinson Hyperlegible&#x27;, &#x27;Helvetica Neue&#x27;, Arial, sans-serif">
 <title id="seq-title">Web bootstrapping: from sign-in to an applied node document</title>
-<desc id="seq-desc">A sequence diagram across six participants: the operator, the browser running the portal, Authentik at adsas.id, the api.blunix.io Worker, the {label}.blnx.io build host, and the machine at the console. A green bar marks where the key exists: the browser from the moment it is made until the install card closes, the operator&#x27;s install card, and the machine from typing until decryption. The server side never holds it. The numbered walk-through after this figure lists every step.</desc>
+<desc id="seq-desc">A sequence diagram across six participants: the operator, the browser running the portal, After Dark Systems SSO at adsas.id, the api.blunix.io Worker, the {label}.blnx.io build host, and the machine at the console. A green bar marks where the key exists: the browser from the moment it is made until the install card closes, the operator&#x27;s install card, and the machine from typing until decryption. The server side never holds it. The numbered walk-through after this figure lists every step.</desc>
 <defs><marker id="seq-head" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
 <defs><marker id="seq-bighead" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="22" markerHeight="22" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
 <rect width="1120" height="2372" fill="#12161a"/>
@@ -384,7 +403,7 @@
 <text x="270.0" y="127.0" font-size="17" fill="#f3efe6" font-weight="700" text-anchor="middle">Browser</text>
 <text x="270.0" y="150.0" font-size="16" fill="#c9c3b6" text-anchor="middle">portal JS</text>
 <rect x="368" y="100" width="164" height="64" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
-<text x="450.0" y="127.0" font-size="17" fill="#f3efe6" font-weight="700" text-anchor="middle">Authentik</text>
+<text x="450.0" y="127.0" font-size="17" fill="#f3efe6" font-weight="700" text-anchor="middle">After Dark SSO</text>
 <text x="450.0" y="150.0" font-size="16" fill="#c9c3b6" text-anchor="middle">adsas.id</text>
 <rect x="548" y="100" width="164" height="64" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
 <text x="630.0" y="127.0" font-size="17" fill="#f3efe6" font-weight="700" text-anchor="middle">api.blunix.io</text>
@@ -403,8 +422,8 @@
 <rect x="318.0" y="267.0" width="286.2" height="47.0" rx="4" fill="#12161a"/>
 <text x="324.0" y="286.0" font-size="16" fill="#c9c3b6">GET /v1/auth/login. Stores state, nonce</text>
 <text x="324.0" y="308.0" font-size="16" fill="#c9c3b6">and PKCE verifier for 10 minutes.</text>
-<rect x="318.0" y="329.0" width="288.7" height="25.0" rx="4" fill="#12161a"/>
-<text x="324.0" y="348.0" font-size="16" fill="#c9c3b6">302 to Authentik, code_challenge S256</text>
+<rect x="318.0" y="329.0" width="279.1" height="25.0" rx="4" fill="#12161a"/>
+<text x="324.0" y="348.0" font-size="16" fill="#c9c3b6">302 to the SSO, code_challenge S256</text>
 <rect x="318.0" y="370.0" width="141.6" height="25.0" rx="4" fill="#12161a"/>
 <text x="324.0" y="389.0" font-size="16" fill="#c9c3b6">Sign in at adsas.id</text>
 <rect x="318.0" y="411.0" width="183.2" height="47.0" rx="4" fill="#12161a"/>
@@ -556,18 +575,18 @@
       </figure>
       <div class="walk">
 <!-- walk:02-web-bootstrap -->
-<p>Six participants: the operator, the browser running the portal, Authentik at adsas.id, the api.blunix.io Worker (with D1 and R2), the <code>{label}.blnx.io</code> build host (the same Worker), and the machine at the console. The key exists in three places only: the browser, from step 14 until the install card closes in step 21; the operator&#x27;s install card, from step 20; and the machine, from step 23 until it decrypts in step 27. It is never on a server.</p>
+<p>Six participants: the operator, the browser running the portal, After Dark Systems SSO at adsas.id, the api.blunix.io Worker (with D1 and R2), the <code>{label}.blnx.io</code> build host (the same Worker), and the machine at the console. The key exists in three places only: the browser, from step 14 until the install card closes in step 21; the operator&#x27;s install card, from step 20; and the machine, from step 23 until it decrypts in step 27. It is never on a server.</p>
 <h3>In the browser, at build.blunix.io</h3>
 <ol>
   <li>The operator asks the browser to sign in.</li>
   <li>The browser calls <code>GET /v1/auth/login</code>. The Worker stores the state, the nonce and the PKCE verifier for 10 minutes.</li>
-  <li>The Worker answers 302 to Authentik, with <code>code_challenge</code> and method <code>S256</code>.</li>
+  <li>The Worker answers 302 to After Dark Systems SSO, with <code>code_challenge</code> and method <code>S256</code>, the state and the nonce. The scopes are <code>openid email profile</code>.</li>
   <li>The operator signs in at adsas.id.</li>
-  <li>Authentik answers 302 to <code>/v1/auth/callback</code> with the code and the state.</li>
+  <li>After Dark Systems SSO answers 302 to <code>/v1/auth/callback</code> with the code and the state.</li>
   <li>The browser calls <code>GET /v1/auth/callback</code>.</li>
-  <li>The Worker sends Authentik the code and the verifier for the ID token, and fetches the JWKS.</li>
+  <li>The Worker sends After Dark Systems SSO the code and the verifier for the ID token, and fetches the JWKS.</li>
   <li>The Worker checks the ID token: algorithm RS256, ES256 or EdDSA only; <code>iss</code>, <code>aud</code>, <code>exp</code> and <code>nonce</code>. It upserts the account by <code>(iss, sub)</code>.</li>
-  <li>The Worker sets the cookie <code>__Host-blx_session</code> (12 hours, <code>HttpOnly</code>) and answers 302 to build.blunix.io.</li>
+  <li>The Worker sets the cookie <code>__Host-blx_session</code> (12 hours, <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code>) and answers 302 to build.blunix.io. The portal shows the signed-in person&#x27;s name.</li>
   <li>The operator fills in the form: a label and the node document fields.</li>
   <li>The browser calls <code>POST /v1/hosts {label}</code> with <code>x-blunix-csrf: 1</code> and the portal&#x27;s <code>Origin</code>.</li>
   <li>The Worker answers 201. Or 409 if the label is taken, 400 if it is invalid or reserved, 429 if rate limited.</li>
@@ -599,22 +618,22 @@
     <section class="wrap band" id="build-release" aria-labelledby="h-pipe">
       <div class="band-head">
         <h2 id="h-pipe">3. Build and release</h2>
-        <p>From Debian packages to a GitHub release, every gate where the build fails closed, and how the site and API deploy.</p>
+        <p>From a signed tag to a signed GitHub release, every gate where the build fails closed, and how the site and API deploy.</p>
       </div>
       <figure class="diagram" tabindex="0" aria-label="Diagram 3, the build and release pipeline. It scrolls sideways on a narrow screen. The walk-through follows.">
 <!-- diagram:03-build-release -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 2225" width="1120" height="2225" role="img" aria-labelledby="pipe-title pipe-desc" font-family="Atkinson, &#x27;Atkinson Hyperlegible&#x27;, &#x27;Helvetica Neue&#x27;, Arial, sans-serif">
 <title id="pipe-title">Build and release pipeline</title>
-<desc id="pipe-desc">Two build scripts run in privileged Docker. build-test-disk.sh --release turns Debian 13 packages into build/blunix-release.raw through mmdebstrap, a strip step, a GPT disk, a root scan, zerofree and a raw byte scan. build-installer.sh --release scans that disk again, compresses it, pins its digest, and makes the ISO, netboot media and SHA256SUMS. Seven gates stop the build. A person uploads the assets to a GitHub release; offline signing is designed, not built. Below, the site and portal deploy through the GitHub Actions production environment to Cloudflare Pages, and the API deploys from a laptop script. The numbered walk-through after this figure says everything the diagram shows.</desc>
+<desc id="pipe-desc">The release build server builds only tags signed by the pinned release key. Two build scripts run in a privileged container pinned by digest. build-test-disk.sh --release turns Debian 13 packages into build/blunix-release.raw through mmdebstrap, a strip step, a GPT disk, a root scan, zerofree and a raw byte scan. build-installer.sh --release scans that disk again, compresses it, pins its digest, and makes the ISO, netboot media and SHA256SUMS. Seven gates stop the build. The build server uploads the unsigned assets to a staging bucket that expires after 30 days. The maintainer verifies them, signs SHA256SUMS offline and publishes the GitHub release. Below, the site and portal deploy through the GitHub Actions production environment to Cloudflare Pages, and the API deploys from a laptop script. All of these are live. The numbered walk-through after this figure says everything the diagram shows.</desc>
 <defs><marker id="pipe-head" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
 <defs><marker id="pipe-bighead" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="22" markerHeight="22" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
 <rect width="1120" height="2225" fill="#12161a"/>
 <rect x="20" y="100" width="520" height="1226" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
 <text x="34.0" y="126.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">IMAGE/BUILD-TEST-DISK.SH --RELEASE</text>
-<text x="34.0" y="147.0" font-size="15" fill="#c9c3b6">Privileged Docker, debian:trixie-slim.</text>
+<text x="34.0" y="147.0" font-size="15" fill="#c9c3b6">Build server, signed tags only. Privileged trixie-slim.</text>
 <rect x="580" y="100" width="520" height="1226" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
 <text x="594.0" y="126.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">IMAGE/BUILD-INSTALLER.SH --RELEASE</text>
-<text x="594.0" y="147.0" font-size="15" fill="#c9c3b6">Same Docker. Needs BLUNIX_RELEASE_VERSION.</text>
+<text x="594.0" y="147.0" font-size="15" fill="#c9c3b6">Same container. BLUNIX_RELEASE_VERSION is the tag.</text>
 <rect x="20" y="1386" width="1080" height="200" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
 <text x="34.0" y="1412.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="1.20">PUBLISH</text>
 <rect x="20" y="1626" width="520" height="453" rx="14" fill="#161b20" stroke="#6f7c8b" stroke-width="2"/>
@@ -638,10 +657,8 @@
 <path d="M840.0 1030.0 L840.0 1064.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
 <path d="M840.0 1157.0 L840.0 1191.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
 <path d="M524.0 1215.5 L560.0 1215.5 L560.0 227.5 L596.0 227.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
-<path d="M840.0 1306.0 L840.0 1356.0 L560.0 1356.0 L560.0 1436.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
-<path d="M200.0 1356.0 L200.0 1436.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#pipe-head)"/>
-<path d="M200 1356 L560 1356" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" fill="none"/>
-<path d="M366.0 1493.5 L395.0 1493.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#pipe-head)"/>
+<path d="M840.0 1306.0 L840.0 1356.0 L200.0 1356.0 L200.0 1436.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
+<path d="M366.0 1493.5 L395.0 1493.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
 <path d="M725.0 1493.5 L754.0 1493.5" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
 <path d="M280.0 1817.0 L280.0 1845.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
 <path d="M280.0 1938.0 L280.0 1966.0" fill="none" stroke="#8e9aa8" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#pipe-head)"/>
@@ -732,25 +749,25 @@
 <text x="627.0" y="1220.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
 <text x="610.0" y="1246.0" font-size="18" fill="#f3efe6" font-weight="700">16. SHA256SUMS, build/release/</text>
 <text x="610.0" y="1269.0" font-size="16" fill="#c9c3b6">ISO, blunix.raw.zst, vmlinuz, initrd.img,</text>
-<text x="610.0" y="1291.0" font-size="16" fill="#c9c3b6">blunix.squashfs. The build does not upload.</text>
-<rect x="36" y="1436" width="330" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
-<rect x="50.5" y="1453.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
-<text x="67.0" y="1465.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DESIGNED, NOT BUILT</text>
-<text x="50.0" y="1491.0" font-size="18" fill="#f3efe6" font-weight="700">17. Sign the digests offline</text>
-<text x="50.0" y="1514.0" font-size="16" fill="#c9c3b6">The key never on the builder or</text>
-<text x="50.0" y="1536.0" font-size="16" fill="#c9c3b6">Cloudflare. Nothing signs today.</text>
+<text x="610.0" y="1291.0" font-size="16" fill="#c9c3b6">blunix.squashfs. Plus SOURCES.md.</text>
+<rect x="36" y="1436" width="330" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="50.5" y="1453.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="67.0" y="1465.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT</text>
+<text x="50.0" y="1491.0" font-size="18" fill="#f3efe6" font-weight="700">17. Upload to staging</text>
+<text x="50.0" y="1514.0" font-size="16" fill="#c9c3b6">Unsigned, to one R2 bucket.</text>
+<text x="50.0" y="1536.0" font-size="16" fill="#c9c3b6">Objects expire after 30 days.</text>
 <rect x="395" y="1436" width="330" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
 <rect x="409.5" y="1453.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="426.0" y="1465.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">MANUAL STEP</text>
-<text x="409.0" y="1491.0" font-size="18" fill="#f3efe6" font-weight="700">18. A person uploads</text>
-<text x="409.0" y="1514.0" font-size="16" fill="#c9c3b6">gh release upload, by hand,</text>
-<text x="409.0" y="1536.0" font-size="16" fill="#c9c3b6">from build/release/.</text>
+<text x="426.0" y="1465.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">MANUAL STEP, OFFLINE</text>
+<text x="409.0" y="1491.0" font-size="18" fill="#f3efe6" font-weight="700">18. Verify and sign</text>
+<text x="409.0" y="1514.0" font-size="16" fill="#c9c3b6">The maintainer signs SHA256SUMS</text>
+<text x="409.0" y="1536.0" font-size="16" fill="#c9c3b6">with the release key, offline.</text>
 <rect x="754" y="1436" width="330" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
 <rect x="768.5" y="1453.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="785.0" y="1465.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">v0.1.0 PUBLISHED</text>
+<text x="785.0" y="1465.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">v0.1.0: UNSIGNED TEST</text>
 <text x="768.0" y="1491.0" font-size="18" fill="#f3efe6" font-weight="700">19. GitHub release</text>
-<text x="768.0" y="1514.0" font-size="16" fill="#c9c3b6">afterdarksys/blunix. blunix.io lists</text>
-<text x="768.0" y="1536.0" font-size="16" fill="#c9c3b6">it through /releases.json.</text>
+<text x="768.0" y="1514.0" font-size="16" fill="#c9c3b6">The maintainer publishes it.</text>
+<text x="768.0" y="1536.0" font-size="16" fill="#c9c3b6">blunix.io lists /releases.json.</text>
 <rect x="36" y="1702" width="488" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
 <rect x="50.5" y="1719.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
 <text x="67.0" y="1731.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">WORKFLOW BUILT</text>
@@ -763,7 +780,7 @@
 <text x="50.0" y="1923.0" font-size="16" fill="#c9c3b6">site.css equals portal.css; node --test.</text>
 <rect x="36" y="1966" width="488" height="93" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
 <circle cx="55.5" cy="1989.0" r="5.5" fill="#a9b4c1"/>
-<text x="67.0" y="1995.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BLUNIX.IO IS LIVE; PORTAL IS NOT</text>
+<text x="67.0" y="1995.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DEPLOYED: BLUNIX.IO AND THE PORTAL</text>
 <text x="50.0" y="2021.0" font-size="18" fill="#f3efe6" font-weight="700">22. wrangler pages deploy</text>
 <text x="50.0" y="2044.0" font-size="16" fill="#c9c3b6">site/ to blunix-io, portal/ to build-blunix-io.</text>
 <polygon points="610.0,1702.0 1070.0,1702.0 1084.0,1716.0 1084.0,1803.0 1070.0,1817.0 610.0,1817.0 596.0,1803.0 596.0,1716.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
@@ -775,9 +792,9 @@
 <text x="610.0" y="1874.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">GATE: STOPS THE DEPLOY</text>
 <text x="610.0" y="1900.0" font-size="18" fill="#f3efe6" font-weight="700">24. Typecheck and tests</text>
 <text x="610.0" y="1923.0" font-size="16" fill="#c9c3b6">npm ci, tsc, vitest in the Workers runtime.</text>
-<rect x="596" y="1966" width="488" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
-<rect x="610.5" y="1983.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="627.0" y="1995.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SCRIPT BUILT, NOT RUN YET</text>
+<rect x="596" y="1966" width="488" height="93" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="615.5" cy="1989.0" r="5.5" fill="#a9b4c1"/>
+<text x="627.0" y="1995.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DEPLOYED</text>
 <text x="610.0" y="2021.0" font-size="18" fill="#f3efe6" font-weight="700">25. D1 migrations, wrangler deploy</text>
 <text x="610.0" y="2044.0" font-size="16" fill="#c9c3b6">api.blunix.io and *.blnx.io.</text>
 <rect x="20" y="2109" width="1080" height="96" rx="10" fill="#1b2127" stroke="#3a434d" stroke-width="2"/>
@@ -790,17 +807,15 @@
 <text x="686.5" y="2137.0" font-size="16" fill="#f3efe6">Designed, not built</text>
 <path d="M130 2173 L174 2173" stroke="#8e9aa8" stroke-width="2.5"/>
 <text x="184.0" y="2179.0" font-size="16" fill="#f3efe6">Call or data</text>
-<path d="M294 2173 L338 2173" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="10 7"/>
-<text x="348.8" y="2179.0" font-size="16" fill="#f3efe6">Designed path</text>
-<polygon points="488.4,2161.0 518.4,2161.0 525.4,2168.0 525.4,2178.0 518.4,2185.0 488.4,2185.0 481.4,2178.0 481.4,2168.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
-<text x="535.4" y="2179.0" font-size="16" fill="#f3efe6">Gate: the build stops, fails closed</text>
+<polygon points="301.8,2161.0 331.8,2161.0 338.8,2168.0 338.8,2178.0 331.8,2185.0 301.8,2185.0 294.8,2178.0 294.8,2168.0" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<text x="348.8" y="2179.0" font-size="16" fill="#f3efe6">Gate: the build stops, fails closed</text>
 </svg>
 <!-- /diagram:03-build-release -->
         <figcaption>Diagram 3. <a href="assets/diagrams/03-build-release.png">Open it as a large image</a>.</figcaption>
       </figure>
       <div class="walk">
 <!-- walk:03-build-release -->
-<p>Octagons are gates: the build stops there and writes no release. The first two columns run in privileged Docker (<code>debian:trixie-slim</code>).</p>
+<p>Octagons are gates: the build stops there and writes no release. The first two columns run on the separate release build server, in a privileged <code>debian:trixie-slim</code> container pinned by digest. Before any of it, the server checks the tag. It builds only a tag signed by the pinned release key. An unsigned or lightweight tag is refused. No credential is passed into the container, and a release starts from an empty <code>build/</code>.</p>
 <h3>image/build-test-disk.sh --release</h3>
 <ol>
   <li>Debian 13 packages: official packages, listed in <code>image/packages.txt</code>.</li>
@@ -812,7 +827,7 @@
   <li>Gate: <code>scan-raw.py</code> reads every byte of the disk for private keys, age secret keys, the fixture&#x27;s age header and the two test secrets.</li>
   <li>The output is <code>build/blunix-release.raw</code>, the release disk. It feeds step 9.</li>
 </ol>
-<h3>image/build-installer.sh --release (needs BLUNIX_RELEASE_VERSION)</h3>
+<h3>image/build-installer.sh --release (BLUNIX_RELEASE_VERSION is the tag)</h3>
 <ol start="9">
   <li>Gate: no version, the word <code>latest</code>, or no release disk stops the build.</li>
   <li>Gate: the release disk is scanned again. It is mounted read-only for <code>scan-root.py --release</code>, then <code>scan-raw.py</code> reads the raw file.</li>
@@ -821,25 +836,25 @@
   <li>Gate: <code>scan-root.py</code> scans the installer&#x27;s own filesystem.</li>
   <li>The ISO and netboot media: a squashfs, the boot menu with keys 1 to 5, a hybrid ISO with volume label <code>BLUNIX_INSTALL</code>, and <code>vmlinuz</code>, <code>initrd.img</code>, <code>blunix.squashfs</code> and <code>blunix.ipxe</code>.</li>
   <li>Gate: every asset must be under 2 GiB, GitHub&#x27;s per-file limit.</li>
-  <li><code>SHA256SUMS</code> in <code>build/release/</code> covers the ISO, <code>blunix.raw.zst</code>, <code>vmlinuz</code>, <code>initrd.img</code> and <code>blunix.squashfs</code>. The build does not upload.</li>
+  <li><code>SHA256SUMS</code> in <code>build/release/</code> covers the ISO, <code>blunix.raw.zst</code>, <code>vmlinuz</code>, <code>initrd.img</code> and <code>blunix.squashfs</code>. <code>image/gpl-sources.py</code> then writes <code>SOURCES.md</code>, the GPL source notice that every release attaches. The build scripts do not upload.</li>
 </ol>
 <h3>Publish</h3>
 <ol start="17">
-  <li>Designed, not built: sign the digests offline. The key is never on the builder or Cloudflare. Nothing is signed today. The dashed path runs through this step; the solid path skips it.</li>
-  <li>A manual step: a person runs <code>gh release upload</code> from <code>build/release/</code>.</li>
-  <li>The GitHub release on <code>afterdarksys/blunix</code>. blunix.io lists it through <code>/releases.json</code>. None is published yet.</li>
+  <li>The build server uploads the images, unsigned, to a staging bucket on R2. Its only credential can write to that one bucket. Objects expire after 30 days.</li>
+  <li>A manual step, offline. The maintainer pulls the images from staging, verifies them, and signs <code>SHA256SUMS</code> with the release key on their own machine. <code>scripts/release-sign.py</code> pins full key fingerprints. The key is never on the build server or Cloudflare.</li>
+  <li>The maintainer publishes the GitHub release on <code>afterdarksys/blunix</code>. blunix.io lists it through <code>/releases.json</code>. v0.1.0 is an unsigned test release; the first signed release is next.</li>
 </ol>
 <h3>Site and portal: push to main in site/, portal/ or brand/, or a manual run</h3>
 <ol start="20">
   <li>GitHub Actions, environment <code>production</code> (the workflow is built). The job runs only on <code>refs/heads/main</code>. Actions are pinned to commit SHAs, and the token is <code>contents: read</code>.</li>
   <li>Gate: <code>site/css/site.css</code> must equal <code>portal/css/site.css</code>, and the node tests must pass.</li>
-  <li><code>wrangler pages deploy</code>: <code>site/</code> to the Pages project <code>blunix-io</code>, <code>portal/</code> to <code>build-blunix-io</code>. blunix.io is live; the portal is not. <code>scripts/deploy-site.sh</code> is the same path from a laptop.</li>
+  <li><code>wrangler pages deploy</code>: <code>site/</code> to the Pages project <code>blunix-io</code>, <code>portal/</code> to <code>build-blunix-io</code>. Both are live. <code>scripts/deploy-site.sh</code> is the same path from a laptop.</li>
 </ol>
 <h3>API Worker: scripts/deploy-api.sh, a laptop only, refuses in CI</h3>
 <ol start="23">
   <li>Gate: a production config. A real D1 id, an empty <code>DEV_ORIGINS</code>, the OIDC issuer and client id set, and the client secret on the Worker.</li>
   <li>Gate: <code>npm ci</code>, the typecheck, and the vitest suite in the Workers runtime.</li>
-  <li>D1 migrations, then <code>wrangler deploy</code> for api.blunix.io and <code>*.blnx.io</code>. The script is built and has not run yet.</li>
+  <li>D1 migrations, then <code>wrangler deploy</code> for api.blunix.io and <code>*.blnx.io</code>. Both are live.</li>
 </ol>
 <!-- /walk:03-build-release -->
       </div>
@@ -1073,15 +1088,15 @@
 <path d="M978.0 1516.0 L978.0 777.0" fill="none" stroke="#12161a" stroke-width="3.5" stroke-linejoin="round"/>
 <path d="M978.0 1516.0 L978.0 777.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#proxy-bighead)"/>
 <text x="28.0" y="44.0" font-size="26" fill="#f3efe6" font-weight="700">blunix proxy on an install LAN</text>
-<text x="28.0" y="72.0" font-size="16" fill="#c9c3b6">All built and tested. The key stays in keys.txt and on the printed card.</text>
-<rect x="36" y="146" width="480" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
-<rect x="50.5" y="163.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="67.0" y="175.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<text x="28.0" y="72.0" font-size="16" fill="#c9c3b6">The proxy is built and tested. The key stays in keys.txt and on the printed card.</text>
+<rect x="36" y="146" width="480" height="93" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="55.5" cy="169.0" r="5.5" fill="#a9b4c1"/>
+<text x="67.0" y="175.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DEPLOYED</text>
 <text x="50.0" y="201.0" font-size="18" fill="#f3efe6" font-weight="700">api.blunix.io</text>
 <text x="50.0" y="224.0" font-size="16" fill="#c9c3b6">POST /v1/hosts reserves; POST .../builds uploads.</text>
-<rect x="604" y="146" width="480" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
-<rect x="618.5" y="163.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="635.0" y="175.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<rect x="604" y="146" width="480" height="93" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="623.5" cy="169.0" r="5.5" fill="#a9b4c1"/>
+<text x="635.0" y="175.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DEPLOYED</text>
 <text x="618.0" y="201.0" font-size="18" fill="#f3efe6" font-weight="700">{label}.blnx.io</text>
 <text x="618.0" y="224.0" font-size="16" fill="#c9c3b6">GET / serves the ciphertext, verified TLS.</text>
 <rect x="52" y="420" width="470" height="159" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
@@ -1166,12 +1181,12 @@
 <text x="594.0" y="1616.0" font-size="16" fill="#c9c3b6">blunix.proxy= on its kernel line. The operator</text>
 <text x="594.0" y="1638.0" font-size="16" fill="#c9c3b6">types the hostname, then the key from the card.</text>
 <text x="594.0" y="1660.0" font-size="16" fill="#c9c3b6">Decrypted on the machine.</text>
-<rect x="36" y="1727" width="1048" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
-<rect x="50.5" y="1744.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
-<text x="67.0" y="1756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SIGNING: DESIGNED, NOT BUILT</text>
+<rect x="36" y="1727" width="1048" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="50.5" y="1744.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="67.0" y="1756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SIGNING: SET UP, NO SIGNED RELEASE YET</text>
 <text x="50.0" y="1782.0" font-size="18" fill="#f3efe6" font-weight="700">Trusted LANs only until images are signed</text>
 <text x="50.0" y="1805.0" font-size="16" fill="#c9c3b6">Kernel, initrd and squashfs travel as plain http. serve&#x27;s startup check proves they match the</text>
-<text x="50.0" y="1827.0" font-size="16" fill="#c9c3b6">SHA256SUMS you trusted, not who built them. iPXE and live-boot verify nothing. Signing is designed.</text>
+<text x="50.0" y="1827.0" font-size="16" fill="#c9c3b6">SHA256SUMS you trusted, not who built them. iPXE and live-boot verify nothing. No signed release yet.</text>
 <rect x="631.7" y="1167.5" width="76.7" height="25.0" rx="4" fill="#161b20"/>
 <text x="670.0" y="1186.5" font-size="16" fill="#c9c3b6" text-anchor="middle">boot.ipxe</text>
 <rect x="784.4" y="1167.5" width="79.1" height="47.0" rx="4" fill="#161b20"/>
@@ -1225,11 +1240,11 @@
       </figure>
       <div class="walk">
 <!-- walk:05-build-proxy -->
-<p>Everything here is built and tested; the signing that would end the trusted-LAN rule is designed, not built. The key stays in <code>keys.txt</code> and on the printed card.</p>
+<p>The proxy is built and tested, and the API and build hosts it talks to are live. Release signing is set up, but no signed release exists yet, so the trusted-LAN rule still holds. The key stays in <code>keys.txt</code> and on the printed card.</p>
 <h3>Cloudflare</h3>
 <ul>
-  <li>api.blunix.io, built and not deployed: <code>POST /v1/hosts</code> reserves a label; <code>POST /v1/hosts/{label}/builds</code> uploads.</li>
-  <li><code>{label}.blnx.io</code>, built and not deployed: <code>GET /</code> serves the ciphertext over verified TLS.</li>
+  <li>api.blunix.io, live: <code>POST /v1/hosts</code> reserves a label; <code>POST /v1/hosts/{label}/builds</code> uploads.</li>
+  <li><code>{label}.blnx.io</code>, live: <code>GET /</code> serves the ciphertext over verified TLS.</li>
 </ul>
 <h3>The operator&#x27;s computer, Linux or macOS (Python stdlib, PyYAML, and age on the PATH)</h3>
 <ol>
@@ -1239,7 +1254,7 @@
   <li><code>blunix proxy publish</code> validates every document first, or sends nothing. Then, per machine: reserve the label, render the document with its inline static network, make a 100-bit key, encrypt with <code>age --passphrase</code>, write the pending card, upload, and check the returned sha256 and size. <code>state.json</code> holds no keys.</li>
   <li><code>keys.txt</code>: created with <code>O_EXCL</code>, mode 0600, one card per machine. It is never served and is not in the media allowlist. The key exists here. Print the cards, then delete the file.</li>
   <li><code>blunix proxy dnsmasq</code> renders a dnsmasq config to stdout. It does not start dnsmasq.</li>
-  <li><code>blunix proxy serve</code>: <code>GET</code> and <code>HEAD</code> only, at most 64 connections, 60 requests per IP refilled at one a second, and no bodies logged. <code>/v1/build/{host}</code> relays only <code>{label}.blnx.io</code> and <code>v{n}.{label}.blnx.io</code> over verified TLS 1.2 or higher, with no redirects, a 256 KiB cap, a 20-second limit and age bodies only, cached 60 seconds for latest and 1 hour for pinned; a TLS failure is a 502. <code>/media/</code> serves <code>vmlinuz</code>, <code>initrd.img</code> and <code>blunix.squashfs</code>, hashed against <code>SHA256SUMS</code> at startup; a file that changes later is not served. <code>/v1/boot.ipxe</code> names the advertise address, never the Host header. Also <code>/v1/netconfig/{mac}</code> and <code>/healthz</code>.</li>
+  <li><code>blunix proxy serve</code>: <code>GET</code> and <code>HEAD</code> only, at most 64 connections, 60 requests per IP refilled at one a second, and no bodies logged. <code>/v1/build/{host}</code> relays only <code>{label}.blnx.io</code> and <code>v{n}.{label}.blnx.io</code> (pinned hosts are not on yet) over verified TLS 1.2 or higher, with no redirects, a 256 KiB cap, a 20-second limit and age bodies only, cached 60 seconds for latest and 1 hour for pinned; a TLS failure is a 502. <code>/media/</code> serves <code>vmlinuz</code>, <code>initrd.img</code> and <code>blunix.squashfs</code>, hashed against <code>SHA256SUMS</code> at startup; a file that changes later is not served. <code>/v1/boot.ipxe</code> names the advertise address, never the Host header. Also <code>/v1/netconfig/{mac}</code> and <code>/healthz</code>.</li>
 </ol>
 <h3>On the install VLAN</h3>
 <ol start="8">
@@ -1256,7 +1271,7 @@
   <li>The machines fetch the kernel, initrd and squashfs from <code>/media/</code> over plain http.</li>
   <li>The installer fetches <code>/v1/build/{host}</code> from <code>serve</code>: ciphertext only.</li>
 </ol>
-<p>Trusted LANs only until images are signed. The kernel, initrd and squashfs travel as plain http. <code>serve</code>&#x27;s startup check proves they match the <code>SHA256SUMS</code> you trusted, not who built them. iPXE and live-boot verify nothing. Signing is designed, not built.</p>
+<p>Trusted LANs only until images are signed. The kernel, initrd and squashfs travel as plain http. <code>serve</code>&#x27;s startup check proves they match the <code>SHA256SUMS</code> you trusted, not who built them. iPXE and live-boot verify nothing. Release signing is set up; the first signed release is next.</p>
 <!-- /walk:05-build-proxy -->
       </div>
     </section>
@@ -1270,7 +1285,7 @@
 <!-- diagram:06-future-plane -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 1856" width="1120" height="1856" role="img" aria-labelledby="future-title future-desc" font-family="Atkinson, &#x27;Atkinson Hyperlegible&#x27;, &#x27;Helvetica Neue&#x27;, Arial, sans-serif">
 <title id="future-title">The future plane: designed, not built</title>
-<desc id="future-desc">Everything on this diagram is designed, not built, except one box: the API already refuses every blx_join_ token with 401. Clients (the web, the laptop CLI, Terraform, Ansible, support) call api.blunix.io. An enrolled machine runs blunixservice, which dials out only: it enrolls once with a join token, then signs check-ins with its Ed25519 key and gets back a desired generation, fetches the ciphertext, applies it, and stages images with systemd-sysupdate from a manifest generated from the Blunix Log. A cloud builder appends log rows and an offline key signs them. Troubleshoot is a fixed collect that rides the check-in response and needs a spoken yes on speech and large-print machines. The numbered walk-through after this figure says everything the diagram shows.</desc>
+<desc id="future-desc">Everything on this diagram is designed, not built, except one box: the live API already refuses every blx_join_ token with 401. Clients (the web, the laptop CLI, Terraform, Ansible, support) call api.blunix.io. An enrolled machine runs blunixservice, which dials out only: it enrolls once with a join token, then signs check-ins with its Ed25519 key and gets back a desired generation, fetches the ciphertext, applies it, and stages images with systemd-sysupdate from a manifest generated from the Blunix Log. A cloud builder appends log rows and an offline key signs them. Troubleshoot is a fixed collect that rides the check-in response and needs a spoken yes on speech and large-print machines. The numbered walk-through after this figure says everything the diagram shows.</desc>
 <defs><marker id="future-head" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
 <defs><marker id="future-bighead" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="22" markerHeight="22" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
 <rect width="1120" height="1856" fill="#12161a"/>
@@ -1316,9 +1331,9 @@
 <text x="614.0" y="452.0" font-size="16" fill="#c9c3b6">POST /v1/machines: bind a public key, consume</text>
 <text x="614.0" y="474.0" font-size="16" fill="#c9c3b6">the token. POST .../checkin, GET .../desired.</text>
 <text x="614.0" y="496.0" font-size="16" fill="#c9c3b6">GET /v1/machines?channel=stable&amp;behind=1.</text>
-<rect x="600" y="533" width="484" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
-<rect x="614.5" y="550.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="631.0" y="562.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<rect x="600" y="533" width="484" height="93" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="619.5" cy="556.0" r="5.5" fill="#a9b4c1"/>
+<text x="631.0" y="562.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT AND LIVE</text>
 <text x="614.0" y="588.0" font-size="18" fill="#f3efe6" font-weight="700">Built today: the refusal</text>
 <text x="614.0" y="611.0" font-size="16" fill="#c9c3b6">Any blx_join_ bearer token is a 401 on every route.</text>
 <rect x="600" y="648" width="484" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
@@ -1441,7 +1456,7 @@
       </figure>
       <div class="walk">
 <!-- walk:06-future-plane -->
-<p>Everything on this diagram is designed, not built, from <code>docs/designs/blunix-service.md</code> and <code>docs/designs/blunix-platform.md</code>. One box is the exception: the API already refuses every <code>blx_join_</code> bearer token with 401 on every route. That refusal is built, not deployed.</p>
+<p>Everything on this diagram is designed, not built, from <code>docs/designs/blunix-service.md</code> and <code>docs/designs/blunix-platform.md</code>. One box is the exception: the API already refuses every <code>blx_join_</code> bearer token with 401 on every route. That refusal is built and live.</p>
 <h3>The boxes</h3>
 <ul>
   <li><strong>Clients of one API.</strong> The web console, the laptop CLI, Terraform, Ansible and the support desk. There is no second control plane. Keys by scope: <code>hosts:write</code>, <code>machines:read</code>, <code>troubleshoot:request</code>, <code>log:publish</code>.</li>
@@ -1456,8 +1471,8 @@
   <li><strong>Troubleshoot collect.</strong> <code>blunix: troubleshoot requested for lab-3. Say yes to start.</code> A fixed collector, an allowlisted report of 64 KiB, signed. No journal text and no keys.</li>
   <li><strong>Blunix Log, append-only.</strong> A row holds the version, channel, artifact sha256, signature, predecessor and file names. Withdrawing is a new row. <code>GET</code> is public; the site renders it.</li>
   <li><strong>Manifest at <code>updates.blunix.io/blunix</code>.</strong> Generated from the current rows, never edited by hand. Mirrors are caches of one digest.</li>
-  <li><strong>Cloud builder.</strong> Runs the build the repo specifies. Its only output is a log row, through <code>log:publish</code>.</li>
-  <li><strong>Offline signing key.</strong> Signs images and rows. Never on the builder or on Cloudflare.</li>
+  <li><strong>Cloud builder.</strong> Runs the build the repo specifies. Its only output is a log row, through <code>log:publish</code>. Today the separate release build server stages unsigned images instead; the log row is designed.</li>
+  <li><strong>Offline signing key.</strong> Signs images and rows. Never on the builder or on Cloudflare. The release key exists today and will sign <code>SHA256SUMS</code>; signing log rows is designed.</li>
 </ul>
 <h3>The numbered arrows, all designed</h3>
 <ol>

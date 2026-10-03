@@ -14,14 +14,14 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="blunix">
   <meta property="og:title" content="API, blunix">
-  <meta property="og:description" content="The blunix API registers build labels, publishes age ciphertext, and holds API keys. People sign in with Authentik. Programs use API keys.">
+  <meta property="og:description" content="The blunix API registers build labels, publishes age ciphertext, and holds API keys. People sign in with After Dark Systems SSO. Programs use API keys.">
   <meta property="og:url" content="https://blunix.io/api.html">
   <meta property="og:image" content="https://blunix.io/assets/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="blunix: a quiet Debian host for cloud nodes.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="description" content="The blunix API registers build labels, publishes age ciphertext, and holds API keys. People sign in with Authentik. Programs use API keys.">
+  <meta name="description" content="The blunix API registers build labels, publishes age ciphertext, and holds API keys. People sign in with After Dark Systems SSO. Programs use API keys.">
   <link rel="stylesheet" href="css/site.css">
   <script type="module" src="js/live.js"></script>
 </head>
@@ -36,6 +36,7 @@
       <a href="index.html">Host</a>
       <a href="install.html">Install</a>
       <a href="access.html">Access</a>
+      <a href="tools.html">Tools</a>
       <a href="log.html">Log</a>
       <a href="account.html">Account</a>
       <a href="service.html">Service</a>
@@ -50,7 +51,7 @@
       <div>
         <p class="kicker">API</p>
         <h1>Keys for programs. Issuers for people.</h1>
-        <p class="lede">The API the <a href="https://build.blunix.io/">portal</a> calls, and a program calls with a key. The installer itself does not use a key. It fetches the label URL. The install routes are built and tested, not deployed. The service and platform routes are designed, not built.</p>
+        <p class="lede">The API the <a href="https://build.blunix.io/">portal</a> calls, and a program calls with a key. The installer itself does not use a key. It fetches the label URL. The install routes are live. The service and platform routes are designed, not built.</p>
       </div>
       <figure class="mark mark-small">
         <img src="assets/logo-mark.svg" width="372" height="446" alt="">
@@ -64,7 +65,8 @@
         <p>The label host, the API host, and the update host are different names so a build URL cannot be mistaken for the API. The portal is <span class="host">https://build.blunix.io/</span>.</p>
       </div>
       <ul class="props">
-        <li><strong>Installer.</strong> <span class="host">https://{label}.blnx.io/</span> returns the latest age ciphertext, not cached. <span class="host">https://v{n}.{label}.blnx.io/</span> returns version n, cached for a year. Otherwise 404. <code>GET</code> and <code>HEAD</code> on <code>/</code> only. No query string. TLS required. Cap 256KiB. No key. The header <code>x-blunix-sha256</code> is the ciphertext digest. <span class="host">blnx.io</span> is a separate domain, so build files never share cookies with the site, the portal, or the API.</li>
+        <li><strong>Installer.</strong> <span class="host">https://{label}.blnx.io/</span> returns the latest age ciphertext, not cached. Otherwise 404. <code>GET</code> and <code>HEAD</code> on <code>/</code> only. Another method is a 405. No query string. TLS required. Cap 256KiB. No key. The header <code>x-blunix-sha256</code> is the ciphertext digest. The server checks the body against that digest before it sends it. <span class="host">blnx.io</span> is a separate domain, so build files never share cookies with the site, the portal, or the API. The bare <span class="host">blnx.io</span> sends you to this site.</li>
+        <li><strong>Pinned versions, not on yet.</strong> <span class="host">https://v{n}.{label}.blnx.io/</span> will return version n, cached for a year. Those names have no certificates yet. Until they do, the API returns <code>pinnedUrl: null</code> and only the latest name is in use.</li>
         <li><strong>API.</strong> <span class="host">https://api.blunix.io/v1</span> is where accounts and publishers write. A Cloudflare Worker, with the same Worker serving the build names.</li>
         <li><strong>Updates.</strong> <span class="host">https://updates.blunix.io/blunix</span> will be the sysupdate manifest generated from the image log. Designed, not built. Releases are on GitHub today, and the <a href="log.html">log</a> page reads them live.</li>
       </ul>
@@ -76,24 +78,25 @@
         <p>A key is for a program, such as the build-proxy. A person keeps using the issuer. A person mints and revokes keys in the <a href="https://build.blunix.io/">portal</a>.</p>
       </div>
       <ul class="props">
-        <li><strong>Drawn from the OS CSPRNG.</strong> Shown once. Stored only as a SHA-256 hash, compared in constant time. A key is high entropy, so it is not stretched the way a password is.</li>
-        <li><strong>Prefix <code>blx_</code>, then 43 base64url characters.</strong> Logs may store the hash as a fingerprint. They must not store the key.</li>
-        <li><strong>Scopes.</strong> <code>hosts:write</code> is the default: reserve labels and upload builds. <code>hosts:read</code> lists only. Keys are minted, listed, and revoked with a browser session, never with another key. Later scopes, such as <code>log:publish</code>, <code>machines:read</code>, and <code>troubleshoot:request</code>, belong to the <a href="service.html">service</a> and <a href="platform.html">platform</a> designs.</li>
+        <li><strong>Drawn from a CSPRNG.</strong> Shown once. Stored only as a SHA-256 hash, compared in constant time. A key is high entropy, so it is not stretched the way a password is.</li>
+        <li><strong>Prefix <code>blx_</code>, then 43 base64url characters.</strong> The fingerprint is the SHA-256 of the key, as 64 hex characters. Logs may store the fingerprint. They must not store the key.</li>
+        <li><strong>Scopes.</strong> <code>hosts:write</code> is the default when you name no scopes: reserve and delete labels, upload and delete builds. It can also read. <code>hosts:read</code> reads only. Keys are minted, listed, and revoked with a browser session, never with another key. Later scopes, such as <code>log:publish</code>, <code>machines:read</code>, and <code>troubleshoot:request</code>, belong to the <a href="service.html">service</a> and <a href="platform.html">platform</a> designs.</li>
         <li><strong>Revocation is immediate.</strong> A revoked hash fails closed. Rotation is a new key, then revoke the old one.</li>
-        <li><strong>Header only.</strong> <code>Authorization: Bearer</code>. A <code>blx_</code> token is an account key. A <code>blx_join_</code> token is a join token for one enrollment, and in this pass it is a 401 everywhere. A JWT is an access token from an allowlisted issuer. A machine call is an Ed25519 signature, not a bearer key. Anything else is a 401. The key is never accepted in a query string.</li>
+        <li><strong>Header only.</strong> <code>Authorization: Bearer</code>. A <code>blx_</code> token is an account key. A <code>blx_join_</code> token is kept for a later join token, and today it is a 401 everywhere. Anything else, including a JWT, is a 401. An unknown or revoked key is a 401, and the API does not fall back to the cookie. The key is never accepted in a query string. Machine calls, signed with Ed25519, belong to the <a href="service.html">service</a> design.</li>
       </ul>
     </section>
 
     <section class="wrap band">
       <div class="band-head">
         <h2>Sign-in</h2>
-        <p>Authentik at adsas.id is the first issuer. Google and GitHub come later, under the same checks.</p>
+        <p>People sign in with After Dark Systems SSO, our OpenID Connect issuer at adsas.id. It is the only issuer today. Google and GitHub are designed for later, under the same checks.</p>
       </div>
       <ul class="props">
-        <li><strong>Allowlist.</strong> Authentik at adsas.id, Google, GitHub. The adsas.id discovery URL is recorded at bind time. Google's issuer is <span class="host">https://accounts.google.com</span>. GitHub user login uses that product's OAuth 2.0 authorization-code endpoints.</li>
-        <li><strong>Browser.</strong> Authorization code with PKCE (S256), plus state and nonce. Redirect URLs are an exact https match. No wildcard redirect. The session is the cookie <code>__Host-blx_session</code>: Secure, HttpOnly, SameSite=Lax, 12 hours.</li>
+        <li><strong>One issuer.</strong> The API reads the issuer's discovery document. Its <code>issuer</code> must match exactly, and its endpoints must be https. A missing or wrong document means sign-in is unavailable.</li>
+        <li><strong>Browser.</strong> Authorization code with PKCE (S256), plus state and nonce. Scopes: <code>openid email profile</code>. The redirect URL is fixed: <span class="host">https://api.blunix.io/v1/auth/callback</span>. No wildcard redirect. The state is also bound to the browser by the cookie <code>__Host-blx_oidc</code>, which lasts 10 minutes. The session is the cookie <code>__Host-blx_session</code>: Secure, HttpOnly, SameSite=Lax, Path=/, 12 hours.</li>
         <li><strong>Cross-site requests.</strong> A state-changing call with a session must send <code>x-blunix-csrf: 1</code> and come from the origin <span class="host">https://build.blunix.io</span>. A call with a bearer key needs neither.</li>
-        <li><strong>Token.</strong> Verified against the issuer's JWKS. Issuer, audience, and expiry are checked. The algorithm has to be RS256, ES256, or EdDSA. <code>none</code> is rejected. A failed check is a refusal, including a missing discovery document.</li>
+        <li><strong>Token.</strong> The ID token is verified against the issuer's JWKS. Issuer, audience, expiry, and nonce are checked. The algorithm has to be RS256, ES256, or EdDSA. <code>none</code> is rejected. A failed check is a refusal.</li>
+        <li><strong>What is kept.</strong> The account is the issuer and the subject from the ID token. A display name is kept for "Signed in as": the token's name, else its username, else its email. It is refreshed at each sign-in and is never used for access. No password is kept.</li>
         <li><strong>No client secret in the tree.</strong> The client id, the secret, and the issuer URL are Worker secrets. They do not go in this website.</li>
       </ul>
     </section>
@@ -101,11 +104,11 @@
     <section class="wrap band">
       <div class="band-head">
         <h2>Routes</h2>
-        <p>JSON in and out, except the ciphertext upload. Errors are fixed strings, <code>{"error":"..."}</code>. The server does not echo a body back, and it does not decrypt.</p>
+        <p>JSON in and out, except the ciphertext upload. A JSON body must be <code>application/json</code>, at most 8KiB. Errors are fixed strings, <code>{"error":"..."}</code>. The server does not echo a body back, and it does not decrypt.</p>
       </div>
       <div class="table-scroll">
         <table>
-          <caption>The install routes in /v1. Built and tested, not deployed.</caption>
+          <caption>The install routes in /v1. Live.</caption>
           <thead>
             <tr>
               <th scope="col">Call</th>
@@ -117,79 +120,80 @@
             <tr>
               <th scope="row"><code>GET /v1/health</code></th>
               <td>anyone</td>
-              <td><code>{"ok":true}</code>. No cookie, no auth. CORS allows <span class="host">https://blunix.io</span> to read it, without credentials. This site uses it to say whether the portal is open.</td>
+              <td><code>GET</code> or <code>HEAD</code>. <code>{"ok":true}</code>. No cookie, no auth. CORS allows <span class="host">https://blunix.io</span> to read it, without credentials. This site uses it to say whether the portal is open.</td>
             </tr>
             <tr>
               <th scope="row"><code>GET /v1/auth/login</code></th>
               <td>anyone</td>
-              <td>Redirect to the issuer. The PKCE state is kept on the server for 10 minutes.</td>
+              <td>302 to the issuer. The PKCE state is kept on the server for 10 minutes. 429 past the rate limit. 503 <code>{"error":"sign-in unavailable"}</code> when the issuer cannot be reached.</td>
             </tr>
             <tr>
               <th scope="row"><code>GET /v1/auth/callback</code></th>
               <td>the issuer</td>
-              <td>Verify, create or find the account, set the session cookie, and return to the portal.</td>
+              <td>Verify, create or find the account, set the session cookie, and 302 back to the portal. Any failure is 400 <code>{"error":"sign-in failed"}</code>.</td>
             </tr>
             <tr>
               <th scope="row"><code>POST /v1/auth/logout</code></th>
               <td>session</td>
-              <td>Delete the session.</td>
+              <td>Delete the session and clear the cookie. 204. A key is 403.</td>
             </tr>
             <tr>
               <th scope="row"><code>GET /v1/me</code></th>
               <td>session or key</td>
-              <td>The account and its labels. No secrets.</td>
+              <td><code>{"account":{"name","id","created"},"labels":[...]}</code>. <code>name</code> is there only when sign-in gave one. No secrets.</td>
             </tr>
             <tr>
               <th scope="row"><code>POST /v1/hosts</code></th>
               <td>session, or <code>hosts:write</code></td>
-              <td>Reserve <code>{label}</code>. 201, 409 if taken, 400 if invalid or reserved. 20 labels per account.</td>
+              <td>Reserve with <code>{"label":"ada"}</code>. 201 with <code>label</code>, <code>created</code>, and <code>url</code>. 409 if taken or held. 400 if invalid or reserved. 403 <code>{"error":"label limit"}</code> past 20 labels per account.</td>
             </tr>
             <tr>
               <th scope="row"><code>GET /v1/hosts</code></th>
               <td>session, <code>hosts:read</code>, or <code>hosts:write</code></td>
-              <td>The account's labels, with the latest version of each.</td>
+              <td><code>{"hosts":[...]}</code>: each label with <code>created</code>, <code>url</code>, and <code>latest</code>, which is null before the first upload.</td>
             </tr>
             <tr>
               <th scope="row"><code>GET /v1/hosts/{label}</code></th>
-              <td>owner</td>
-              <td>The label, when it was made, and its versions: number, sha256, size, time.</td>
+              <td>owner: session, <code>hosts:read</code>, or <code>hosts:write</code></td>
+              <td>The label, when it was made, and its versions: <code>version</code>, <code>sha256</code>, <code>size</code>, <code>created</code>, <code>pinnedUrl</code>. Another account's label is 404, the same as one that does not exist.</td>
             </tr>
             <tr>
               <th scope="row"><code>DELETE /v1/hosts/{label}</code></th>
-              <td>owner</td>
-              <td>The label and every version stop serving. The name is held 30 days.</td>
+              <td>owner: session, or <code>hosts:write</code></td>
+              <td>204. The label and every version stop serving. The name is held 30 days. Version numbers are never reused, even if the name is reserved again.</td>
             </tr>
             <tr>
               <th scope="row"><code>POST /v1/hosts/{label}/builds</code></th>
-              <td>owner</td>
-              <td>The body is raw age ciphertext, <code>application/octet-stream</code>. 201 with the version, sha256, size, and both URLs.</td>
+              <td>owner: session, or <code>hosts:write</code></td>
+              <td>The body is raw age ciphertext, <code>application/octet-stream</code>, or 415. 201 with <code>version</code>, <code>sha256</code>, <code>size</code>, <code>url</code>, and <code>pinnedUrl</code>, which is null for now.</td>
             </tr>
             <tr>
               <th scope="row"><code>DELETE /v1/hosts/{label}/builds/{n}</code></th>
-              <td>owner</td>
-              <td>That version stops serving. The latest moves back to the highest remaining version.</td>
+              <td>owner: session, or <code>hosts:write</code></td>
+              <td>204. That version stops serving. The latest moves back to the highest remaining version.</td>
             </tr>
             <tr>
               <th scope="row"><code>POST /v1/keys</code></th>
               <td>session only</td>
-              <td>Mint a key with <code>{name, scopes}</code>. The response is the only time the key appears.</td>
+              <td>Mint a key with <code>{"name":"...","scopes":[...]}</code>. The name is 1 to 64 printable ASCII characters. Scopes are optional. 201 with <code>key</code>, <code>fingerprint</code>, <code>name</code>, <code>scopes</code>, and <code>created</code>. The response is the only time the key appears.</td>
             </tr>
             <tr>
               <th scope="row"><code>GET /v1/keys</code></th>
               <td>session only</td>
-              <td>Fingerprints, names, and scopes. Never the key.</td>
+              <td><code>{"keys":[...]}</code>: fingerprint, name, scopes, and created, for keys not revoked. Never the key.</td>
             </tr>
             <tr>
               <th scope="row"><code>DELETE /v1/keys/{fingerprint}</code></th>
               <td>session only</td>
-              <td>Revoke that key. Immediate.</td>
+              <td>Revoke that key. Immediate. 204, or 404.</td>
             </tr>
           </tbody>
         </table>
       </div>
       <ul class="props">
-        <li><strong>An upload is age, or it is refused.</strong> At most 256KiB. Age binary or age armor. Exactly one stanza in the header, and it is <code>scrypt</code>. A recipient-key stanza, plaintext, YAML, a shell script, and an empty body are <code>400 {"error":"refused ciphertext"}</code>.</li>
-        <li><strong>Rate limits.</strong> 10 label reservations and 30 uploads per account per hour. 60 login starts per address per hour.</li>
+        <li><strong>An upload is age, or it is refused.</strong> At most 256KiB. Age binary or age armor. Exactly one stanza in the header, and it is <code>scrypt</code>. The scrypt work factor is at most 22, the most <code>age</code> accepts by default. A recipient-key stanza, plaintext, YAML, a shell script, an empty body, and a body over the cap are <code>400 {"error":"refused ciphertext"}</code>. Armor is unwrapped, so the stored and served file is always binary age.</li>
+        <li><strong>Rate limits.</strong> 10 label reservation attempts and 30 uploads per account per hour. 60 login starts per address per hour. Windows are fixed hours. Past a limit the answer is <code>429 {"error":"rate limited"}</code>. The address is kept only as a SHA-256 hash.</li>
+        <li><strong>Other errors.</strong> 401 <code>unauthorized</code>. 403 <code>forbidden</code> for a missing scope, or a key on a session-only route. 403 <code>csrf</code>. 404 <code>not found</code>. 405 <code>method not allowed</code>, with an <code>Allow</code> header. 413 and 415 for a JSON body. 500 <code>internal error</code>.</li>
         <li><strong>Audit.</strong> A row for each reserve, upload, delete, and key event: time, account, label, version, sha256, key fingerprint. Never a body, a key, or a token.</li>
       </ul>
       <div class="table-scroll">

@@ -14,14 +14,14 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="blunix">
   <meta property="og:title" content="blunix, a quiet Debian host">
-  <meta property="og:description" content="blunix is a quiet Debian host for cloud nodes, named for the Russian Blue. A test image and the installer boot in a VM, unsigned. Signing and rollback are designed, not built.">
+  <meta property="og:description" content="blunix is a quiet Debian host for cloud nodes, named for the Russian Blue. The portal, the API and the build hosts are live. Release signing is set up. The first signed release is next. Rollback is designed, not built.">
   <meta property="og:url" content="https://blunix.io/">
   <meta property="og:image" content="https://blunix.io/assets/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="blunix: a quiet Debian host for cloud nodes.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="description" content="blunix is a quiet Debian host for cloud nodes, named for the Russian Blue. A test image and the installer boot in a VM, unsigned. Signing and rollback are designed, not built.">
+  <meta name="description" content="blunix is a quiet Debian host for cloud nodes, named for the Russian Blue. The portal, the API and the build hosts are live. Release signing is set up. The first signed release is next. Rollback is designed, not built.">
   <link rel="stylesheet" href="css/site.css">
   <script type="module" src="js/live.js"></script>
 </head>
@@ -36,6 +36,7 @@
       <a href="index.html" aria-current="page">Host</a>
       <a href="install.html">Install</a>
       <a href="access.html">Access</a>
+      <a href="tools.html">Tools</a>
       <a href="log.html">Log</a>
       <a href="account.html">Account</a>
       <a href="service.html">Service</a>
@@ -69,7 +70,7 @@
         <li><picture><source type="image/avif" srcset="assets/cat/spot-sleep-96.avif 1x, assets/cat/spot-sleep-192.avif 2x"><source type="image/webp" srcset="assets/cat/spot-sleep-96.webp 1x, assets/cat/spot-sleep-192.webp 2x"><img src="assets/cat/spot-sleep-192.png" srcset="assets/cat/spot-sleep-96.png 1x, assets/cat/spot-sleep-192.png 2x" width="192" height="192" alt="" class="spot" loading="lazy" decoding="async"></picture><strong>Quiet by default.</strong> The regular boot starts none of the access programs, and the unit list fits on one screen. <span class="state">In the test image</span></li>
         <li><picture><source type="image/avif" srcset="assets/cat/spot-sit-96.avif 1x, assets/cat/spot-sit-192.avif 2x"><source type="image/webp" srcset="assets/cat/spot-sit-96.webp 1x, assets/cat/spot-sit-192.webp 2x"><img src="assets/cat/spot-sit-192.png" srcset="assets/cat/spot-sit-96.png 1x, assets/cat/spot-sit-192.png 2x" width="192" height="192" alt="" class="spot" loading="lazy" decoding="async"></picture><strong>Small footprint.</strong> Debian stable packages and a short default set: ssh, network, time, containers. Root stays available for the person who has to see why a node failed. <span class="state">In the test image</span></li>
         <li><picture><source type="image/avif" srcset="assets/cat/spot-paw-96.avif 1x, assets/cat/spot-paw-192.avif 2x"><source type="image/webp" srcset="assets/cat/spot-paw-96.webp 1x, assets/cat/spot-paw-192.webp 2x"><img src="assets/cat/spot-paw-192.png" srcset="assets/cat/spot-paw-96.png 1x, assets/cat/spot-paw-192.png 2x" width="192" height="192" alt="" class="spot" loading="lazy" decoding="async"></picture><strong>Speaks when you ask.</strong> The boot menu beeps when it is ready. Key 1 or key 2 starts speech and braille after the kernel, so a blind operator can answer the install prompts. <span class="state">In the test image and the installer</span></li>
-        <li><picture><source type="image/avif" srcset="assets/cat/spot-peek-96.avif 1x, assets/cat/spot-peek-192.avif 2x"><source type="image/webp" srcset="assets/cat/spot-peek-96.webp 1x, assets/cat/spot-peek-192.webp 2x"><img src="assets/cat/spot-peek-192.png" srcset="assets/cat/spot-peek-96.png 1x, assets/cat/spot-peek-192.png 2x" width="192" height="192" alt="" class="spot" loading="lazy" decoding="async"></picture><strong>Watchful.</strong> The installer checks the image's sha256 before it writes a disk, and a mismatch writes nothing. A signed boot, where the machine refuses a boot file it cannot verify, is designed. <span class="state">Digest check built. Signing designed, not built</span></li>
+        <li><picture><source type="image/avif" srcset="assets/cat/spot-peek-96.avif 1x, assets/cat/spot-peek-192.avif 2x"><source type="image/webp" srcset="assets/cat/spot-peek-96.webp 1x, assets/cat/spot-peek-192.webp 2x"><img src="assets/cat/spot-peek-192.png" srcset="assets/cat/spot-peek-96.png 1x, assets/cat/spot-peek-192.png 2x" width="192" height="192" alt="" class="spot" loading="lazy" decoding="async"></picture><strong>Watchful.</strong> The installer checks the image's sha256 before it writes a disk, and a mismatch writes nothing. Releases will be signed with a published release key. The first signed release is next. A signed boot, where the machine refuses a boot file it cannot verify, is designed. <span class="state">Digest check built. Release signing set up. Signed boot designed, not built</span></li>
         <li><picture><source type="image/avif" srcset="assets/cat/spot-land-96.avif 1x, assets/cat/spot-land-192.avif 2x"><source type="image/webp" srcset="assets/cat/spot-land-96.webp 1x, assets/cat/spot-land-192.webp 2x"><img src="assets/cat/spot-land-192.png" srcset="assets/cat/spot-land-96.png 1x, assets/cat/spot-land-192.png 2x" width="192" height="192" alt="" class="spot" loading="lazy" decoding="async"></picture><strong>Lands on its feet.</strong> An update installs beside the running image, and the previous one still boots. That is rollback. <span class="state">Designed, not built</span></li>
         <li><picture><source type="image/avif" srcset="assets/cat/spot-stretch-96.avif 1x, assets/cat/spot-stretch-192.avif 2x"><source type="image/webp" srcset="assets/cat/spot-stretch-96.webp 1x, assets/cat/spot-stretch-192.webp 2x"><img src="assets/cat/spot-stretch-192.png" srcset="assets/cat/spot-stretch-96.png 1x, assets/cat/spot-stretch-192.png 2x" width="192" height="192" alt="" class="spot" loading="lazy" decoding="async"></picture><strong>Nine lives, within reason.</strong> We will not promise nine. The plan is two: root slots A and B, so there is always one to fall back to. <span class="state">Planned</span></li>
       </ul>
@@ -87,7 +88,7 @@
         <article>
           <figure class="scene"><picture><source type="image/avif" srcset="assets/cat/held-still-320.avif 320w, assets/cat/held-still-640.avif 640w" sizes="260px"><source type="image/webp" srcset="assets/cat/held-still-320.webp 320w, assets/cat/held-still-640.webp 640w" sizes="260px"><img src="assets/cat/held-still-640.jpg" srcset="assets/cat/held-still-320.jpg 320w, assets/cat/held-still-640.jpg 640w" sizes="260px" width="640" height="640" alt="Blubie sits upright and perfectly still on a low ledge, tail curled at its side." loading="lazy" decoding="async"></picture></figure>
           <h3>Debian, held still</h3>
-          <p>Packages come from Debian stable. An update is a new signed image, and the previous one still boots. Signing and rollback are designed, not built.</p>
+          <p>Packages come from Debian stable. An update is a new signed image, and the previous one still boots. Release signing is set up, and the first signed release is next. Rollback is designed, not built.</p>
         </article>
         <article>
           <figure class="scene"><picture><source type="image/avif" srcset="assets/cat/shell-320.avif 320w, assets/cat/shell-640.avif 640w" sizes="260px"><source type="image/webp" srcset="assets/cat/shell-320.webp 320w, assets/cat/shell-640.webp 640w" sizes="260px"><img src="assets/cat/shell-640.jpg" srcset="assets/cat/shell-320.jpg 320w, assets/cat/shell-640.jpg 640w" sizes="260px" width="640" height="640" alt="Blubie sits beside a small terminal whose screen glows green." loading="lazy" decoding="async"></picture></figure>
@@ -121,16 +122,18 @@
           <span class="kicker">No tall tales</span>
           <h2 id="exists-h">What exists</h2>
         </div>
-        <p>Built means the code and its tests are in the repository. Deployed means it answers on the internet. Most of this is built and not deployed yet.</p>
+        <p>Built means the code and its tests are in the repository. Live means it answers on the internet. Each line says which.</p>
       </div>
       <ul class="status-list">
         <li><strong>Boots in a VM, unsigned</strong><span>A test image boots in a VM. The installer ISO boots in a VM, asks for the build hostname and the key with echo off, checks the image digest, and writes the disk. Neither is signed.</span></li>
-        <li><strong>Releases</strong><span>Each GitHub release holds the unsigned test image and the installer ISO, with a <code>SHA256SUMS</code> file. The panel above shows only what GitHub has actually published. If it says there is none, there is none yet.</span></li>
-        <li><strong>Built and tested, not deployed</strong><span>The API at <span class="host">api.blunix.io</span>, the portal at <span class="host">build.blunix.io</span>, and the build hosts on <span class="host">blnx.io</span>. In the portal the browser makes the key and encrypts with age. The server only ever stores ciphertext.</span></li>
-        <li><strong>Designed, not built</strong><span>Image signing. sysupdate updates and rollback. The image log. Enrolled machines. The service client on each machine. The troubleshoot collector. Google and GitHub sign-in.</span></li>
+        <li><strong>Releases</strong><span>v0.1.0 is an unsigned test release on Debian 13: the installer ISO for UEFI and BIOS, a disk image, netboot media, and a <code>SHA256SUMS</code> file. Checksums prove the bytes match. They do not prove who built them. The panel above shows only what GitHub has actually published.</span></li>
+        <li><strong>Release signing, set up</strong><span>A build server builds official images only from signed git tags. It holds no signing key. Signing happens offline, with a published release key. The first signed release is next. <a href="log.html#verify-h">Read how to verify a release</a>.</span></li>
+        <li><strong>Live</strong><span>The API at <span class="host">api.blunix.io</span>, the portal at <span class="host">build.blunix.io</span>, and the build hosts on <span class="host">blnx.io</span>. Sign-in is After Dark Systems SSO. In the portal the browser makes the key and encrypts with age. The server only ever stores ciphertext. Pinned version hosts are not on yet.</span></li>
+        <li><strong>Tools, built</strong><span>The <code>blunix</code> command for checks and support reports, <code>gitbuild</code> for source builds, the build-proxy for netboot LANs, and the image helpers. <a href="tools.html">Read the tools</a>.</span></li>
+        <li><strong>Designed, not built</strong><span>Signed boot. sysupdate updates and rollback. The image log. Enrolled machines. The service client on each machine. The troubleshoot collector. Google and GitHub sign-in.</span></li>
       </ul>
       <p class="portal-status" data-portal-status aria-live="polite"><span data-portal-words>The portal is not open yet.</span> Its address is <a href="https://build.blunix.io/">build.blunix.io</a>.</p>
-      <p class="note"><a href="install.html">Read the install sequence</a>. <a href="access.html">Read the five boot entries</a>. <a href="log.html">Read the release log</a>. <a href="account.html">Read the account</a>. <a href="api.html">Read the API</a>. <a href="service.html">Read the service design</a>. <a href="platform.html">Read the platform design</a>. <a href="architecture.html">See how it fits together</a>.</p>
+      <p class="note"><a href="install.html">Read the install sequence</a>. <a href="tools.html">Read the tools</a>. <a href="access.html">Read the five boot entries</a>. <a href="log.html">Read the release log</a>. <a href="account.html">Read the account</a>. <a href="api.html">Read the API</a>. <a href="service.html">Read the service design</a>. <a href="platform.html">Read the platform design</a>. <a href="architecture.html">See how it fits together</a>.</p>
     </section>
     <section class="wrap band" aria-labelledby="cat-h">
       <div class="band-head">

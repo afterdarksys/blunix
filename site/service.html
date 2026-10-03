@@ -36,6 +36,7 @@
       <a href="index.html">Host</a>
       <a href="install.html">Install</a>
       <a href="access.html">Access</a>
+      <a href="tools.html">Tools</a>
       <a href="log.html">Log</a>
       <a href="account.html">Account</a>
       <a href="service.html" aria-current="page">Service</a>
@@ -54,7 +55,7 @@
       </div>
       <figure class="mark mark-small scene">
         <picture><source type="image/avif" srcset="assets/cat/shell-320.avif 320w, assets/cat/shell-640.avif 640w" sizes="(max-width: 800px) 240px, 300px"><source type="image/webp" srcset="assets/cat/shell-320.webp 320w, assets/cat/shell-640.webp 640w" sizes="(max-width: 800px) 240px, 300px"><img src="assets/cat/shell-640.jpg" srcset="assets/cat/shell-320.jpg 320w, assets/cat/shell-640.jpg 640w" sizes="(max-width: 800px) 240px, 300px" width="640" height="640" alt="Blubie, the Blunix cat, sits beside a small terminal whose screen glows green, waiting for a prompt." decoding="async"></picture>
-        <figcaption>The machine will call <span class="host">https://api.blunix.io/v1</span>. The machine routes are designed, not built.</figcaption>
+        <figcaption>The machine will call <span class="host">https://api.blunix.io/v1</span>. The API is live. The machine routes are designed, not built.</figcaption>
       </figure>
     </section>
 
@@ -116,7 +117,7 @@
     <section class="wrap band">
       <div class="band-head">
         <h2>Offline</h2>
-        <p>The <code>blunix</code> CLI installs on your computer. It exports and imports a JSON bundle. The bundle holds ciphertext and metadata. It has no passphrase field and no API key.</p>
+        <p>The <code>blunix</code> CLI installs on your computer. The design adds a <code>blunix service</code> command that exports and imports a JSON bundle. The bundle holds ciphertext and metadata. It has no passphrase field and no API key.</p>
       </div>
       <ol class="steps">
         <li>
@@ -136,7 +137,7 @@
           <p>When a link exists, <code>blunix service checkin</code> registers the machine. Until then the API does not know it, and the machine is still configured.</p>
         </li>
       </ol>
-      <p class="note">Speech and large print use the sentences in the next section. Silence means no. A quiet cloud profile may reboot inside a maintenance window. A speech profile may not.</p>
+      <p class="note">The <code>blunix</code> CLI exists today, with commands such as <code>blunix doctor</code> and <code>blunix proxy</code>. The <code>blunix service</code> commands above are designed, not built. Speech and large print use the sentences in the next section. Silence means no. A quiet cloud profile may reboot inside a maintenance window. A speech profile may not.</p>
     </section>
 
     <section class="wrap band">
@@ -229,7 +230,7 @@
         <li><strong>The image still refuses a sysext list.</strong> That control stays closed. Orca remains an optional extension the cloud image does not install.</li>
         <li><strong>The channel the schema accepts today is <code>stable</code>.</strong> A second channel is a later change.</li>
         <li><strong>A tool with no digest is shown as waiting.</strong> It cannot be selected. The client does not go fetch a newer one.</li>
-        <li><strong>The browser encrypts.</strong> The upload is ciphertext. This page has no form, and it does not submit a passphrase.</li>
+        <li><strong>The browser encrypts.</strong> The upload is ciphertext. Composing and uploading are live in the <a href="https://build.blunix.io/">portal</a>, after you sign in with After Dark Systems SSO. This page has no form, and it does not submit a passphrase.</li>
       </ul>
     </section>
 
