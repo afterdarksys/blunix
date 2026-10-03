@@ -60,7 +60,8 @@ def doctor(root):
         "tools_on_operator_host": {name: bool(shutil.which(name)) for name in TOOLS},
         "root_free_bytes": fs.f_bavail * fs.f_frsize,
         "root_free_inodes": fs.f_favail,
-        "note": "Availability and capacity checks; not a full system health assessment.",
+        "note": "Tools are checked on the machine running this command; --root changes "
+        "only the free-space figures. Not a full system health assessment.",
     }
 
 
@@ -79,7 +80,14 @@ def security(root):
         unsafe = False
         for part in name.split("/"):
             path /= part
-            if path.is_symlink():
+            try:
+                link = path.is_symlink()
+            except OSError:
+                # e.g. EACCES on /root/.ssh as a non-root user: say so, fail closed.
+                findings.append({"path": "/" + name, "issue": "unreadable metadata"})
+                unsafe = True
+                break
+            if link:
                 findings.append(
                     {"path": "/" + name, "issue": "symlink in protected path"}
                 )
@@ -119,8 +127,11 @@ def integrity(root, product=None):
             item["status"] = (
                 "changed" if item["changed"] or item["links_changed"] else "ok"
             )
-        except (OSError, BlunixError, ValueError, KeyError):
-            item = {"product": name, "status": "error"}
+        except BlunixError as exc:
+            # BlunixError text is written for operators and never holds file bodies.
+            item = {"product": name, "status": "error", "reason": str(exc)}
+        except (OSError, ValueError, KeyError) as exc:
+            item = {"product": name, "status": "error", "reason": type(exc).__name__}
         reports.append(item)
     return {
         "status": "findings" if any(p["status"] != "ok" for p in reports) else "ok",
@@ -129,19 +140,34 @@ def integrity(root, product=None):
     }
 
 
+_LSBLK = ["lsblk", "--json", "--bytes", "--output"]
+
+
+def _with_mountpoints(dev):
+    # Old lsblk: one "mountpoint" string. New lsblk: a "mountpoints" list.
+    dev = dict(dev)
+    dev["mountpoints"] = [dev.pop("mountpoint", None)]
+    if isinstance(dev.get("children"), list):
+        dev["children"] = [_with_mountpoints(c) for c in dev["children"]]
+    return dev
+
+
 def disks():
-    result = command(
-        ["lsblk", "--json", "--bytes", "--output", "KNAME,TYPE,SIZE,RO,RM,MOUNTPOINTS"]
-    )
-    if result["status"] == "ok":
-        try:
-            return {
-                "status": "ok",
-                "devices": json.loads(result["output"])["blockdevices"],
-            }
-        except (ValueError, KeyError):
-            return {"status": "error", "tool": "lsblk"}
-    return result
+    # MOUNTPOINTS needs util-linux 2.37 (Debian 12). Debian 10 and 11 refuse it, so
+    # fall back to MOUNTPOINT and report the same shape either way.
+    result = command(_LSBLK + ["KNAME,TYPE,SIZE,RO,RM,MOUNTPOINTS"])
+    legacy = result["status"] == "error"
+    if legacy:
+        result = command(_LSBLK + ["KNAME,TYPE,SIZE,RO,RM,MOUNTPOINT"])
+    if result["status"] != "ok":
+        return result
+    try:
+        devices = json.loads(result["output"])["blockdevices"]
+        if legacy:
+            devices = [_with_mountpoints(d) for d in devices]
+        return {"status": "ok", "devices": devices}
+    except (ValueError, KeyError, TypeError, AttributeError):
+        return {"status": "error", "tool": "lsblk"}
 
 
 def admin():

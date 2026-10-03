@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_commit": "b69aa422ab2256a5f4d9fed1806e55327615bf0d",
+  "source_commit": "e5fa4c2a3153f8067d281efeca2babe82b13b6ec",
   "files": {
     ".github/workflows/host-tests.yml": {
       "sha256": "4dcfb203f6fdd7c088e048f4af005fd0da57eca46d9e1c259fccb6e6d308372a",
@@ -139,11 +139,11 @@
       "executable": true
     },
     "image/scan-raw.py": {
-      "sha256": "db1b1ed80575d7bb10e91ccba9add98ec98f3c699fe298939080198fd9faa8f6",
+      "sha256": "ad0816b1c876df46e388adc0daf313ca61e6044cb3e2e174cb57a3983dc0feb8",
       "executable": true
     },
     "image/scan-root.py": {
-      "sha256": "813ad43c7f2c60528124af84d330f0239328c5dcca5f2b7b86e2df2ee68a4db3",
+      "sha256": "aea97d3b61c5f0a380449567eb708213c266ee83fda376029bd3af8d82354b02",
       "executable": true
     },
     "image/seal-root.py": {
@@ -199,7 +199,7 @@
       "executable": false
     },
     "lib/blunix/cli.py": {
-      "sha256": "800242d2b24f652b3f638c22486d2d009aa7be6fa1ffefae1762079e54181862",
+      "sha256": "2110173f4d55ae0c2e34393eab25fe9905e007e633b3e9b26c381d960f401e21",
       "executable": false
     },
     "lib/blunix/cmd.py": {
@@ -219,7 +219,7 @@
       "executable": false
     },
     "lib/blunix/gitbuild.py": {
-      "sha256": "34955be7d22a7ca60cbd533629af6066792d2ab5a91aa951722f3457c5a2b3c7",
+      "sha256": "780aea00d564e443b25d53e18e1c19951d70fa16ed2b9639133d9abd8a4054fa",
       "executable": false
     },
     "lib/blunix/gitbuild_install.py": {
@@ -247,11 +247,11 @@
       "executable": false
     },
     "lib/blunix/ops.py": {
-      "sha256": "23212fc8e267fe711c932c07f33d078a951a0b9b15ba7936bab7341980c4b65b",
+      "sha256": "b89f575f780a477547bee4bd705a3477f832c904fcde016ba429d96ad1d3eddb",
       "executable": false
     },
     "lib/blunix/proxy.py": {
-      "sha256": "3750466efc6568ec715e7cc333865381ac6be3f04a99dcf0bdd6a4cea9daec14",
+      "sha256": "9b911e704f4204095caafd3639f53b66227688f290e162696347c6fc63fcb642",
       "executable": false
     },
     "lib/blunix/proxy_boot.py": {
@@ -355,7 +355,7 @@
       "executable": false
     },
     "tests/test_ops.py": {
-      "sha256": "b9da889c48d297f5b886269cbebbe4397b00459a5a624ece490e57ffa83a05ec",
+      "sha256": "20fc59cd65e30612d28124a35acc163cef002b1dee5e9a48f30ca3e944050e60",
       "executable": false
     },
     "tests/test_proxy.py": {
@@ -367,7 +367,7 @@
       "executable": false
     },
     "tests/test_scan_raw.py": {
-      "sha256": "00204713daa6f6a84832bebd7b619b2a2ba869cff37dbde4ff4970afd5ba9c9b",
+      "sha256": "b9d42cea4650c538bc622f1330dba4c2234631b0d8c87f9514f695e371e53ee7",
       "executable": false
     },
     "tests/test_scan_root.py": {
