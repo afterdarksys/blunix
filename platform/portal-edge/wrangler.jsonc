@@ -1,0 +1,8 @@
+// build.blunix.io front door for the build-blunix-io Pages project. See src/index.ts.
+{
+  "name": "blunix-portal-edge",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-15",
+  "workers_dev": false,
+  "routes": [{ "pattern": "build.blunix.io/*", "zone_name": "blunix.io" }]
+}
