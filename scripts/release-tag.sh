@@ -41,6 +41,8 @@ if [[ -z "${GPG_TTY:-}" ]] && tty -s; then
   GPG_TTY=$(tty)
   export GPG_TTY
 fi
+# A gpg-agent that is already running keeps the tty it started on; point it here.
+gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1 || true
 
 echo "release-tag: signing $tag on $(git rev-parse --short HEAD) with $FPR"
 git -c gpg.format=openpgp tag -s -u "$FPR" -m "blunix $tag" "$tag"
