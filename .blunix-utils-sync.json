@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_commit": "183e628a6edd410dd6b0ccf631b3b849f8f46b39",
+  "source_commit": "86d887059ff0acfc520661fff70faba20c68e05a",
   "files": {
     ".github/workflows/host-tests.yml": {
       "sha256": "4dcfb203f6fdd7c088e048f4af005fd0da57eca46d9e1c259fccb6e6d308372a",
@@ -127,7 +127,7 @@
       "executable": true
     },
     "image/release/RELEASE-NOTES.md": {
-      "sha256": "4f2c8ed483aa4cec2f0b77af8da605cb65a84c4e36837316069a6244a05c97b3",
+      "sha256": "465f8159c3dcfc00b66e7a5793c007dfb61f8ee7ae9c2189c17b958f190dcad5",
       "executable": false
     },
     "image/release/bootstrap-console.conf": {
@@ -351,7 +351,7 @@
       "executable": false
     },
     "tests/test_image_scripts.py": {
-      "sha256": "9230629f68ff1ceb3245b141fa033c6ece1f03280c841d67451fc60c5c23521c",
+      "sha256": "b61737bb865b141f525cf85b3213233b8309bf34e7bcfd4aa00ced0d23cfcd5f",
       "executable": false
     },
     "tests/test_installer.py": {
