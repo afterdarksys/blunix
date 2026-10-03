@@ -40,18 +40,20 @@ async function owned(env: Env, p: Principal, label: string): Promise<LabelRow | 
 }
 
 export async function me(env: Env, p: Principal): Promise<Response> {
-  const account = await env.DB.prepare("SELECT id, created FROM accounts WHERE id = ?")
+  const account = await env.DB.prepare("SELECT id, display_name, created FROM accounts WHERE id = ?")
     .bind(p.accountId)
-    .first<{ id: number; created: number }>();
+    .first<{ id: number; display_name: string | null; created: number }>();
   if (!account) return error(401, "unauthorized");
   const { results } = await env.DB.prepare(
     "SELECT label FROM labels WHERE account_id = ? AND deleted_at IS NULL ORDER BY label",
   )
     .bind(p.accountId)
     .all<{ label: string }>();
-  // The id is a string because the portal shows the first string field it finds.
+  // The portal shows the first string field it finds: name (from the ID token at
+  // sign-in), else the id, which is a string for that reason.
+  const shown: { name?: string } = account.display_name ? { name: account.display_name } : {};
   return json(200, {
-    account: { id: String(account.id), created: iso(account.created) },
+    account: { ...shown, id: String(account.id), created: iso(account.created) },
     labels: results.map((r) => r.label),
   });
 }

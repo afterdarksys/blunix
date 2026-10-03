@@ -26,11 +26,12 @@ interface Claims {
   sub?: string;
   nonce?: string;
   exp?: number;
+  extra?: Record<string, unknown>;
 }
 
 async function idToken(nonce: string, c: Claims = {}): Promise<string> {
   const kid = c.kid ?? "rs";
-  const claims: Record<string, unknown> = { nonce: c.nonce ?? nonce };
+  const claims: Record<string, unknown> = { ...c.extra, nonce: c.nonce ?? nonce };
   if (c.azp) claims.azp = c.azp;
   return new SignJWT(claims)
     .setProtectedHeader({ alg: c.alg ?? keys[kid].jwk.alg!, kid })
@@ -141,7 +142,7 @@ describe("OIDC login start", () => {
     expect(q.get("response_type")).toBe("code");
     expect(q.get("client_id")).toBe(CLIENT);
     expect(q.get("redirect_uri")).toBe("https://api.blunix.io/v1/auth/callback");
-    expect(q.get("scope")).toBe("openid");
+    expect(q.get("scope")).toBe("openid email profile");
     expect(q.get("code_challenge_method")).toBe("S256");
     expect(s.state).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(s.nonce).toMatch(/^[A-Za-z0-9_-]{43}$/);
@@ -230,6 +231,43 @@ describe("OIDC callback", () => {
     await loginWith({ sub: "same-person" });
     const n = await env.DB.prepare("SELECT COUNT(*) AS n FROM accounts WHERE sub = 'same-person'").first<{ n: number }>();
     expect(n!.n).toBe(1);
+  });
+
+  async function shownAs(c: Claims): Promise<Record<string, unknown>> {
+    const res = await loginWith(c);
+    expect(res.status).toBe(302);
+    const cookie = res.headers.getSetCookie().find((x) => x.startsWith("__Host-blx_session="))!.split(";")[0];
+    const me = await call(`${API}/v1/me`, { headers: { cookie } });
+    expect(me.status).toBe(200);
+    return ((await me.json()) as { account: Record<string, unknown> }).account;
+  }
+
+  it("shows the ID token's name in /me, falling back to preferred_username, then email", async () => {
+    expect((await shownAs({ sub: "n1", extra: { name: "Ryan Coleman", email: "r@x.test" } })).name).toBe("Ryan Coleman");
+    expect((await shownAs({ sub: "n2", extra: { preferred_username: "rycat", email: "r@x.test" } })).name).toBe("rycat");
+    expect((await shownAs({ sub: "n3", extra: { email: "r@x.test" } })).name).toBe("r@x.test");
+    const bare = await shownAs({ sub: "n4" });
+    expect(bare.name).toBeUndefined();
+    expect(typeof bare.id).toBe("string");
+  });
+
+  it("drops control, format and bidi characters and caps the name at 100 characters", async () => {
+    expect((await shownAs({ sub: "h1", extra: { name: "Ry\u202Ean\u0000\u200B\n  Cole\u2028man" } })).name).toBe("Ryan Coleman");
+    expect((await shownAs({ sub: "h2", extra: { name: "\u0007\u202E\u200B" , email: "f@x.test" } })).name).toBe("f@x.test");
+    expect([...((await shownAs({ sub: "h3", extra: { name: "\u{1F431}".repeat(500) } })).name as string)]).toHaveLength(100);
+  });
+
+  it("ignores non-string name claims", async () => {
+    const a = await shownAs({ sub: "t1", extra: { name: 42, preferred_username: { evil: true }, email: ["a@x.test"] } });
+    expect(a.name).toBeUndefined();
+  });
+
+  it("refreshes the name at each sign-in, and never uses it for identity", async () => {
+    expect((await shownAs({ sub: "same", extra: { name: "Old Name" } })).name).toBe("Old Name");
+    expect((await shownAs({ sub: "same", extra: { name: "New Name" } })).name).toBe("New Name");
+    await shownAs({ sub: "other", extra: { name: "New Name" } });
+    const n = await env.DB.prepare("SELECT COUNT(*) AS n FROM accounts WHERE display_name = 'New Name'").first<{ n: number }>();
+    expect(n!.n).toBe(2);
   });
 
   it("rejects alg none", async () => {

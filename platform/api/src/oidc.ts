@@ -139,7 +139,7 @@ export async function login(req: Request, env: Env): Promise<Response> {
   url.searchParams.set("response_type", "code");
   url.searchParams.set("client_id", env.OIDC_CLIENT_ID);
   url.searchParams.set("redirect_uri", CALLBACK_URL);
-  url.searchParams.set("scope", "openid");
+  url.searchParams.set("scope", "openid email profile");
   url.searchParams.set("state", state);
   url.searchParams.set("nonce", nonce);
   url.searchParams.set("code_challenge", b64url(await sha256(verifier)));
@@ -147,7 +147,27 @@ export async function login(req: Request, env: Env): Promise<Response> {
   return redirect(url.toString(), [stateCookie(state)]);
 }
 
-async function verifyIdToken(env: Env, doc: Discovery, idToken: string, nonce: string): Promise<string | null> {
+// What the portal shows as "Signed in as ...": name, else preferred_username, else
+// email, from the already-verified ID token. Display only: never used for identity
+// (that is iss + sub) or authorization. Control and format characters are dropped and
+// the result is capped, so a hostile claim cannot forge layout or bloat the row.
+const DISPLAY_MAX = 100;
+export function displayName(p: Record<string, unknown>): string | null {
+  for (const k of ["name", "preferred_username", "email"]) {
+    const v = p[k];
+    if (typeof v !== "string") continue;
+    const clean = v.normalize("NFC").replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu, "").replace(/\s+/g, " ").trim();
+    if (clean) return [...clean].slice(0, DISPLAY_MAX).join("");
+  }
+  return null;
+}
+
+async function verifyIdToken(
+  env: Env,
+  doc: Discovery,
+  idToken: string,
+  nonce: string,
+): Promise<{ sub: string; name: string | null } | null> {
   const options = {
     issuer: env.OIDC_ISSUER,
     audience: env.OIDC_CLIENT_ID,
@@ -168,7 +188,7 @@ async function verifyIdToken(env: Env, doc: Discovery, idToken: string, nonce: s
   const multi = Array.isArray(p.aud) && p.aud.length > 1;
   if ((multi || p.azp !== undefined) && p.azp !== env.OIDC_CLIENT_ID) return null;
   if (typeof p.sub !== "string" || p.sub.length === 0 || p.sub.length > 255) return null;
-  return p.sub;
+  return { sub: p.sub, name: displayName(p) };
 }
 
 export async function callback(req: Request, env: Env): Promise<Response> {
@@ -187,7 +207,7 @@ export async function callback(req: Request, env: Env): Promise<Response> {
     .first<{ verifier: string; nonce: string; expires: number }>();
   if (!pending || pending.expires < now()) return failed();
 
-  let sub: string | null;
+  let who: { sub: string; name: string | null } | null;
   try {
     const doc = await discovery(env);
     const basic = btoa(`${encodeURIComponent(env.OIDC_CLIENT_ID)}:${encodeURIComponent(env.OIDC_CLIENT_SECRET)}`);
@@ -207,18 +227,19 @@ export async function callback(req: Request, env: Env): Promise<Response> {
       }),
     })) as { id_token?: unknown } | null;
     if (!tokens || typeof tokens.id_token !== "string") return failed();
-    sub = await verifyIdToken(env, doc, tokens.id_token, pending.nonce);
+    who = await verifyIdToken(env, doc, tokens.id_token, pending.nonce);
   } catch (e) {
     console.error("blunix-api: sign-in refused:", e instanceof Error ? e.name : "error");
     return failed();
   }
-  if (sub === null) return failed();
+  if (who === null) return failed();
 
   const t = now();
   const account = await env.DB.prepare(
-    "INSERT INTO accounts (iss, sub, created) VALUES (?, ?, ?) ON CONFLICT (iss, sub) DO UPDATE SET sub = excluded.sub RETURNING id",
+    "INSERT INTO accounts (iss, sub, display_name, created) VALUES (?, ?, ?, ?) " +
+      "ON CONFLICT (iss, sub) DO UPDATE SET display_name = excluded.display_name RETURNING id",
   )
-    .bind(env.OIDC_ISSUER, sub, t)
+    .bind(env.OIDC_ISSUER, who.sub, who.name, t)
     .first<{ id: number }>();
   if (!account) return error(500, "internal error");
   const token = randomToken();
