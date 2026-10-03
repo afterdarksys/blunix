@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_commit": "e17ec6265cb80d502666007e5c5f1a1c3d7ab267",
+  "source_commit": "183e628a6edd410dd6b0ccf631b3b849f8f46b39",
   "files": {
     ".github/workflows/host-tests.yml": {
       "sha256": "4dcfb203f6fdd7c088e048f4af005fd0da57eca46d9e1c259fccb6e6d308372a",
@@ -51,7 +51,7 @@
       "executable": false
     },
     "image/README.md": {
-      "sha256": "aed17ba7b986dafcb27f976153eaf3ebfe080ea99606a173afa65db225afe07b",
+      "sha256": "8dee4ff37321d2bb0171283767809887bb1cdd1766a3bd62d2cd108b2b5e61d1",
       "executable": false
     },
     "image/boot-installer-test.sh": {
@@ -138,8 +138,12 @@
       "sha256": "f83ca2dc04d5c96ed8e681cef9f425c837b1f05e05a979989b4b1a188af8a26a",
       "executable": true
     },
+    "image/scan-raw-explain.py": {
+      "sha256": "b1014920eba52f2113424b6c222ba4f988ee77a28139046b6066b9618c0472ad",
+      "executable": true
+    },
     "image/scan-raw.py": {
-      "sha256": "14c93d65adc14a4f155f378a63d07c676e5cd416b7280fdcc5613bbb102b3790",
+      "sha256": "1b0324ae54d0f84af4ce95bf05b03e205573e9d9711123ff3891a51b68db7dbf",
       "executable": true
     },
     "image/scan-root.py": {
@@ -368,6 +372,10 @@
     },
     "tests/test_scan_raw.py": {
       "sha256": "f162b2a4f9f249901aab4e415ce359ee7de08248529e74e969a2ce2d24176108",
+      "executable": false
+    },
+    "tests/test_scan_raw_explain.py": {
+      "sha256": "030d0f0504e857cec5e40de76ddca650d1ff154cbad59bb17c8a304c182f5092",
       "executable": false
     },
     "tests/test_scan_root.py": {
