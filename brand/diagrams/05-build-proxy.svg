@@ -31,15 +31,15 @@
 <path d="M978.0 1516.0 L978.0 777.0" fill="none" stroke="#12161a" stroke-width="3.5" stroke-linejoin="round"/>
 <path d="M978.0 1516.0 L978.0 777.0" fill="none" stroke="none" stroke-width="1" marker-end="url(#proxy-bighead)"/>
 <text x="28.0" y="44.0" font-size="26" fill="#f3efe6" font-weight="700">blunix proxy on an install LAN</text>
-<text x="28.0" y="72.0" font-size="16" fill="#c9c3b6">All built and tested. The key stays in keys.txt and on the printed card.</text>
-<rect x="36" y="146" width="480" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
-<rect x="50.5" y="163.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="67.0" y="175.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<text x="28.0" y="72.0" font-size="16" fill="#c9c3b6">The proxy is built and tested. The key stays in keys.txt and on the printed card.</text>
+<rect x="36" y="146" width="480" height="93" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="55.5" cy="169.0" r="5.5" fill="#a9b4c1"/>
+<text x="67.0" y="175.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DEPLOYED</text>
 <text x="50.0" y="201.0" font-size="18" fill="#f3efe6" font-weight="700">api.blunix.io</text>
 <text x="50.0" y="224.0" font-size="16" fill="#c9c3b6">POST /v1/hosts reserves; POST .../builds uploads.</text>
-<rect x="604" y="146" width="480" height="93" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
-<rect x="618.5" y="163.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="635.0" y="175.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">BUILT, NOT DEPLOYED</text>
+<rect x="604" y="146" width="480" height="93" rx="8" fill="#1b2127" stroke="#a9b4c1" stroke-width="3.5"/>
+<circle cx="623.5" cy="169.0" r="5.5" fill="#a9b4c1"/>
+<text x="635.0" y="175.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">DEPLOYED</text>
 <text x="618.0" y="201.0" font-size="18" fill="#f3efe6" font-weight="700">{label}.blnx.io</text>
 <text x="618.0" y="224.0" font-size="16" fill="#c9c3b6">GET / serves the ciphertext, verified TLS.</text>
 <rect x="52" y="420" width="470" height="159" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
@@ -124,12 +124,12 @@
 <text x="594.0" y="1616.0" font-size="16" fill="#c9c3b6">blunix.proxy= on its kernel line. The operator</text>
 <text x="594.0" y="1638.0" font-size="16" fill="#c9c3b6">types the hostname, then the key from the card.</text>
 <text x="594.0" y="1660.0" font-size="16" fill="#c9c3b6">Decrypted on the machine.</text>
-<rect x="36" y="1727" width="1048" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="11 7"/>
-<rect x="50.5" y="1744.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/>
-<text x="67.0" y="1756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SIGNING: DESIGNED, NOT BUILT</text>
+<rect x="36" y="1727" width="1048" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
+<rect x="50.5" y="1744.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
+<text x="67.0" y="1756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SIGNING: SET UP, NO SIGNED RELEASE YET</text>
 <text x="50.0" y="1782.0" font-size="18" fill="#f3efe6" font-weight="700">Trusted LANs only until images are signed</text>
 <text x="50.0" y="1805.0" font-size="16" fill="#c9c3b6">Kernel, initrd and squashfs travel as plain http. serve&#x27;s startup check proves they match the</text>
-<text x="50.0" y="1827.0" font-size="16" fill="#c9c3b6">SHA256SUMS you trusted, not who built them. iPXE and live-boot verify nothing. Signing is designed.</text>
+<text x="50.0" y="1827.0" font-size="16" fill="#c9c3b6">SHA256SUMS you trusted, not who built them. iPXE and live-boot verify nothing. No signed release yet.</text>
 <rect x="631.7" y="1167.5" width="76.7" height="25.0" rx="4" fill="#161b20"/>
 <text x="670.0" y="1186.5" font-size="16" fill="#c9c3b6" text-anchor="middle">boot.ipxe</text>
 <rect x="784.4" y="1167.5" width="79.1" height="47.0" rx="4" fill="#161b20"/>

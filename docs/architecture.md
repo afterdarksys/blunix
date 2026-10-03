@@ -1,6 +1,6 @@
 # Architecture
 
-How the Blunix install plane fits together, drawn from the code as it stands on 2026-09-30. The same drawings and walk-throughs are on `site/architecture.html`. The walk-through under each drawing says everything the drawing says.
+How the Blunix install plane fits together, drawn from the code and the running services as they stand on 2026-10-03. The same drawings and walk-throughs are on `site/architecture.html`. The walk-through under each drawing says everything the drawing says.
 
 Sources: `brand/src/tools/diagrams.py` draws them (`python3 brand/src/tools/diagrams.py`), and `brand/src/tools/diagrams-png.sh` renders the PNGs at 2x.
 
@@ -21,15 +21,15 @@ PNG at 2x: [`brand/diagrams/01-ecosystem.png`](../brand/diagrams/01-ecosystem.pn
 
 #### What each zone holds
 
-- **Operator's device.** The operator's browser runs the portal's JavaScript (built). It composes the node document, makes the key, and encrypts with age. The key exists here. The browser sends only ciphertext.
-- **adsas.id.** Authentik, the OIDC issuer, runs today. The Blunix client is not set up yet: `OIDC_ISSUER` is empty in `platform/api/wrangler.jsonc`, so sign-in answers 503 until it is.
+- **Operator's device.** The operator's browser runs the portal's JavaScript, which is live. It composes the node document, makes the key, and encrypts with age. The key exists here. The browser sends only ciphertext.
+- **adsas.id.** After Dark Systems SSO, the OpenID Connect identity provider, runs today, and the Blunix client on it is live. It signs the operator in to the portal.
 - **Cloudflare** holds records and ciphertext, never a key. The blunix.io website on Pages is deployed. Its function `/releases.json` reads GitHub, and its page asks `api.blunix.io/v1/health` whether the API is up.
-- **Cloudflare, continued.** The build.blunix.io portal is a separate Pages project, built and not deployed; today that name answers a placeholder. It is same-site with the API, so the session cookie rides the portal's `fetch` calls.
-- **Cloudflare, continued.** The api.blunix.io Worker (`/v1`) is built and not deployed; today that name answers a placeholder. It handles sign-in, labels, builds and API keys. It checks the age header and never decrypts. D1 holds accounts, labels, versions, hashed sessions and hashed API keys, audit rows and rate limits. R2 holds each build at `builds/{label id}/{version}` as the binary age file, and its sha256 is checked before it is served.
-- **Cloudflare, continued.** `{label}.blnx.io` is the same Worker: `GET` and `HEAD` on `/` only. blnx.io is a separate registrable domain, so build hosts never share cookies with the site, the portal or the API. Built, not deployed: blnx.io has no DNS yet.
-- **GitHub.** The repo `afterdarksys/blunix` is live. Its Actions job, in the `production` environment, deploys `site/` and `portal/`. Releases will hold the ISO, `blunix.raw.zst`, the netboot media and `SHA256SUMS`; none is published yet.
-- **Our servers.** The image builder. The build scripts are built and run in privileged Docker. No builder host is set up in the tree yet.
-- **Offline.** The image signing key: designed, not built. It is never on the builder and never on Cloudflare. Nothing is signed today.
+- **Cloudflare, continued.** The build.blunix.io portal is a separate Pages project, and it is live. It is same-site with the API, so the session cookie rides the portal's `fetch` calls.
+- **Cloudflare, continued.** The api.blunix.io Worker (`/v1`) is live. `/v1/health` answers, and the site's portal status line comes from that check. It handles sign-in, labels, builds and API keys. It checks the age header and never decrypts. D1 holds accounts, labels, versions, hashed sessions and hashed API keys, audit rows and rate limits. R2 holds each build at `builds/{label id}/{version}` as the binary age file, and its sha256 is checked before it is served.
+- **Cloudflare, continued.** `{label}.blnx.io` is the same Worker: `GET` and `HEAD` on `/` only. blnx.io is a separate registrable domain, so build hosts never share cookies with the site, the portal or the API. Live, with wildcard DNS and TLS. Only the latest version is served for now: pinned version hosts, `v{n}.{label}.blnx.io`, have no certificates yet.
+- **GitHub.** The repo `afterdarksys/blunix` is live. Its Actions job, in the `production` environment, deploys `site/` and `portal/`. Releases hold the ISO, `blunix.raw.zst`, the netboot media and `SHA256SUMS`. v0.1.0 is an unsigned test release on Debian 13: its checksums prove the bytes match, not who built them.
+- **Release build server.** A separate server, not on Cloudflare. It builds only tags signed by the pinned release key, in a privileged `debian:trixie-slim` container pinned by digest. It is pull-only and holds no signing key. It uploads the images, unsigned, to a staging bucket where objects expire after 30 days.
+- **Offline.** The release signing key, an OpenPGP ed25519 key, on the maintainer's machine. It is never on the build server and never on Cloudflare. It is set up; the first signed release is next.
 - **Customer LAN.** `blunix proxy` on the operator's Linux or Mac, built. `publish` encrypts per machine and uploads ciphertext. `serve` relays `*.blnx.io` and serves netboot media and `boot.ipxe`. The keys are in `keys.txt`, mode 0600, on this computer. The key exists here.
 - **The machine at the console.** The installer (ISO, USB or netboot) or the first-boot bootstrap (raw image), built and booting in a VM. It asks the hostname, then the key with echo off, fetches, decrypts on the machine, and applies. The key exists here while it is typed.
 
@@ -37,8 +37,8 @@ PNG at 2x: [`brand/diagrams/01-ecosystem.png`](../brand/diagrams/01-ecosystem.pn
 
 1. The browser loads the portal page from build.blunix.io.
 2. The browser calls api.blunix.io with the session cookie (`credentials: 'include'`). The build upload on this path is ciphertext only.
-3. The browser and Authentik: the OIDC sign-in redirects, both ways.
-4. The Worker and Authentik: the Worker trades the code and the PKCE verifier for an ID token, and fetches the JWKS to check it.
+3. The browser and After Dark Systems SSO: the sign-in redirects, both ways.
+4. The Worker and After Dark Systems SSO: the Worker trades the code and the PKCE verifier for an ID token, and fetches the JWKS to check it.
 5. The Worker reads and writes D1 and R2.
 6. The build hosts read D1 and R2.
 7. `{label}.blnx.io` to the machine: HTTPS `GET /` over verified TLS. Ciphertext only.
@@ -47,9 +47,10 @@ PNG at 2x: [`brand/diagrams/01-ecosystem.png`](../brand/diagrams/01-ecosystem.pn
 10. The proxy to the Worker: `publish` reserves labels and uploads ciphertext with a `blx_` API key.
 11. The site's `/releases.json` function reads the GitHub Releases API and each release's `SHA256SUMS`.
 12. GitHub Actions deploys the site and the portal to Cloudflare Pages.
-13. The builder's assets reach Releases only when a person runs `gh release upload`. The build does not upload.
+13. The release build server polls GitHub every 10 minutes and fetches new tags. It builds a tag only if its signature checks against the pinned release key.
 14. The installer streams the image from a GitHub release when its medium carries only a release pin. The stream's sha256 must match the pin.
-15. Designed, not built: the offline key signs the builder's digests.
+15. The build server uploads the unsigned images to the staging bucket. The maintainer pulls them from there, verifies them, and signs `SHA256SUMS` offline.
+16. The maintainer publishes the signed GitHub release. The build server cannot publish.
 
 
 ## 2. From sign-in to an applied document
@@ -58,19 +59,19 @@ PNG at 2x: [`brand/diagrams/01-ecosystem.png`](../brand/diagrams/01-ecosystem.pn
 
 PNG at 2x: [`brand/diagrams/02-web-bootstrap.png`](../brand/diagrams/02-web-bootstrap.png)
 
-Six participants: the operator, the browser running the portal, Authentik at adsas.id, the api.blunix.io Worker (with D1 and R2), the `{label}.blnx.io` build host (the same Worker), and the machine at the console. The key exists in three places only: the browser, from step 14 until the install card closes in step 21; the operator's install card, from step 20; and the machine, from step 23 until it decrypts in step 27. It is never on a server.
+Six participants: the operator, the browser running the portal, After Dark Systems SSO at adsas.id, the api.blunix.io Worker (with D1 and R2), the `{label}.blnx.io` build host (the same Worker), and the machine at the console. The key exists in three places only: the browser, from step 14 until the install card closes in step 21; the operator's install card, from step 20; and the machine, from step 23 until it decrypts in step 27. It is never on a server.
 
 #### In the browser, at build.blunix.io
 
 1. The operator asks the browser to sign in.
 2. The browser calls `GET /v1/auth/login`. The Worker stores the state, the nonce and the PKCE verifier for 10 minutes.
-3. The Worker answers 302 to Authentik, with `code_challenge` and method `S256`.
+3. The Worker answers 302 to After Dark Systems SSO, with `code_challenge` and method `S256`, the state and the nonce. The scopes are `openid email profile`.
 4. The operator signs in at adsas.id.
-5. Authentik answers 302 to `/v1/auth/callback` with the code and the state.
+5. After Dark Systems SSO answers 302 to `/v1/auth/callback` with the code and the state.
 6. The browser calls `GET /v1/auth/callback`.
-7. The Worker sends Authentik the code and the verifier for the ID token, and fetches the JWKS.
+7. The Worker sends After Dark Systems SSO the code and the verifier for the ID token, and fetches the JWKS.
 8. The Worker checks the ID token: algorithm RS256, ES256 or EdDSA only; `iss`, `aud`, `exp` and `nonce`. It upserts the account by `(iss, sub)`.
-9. The Worker sets the cookie `__Host-blx_session` (12 hours, `HttpOnly`) and answers 302 to build.blunix.io.
+9. The Worker sets the cookie `__Host-blx_session` (12 hours, `HttpOnly`, `Secure`, `SameSite=Lax`) and answers 302 to build.blunix.io. The portal shows the signed-in person's name.
 10. The operator fills in the form: a label and the node document fields.
 11. The browser calls `POST /v1/hosts {label}` with `x-blunix-csrf: 1` and the portal's `Origin`.
 12. The Worker answers 201. Or 409 if the label is taken, 400 if it is invalid or reserved, 429 if rate limited.
@@ -103,7 +104,7 @@ The note at the bottom of the diagram says it plainly: no key on the server side
 
 PNG at 2x: [`brand/diagrams/03-build-release.png`](../brand/diagrams/03-build-release.png)
 
-Octagons are gates: the build stops there and writes no release. The first two columns run in privileged Docker (`debian:trixie-slim`).
+Octagons are gates: the build stops there and writes no release. The first two columns run on the separate release build server, in a privileged `debian:trixie-slim` container pinned by digest. Before any of it, the server checks the tag. It builds only a tag signed by the pinned release key. An unsigned or lightweight tag is refused. No credential is passed into the container, and a release starts from an empty `build/`.
 
 #### image/build-test-disk.sh --release
 
@@ -116,7 +117,7 @@ Octagons are gates: the build stops there and writes no release. The first two c
 7. Gate: `scan-raw.py` reads every byte of the disk for private keys, age secret keys, the fixture's age header and the two test secrets.
 8. The output is `build/blunix-release.raw`, the release disk. It feeds step 9.
 
-#### image/build-installer.sh --release (needs BLUNIX_RELEASE_VERSION)
+#### image/build-installer.sh --release (BLUNIX_RELEASE_VERSION is the tag)
 
 9. Gate: no version, the word `latest`, or no release disk stops the build.
 10. Gate: the release disk is scanned again. It is mounted read-only for `scan-root.py --release`, then `scan-raw.py` reads the raw file.
@@ -125,25 +126,25 @@ Octagons are gates: the build stops there and writes no release. The first two c
 13. Gate: `scan-root.py` scans the installer's own filesystem.
 14. The ISO and netboot media: a squashfs, the boot menu with keys 1 to 5, a hybrid ISO with volume label `BLUNIX_INSTALL`, and `vmlinuz`, `initrd.img`, `blunix.squashfs` and `blunix.ipxe`.
 15. Gate: every asset must be under 2 GiB, GitHub's per-file limit.
-16. `SHA256SUMS` in `build/release/` covers the ISO, `blunix.raw.zst`, `vmlinuz`, `initrd.img` and `blunix.squashfs`. The build does not upload.
+16. `SHA256SUMS` in `build/release/` covers the ISO, `blunix.raw.zst`, `vmlinuz`, `initrd.img` and `blunix.squashfs`. `image/gpl-sources.py` then writes `SOURCES.md`, the GPL source notice that every release attaches. The build scripts do not upload.
 
 #### Publish
 
-17. Designed, not built: sign the digests offline. The key is never on the builder or Cloudflare. Nothing is signed today. The dashed path runs through this step; the solid path skips it.
-18. A manual step: a person runs `gh release upload` from `build/release/`.
-19. The GitHub release on `afterdarksys/blunix`. blunix.io lists it through `/releases.json`. None is published yet.
+17. The build server uploads the images, unsigned, to a staging bucket on R2. Its only credential can write to that one bucket. Objects expire after 30 days.
+18. A manual step, offline. The maintainer pulls the images from staging, verifies them, and signs `SHA256SUMS` with the release key on their own machine. `scripts/release-sign.py` pins full key fingerprints. The key is never on the build server or Cloudflare.
+19. The maintainer publishes the GitHub release on `afterdarksys/blunix`. blunix.io lists it through `/releases.json`. v0.1.0 is an unsigned test release; the first signed release is next.
 
 #### Site and portal: push to main in site/, portal/ or brand/, or a manual run
 
 20. GitHub Actions, environment `production` (the workflow is built). The job runs only on `refs/heads/main`. Actions are pinned to commit SHAs, and the token is `contents: read`.
 21. Gate: `site/css/site.css` must equal `portal/css/site.css`, and the node tests must pass.
-22. `wrangler pages deploy`: `site/` to the Pages project `blunix-io`, `portal/` to `build-blunix-io`. blunix.io is live; the portal is not. `scripts/deploy-site.sh` is the same path from a laptop.
+22. `wrangler pages deploy`: `site/` to the Pages project `blunix-io`, `portal/` to `build-blunix-io`. Both are live. `scripts/deploy-site.sh` is the same path from a laptop.
 
 #### API Worker: scripts/deploy-api.sh, a laptop only, refuses in CI
 
 23. Gate: a production config. A real D1 id, an empty `DEV_ORIGINS`, the OIDC issuer and client id set, and the client secret on the Worker.
 24. Gate: `npm ci`, the typecheck, and the vitest suite in the Workers runtime.
-25. D1 migrations, then `wrangler deploy` for api.blunix.io and `*.blnx.io`. The script is built and has not run yet.
+25. D1 migrations, then `wrangler deploy` for api.blunix.io and `*.blnx.io`. Both are live.
 
 
 ## 4. The installer
@@ -177,12 +178,12 @@ Not drawn, but in the code: any answer typed at a second console stops with `blu
 
 PNG at 2x: [`brand/diagrams/05-build-proxy.png`](../brand/diagrams/05-build-proxy.png)
 
-Everything here is built and tested; the signing that would end the trusted-LAN rule is designed, not built. The key stays in `keys.txt` and on the printed card.
+The proxy is built and tested, and the API and build hosts it talks to are live. Release signing is set up, but no signed release exists yet, so the trusted-LAN rule still holds. The key stays in `keys.txt` and on the printed card.
 
 #### Cloudflare
 
-- api.blunix.io, built and not deployed: `POST /v1/hosts` reserves a label; `POST /v1/hosts/{label}/builds` uploads.
-- `{label}.blnx.io`, built and not deployed: `GET /` serves the ciphertext over verified TLS.
+- api.blunix.io, live: `POST /v1/hosts` reserves a label; `POST /v1/hosts/{label}/builds` uploads.
+- `{label}.blnx.io`, live: `GET /` serves the ciphertext over verified TLS.
 
 #### The operator's computer, Linux or macOS (Python stdlib, PyYAML, and age on the PATH)
 
@@ -192,7 +193,7 @@ Everything here is built and tested; the signing that would end the trusted-LAN 
 4. `blunix proxy publish` validates every document first, or sends nothing. Then, per machine: reserve the label, render the document with its inline static network, make a 100-bit key, encrypt with `age --passphrase`, write the pending card, upload, and check the returned sha256 and size. `state.json` holds no keys.
 5. `keys.txt`: created with `O_EXCL`, mode 0600, one card per machine. It is never served and is not in the media allowlist. The key exists here. Print the cards, then delete the file.
 6. `blunix proxy dnsmasq` renders a dnsmasq config to stdout. It does not start dnsmasq.
-7. `blunix proxy serve`: `GET` and `HEAD` only, at most 64 connections, 60 requests per IP refilled at one a second, and no bodies logged. `/v1/build/{host}` relays only `{label}.blnx.io` and `v{n}.{label}.blnx.io` over verified TLS 1.2 or higher, with no redirects, a 256 KiB cap, a 20-second limit and age bodies only, cached 60 seconds for latest and 1 hour for pinned; a TLS failure is a 502. `/media/` serves `vmlinuz`, `initrd.img` and `blunix.squashfs`, hashed against `SHA256SUMS` at startup; a file that changes later is not served. `/v1/boot.ipxe` names the advertise address, never the Host header. Also `/v1/netconfig/{mac}` and `/healthz`.
+7. `blunix proxy serve`: `GET` and `HEAD` only, at most 64 connections, 60 requests per IP refilled at one a second, and no bodies logged. `/v1/build/{host}` relays only `{label}.blnx.io` and `v{n}.{label}.blnx.io` (pinned hosts are not on yet) over verified TLS 1.2 or higher, with no redirects, a 256 KiB cap, a 20-second limit and age bodies only, cached 60 seconds for latest and 1 hour for pinned; a TLS failure is a 502. `/media/` serves `vmlinuz`, `initrd.img` and `blunix.squashfs`, hashed against `SHA256SUMS` at startup; a file that changes later is not served. `/v1/boot.ipxe` names the advertise address, never the Host header. Also `/v1/netconfig/{mac}` and `/healthz`.
 
 #### On the install VLAN
 
@@ -209,7 +210,7 @@ Everything here is built and tested; the signing that would end the trusted-LAN 
 15. The machines fetch the kernel, initrd and squashfs from `/media/` over plain http.
 16. The installer fetches `/v1/build/{host}` from `serve`: ciphertext only.
 
-Trusted LANs only until images are signed. The kernel, initrd and squashfs travel as plain http. `serve`'s startup check proves they match the `SHA256SUMS` you trusted, not who built them. iPXE and live-boot verify nothing. Signing is designed, not built.
+Trusted LANs only until images are signed. The kernel, initrd and squashfs travel as plain http. `serve`'s startup check proves they match the `SHA256SUMS` you trusted, not who built them. iPXE and live-boot verify nothing. Release signing is set up; the first signed release is next.
 
 
 ## 6. Later: the future plane (designed, not built)
@@ -218,7 +219,7 @@ Trusted LANs only until images are signed. The kernel, initrd and squashfs trave
 
 PNG at 2x: [`brand/diagrams/06-future-plane.png`](../brand/diagrams/06-future-plane.png)
 
-Everything on this diagram is designed, not built, from `docs/designs/blunix-service.md` and `docs/designs/blunix-platform.md`. One box is the exception: the API already refuses every `blx_join_` bearer token with 401 on every route. That refusal is built, not deployed.
+Everything on this diagram is designed, not built, from `docs/designs/blunix-service.md` and `docs/designs/blunix-platform.md`. One box is the exception: the API already refuses every `blx_join_` bearer token with 401 on every route. That refusal is built and live.
 
 #### The boxes
 
@@ -234,8 +235,8 @@ Everything on this diagram is designed, not built, from `docs/designs/blunix-ser
 - **Troubleshoot collect.** `blunix: troubleshoot requested for lab-3. Say yes to start.` A fixed collector, an allowlisted report of 64 KiB, signed. No journal text and no keys.
 - **Blunix Log, append-only.** A row holds the version, channel, artifact sha256, signature, predecessor and file names. Withdrawing is a new row. `GET` is public; the site renders it.
 - **Manifest at `updates.blunix.io/blunix`.** Generated from the current rows, never edited by hand. Mirrors are caches of one digest.
-- **Cloud builder.** Runs the build the repo specifies. Its only output is a log row, through `log:publish`.
-- **Offline signing key.** Signs images and rows. Never on the builder or on Cloudflare.
+- **Cloud builder.** Runs the build the repo specifies. Its only output is a log row, through `log:publish`. Today the separate release build server stages unsigned images instead; the log row is designed.
+- **Offline signing key.** Signs images and rows. Never on the builder or on Cloudflare. The release key exists today and will sign `SHA256SUMS`; signing log rows is designed.
 
 #### The numbered arrows, all designed
 
@@ -262,7 +263,7 @@ The contract is `docs/designs/blunix-install-plane.md`. The drawings follow the 
 7. **Pinned URLs.** The contract's hand-off always shows `https://v3.ada.blnx.io/`. The Worker returns `pinnedUrl: null` until `PINNED_HOSTS_TLS` is `on`, and the portal and the card then leave it out. The contract's deploy notes explain why; its hand-off section does not.
 8. **Routes not in the contract.** The Worker answers `GET /v1/health` (public, CORS for blunix.io only), which the site's `js/live.js` calls. An upload with the wrong content type is `415 unsupported media type`, not the contract's `400 refused ciphertext`. Reserving past 20 labels is `403 label limit`.
 9. **Image source.** The contract says the medium's image, "or updates.blunix.io later". The code falls back to a GitHub release named by a pin on the medium, over verified TLS, checked against the pinned sha256.
-10. **The builder.** The contract places the builder on our servers, on a clean host, using mkosi or Docker. The code runs the scripts in privileged Docker from a Mac or a Linux host; no builder host is set up in the tree, and `image/mkosi/` is not used by these scripts. The build never uploads: a person runs `gh release upload`.
+10. **The builder.** The contract places the builder on our servers, on a clean host, using mkosi or Docker. Release images are now built on a separate release build server, from signed tags only, in a privileged container pinned by digest; `image/mkosi/` is not used by these scripts. The build scripts never upload. The build server stages unsigned images in a bucket that expires after 30 days, and the maintainer signs and publishes the release offline.
 11. **Two apiVersion domains.** Node documents are `apiVersion: blunix.dev/v1`; the offline `InstallBundle` is `apiVersion: blunix.io/v1`. Both match the contract, but the two domains differ.
 12. **The first-boot bootstrap.** The raw image's bootstrap has no proxy and no typed static address. It waits for a DHCP address (18 checks, 5 s apart), then fails closed. Only the live installer has the fallbacks.
-13. **Deployment, as of 2026-09-30.** blunix.io and `/releases.json` are live (no releases yet). build.blunix.io and api.blunix.io answer placeholders, blnx.io has no DNS, `wrangler.jsonc` still has the all-zero D1 id, and `OIDC_ISSUER` is empty. The contract's status line says BUILDING, which matches.
+13. **Deployment, as of 2026-10-03.** blunix.io and `/releases.json`, build.blunix.io, api.blunix.io and the `{label}.blnx.io` build hosts are live, with sign-in through After Dark Systems SSO. Pinned version hosts are not on yet, so the Worker returns `pinnedUrl: null`. v0.1.0 is an unsigned test release; release signing is set up and the first signed release is next. If the contract's status line still says BUILDING, it is behind.

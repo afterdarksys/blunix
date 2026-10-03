@@ -404,13 +404,14 @@ def d1():
     d = Diagram(
         "eco", 1120, 1200,
         "Blunix ecosystem: who talks to whom",
-        "Zones for the operator's browser, adsas.id, Cloudflare, GitHub, our servers, the offline signing key, "
-        "the customer LAN and the machine at the console, joined by 15 numbered connections. Only blunix.io, its "
-        "releases function, the GitHub repo and Authentik run today; the portal, API, build hosts, installer and "
-        "proxy are built and tested; the signing key is designed, not built. The numbered walk-through after this "
-        "figure says everything the diagram shows.")
+        "Zones for the operator's browser, After Dark Systems SSO at adsas.id, Cloudflare, GitHub, the release "
+        "build server, the offline signing key, the customer LAN and the machine at the console, joined by 16 "
+        "numbered connections. The website, portal, API, build hosts, sign-in, GitHub repo and release build "
+        "server run today; the installer and proxy are built and tested; the release signing key is set up, and "
+        "no signed release exists yet. The numbered walk-through after this figure says everything the diagram "
+        "shows.")
     d.text(28, 44, "Blunix ecosystem: who talks to whom", T_TITLE, True, INK)
-    d.text(28, 72, "As the code stands on 2026-09-30. Numbers match the walk-through.", T_LINE, False, MUTED)
+    d.text(28, 72, "As it stands on 2026-10-03. Numbers match the walk-through.", T_LINE, False, MUTED)
 
     # Left column
     d.zone(20, 100, 300, 240, "OPERATOR'S DEVICE")
@@ -419,12 +420,12 @@ def d1():
         "Composes the node document,",
         "makes the key, encrypts with",
         "age. Sends only ciphertext.",
-    ], status="built", tag="BUILT", key=True)
+    ], status="deployed", tag="LIVE", key=True)
     d.zone(20, 380, 300, 200, "ADSAS.ID")
-    authentik = d.box(36, 425, 268, "Authentik (OIDC)", [
+    authentik = d.box(36, 425, 268, "After Dark Systems SSO", [
         "Signs the operator in.",
-        "Blunix client not set up yet:",
-        "OIDC_ISSUER is empty.",
+        "OpenID Connect with PKCE.",
+        "The Blunix client is live.",
     ], status="deployed", tag="RUNS TODAY")
 
     # Cloudflare
@@ -436,11 +437,11 @@ def d1():
     portal = d.box(356, 290, 398, "build.blunix.io portal (Pages)", [
         "A separate Pages project. Same-site",
         "with the API, so the cookie rides fetch.",
-    ], status="built")
+    ], status="deployed")
     worker = d.box(356, 420, 398, "api.blunix.io Worker (/v1)", [
         "Sign-in, labels, builds, API keys.",
         "Checks the age header. Never decrypts.",
-    ], status="built")
+    ], status="deployed")
     d1b = d.box(356, 570, 193, "D1 records", [
         "accounts, labels,",
         "versions, hashed",
@@ -455,7 +456,7 @@ def d1():
     ], status=None)
     blnx = d.box(356, 716, 398, "{label}.blnx.io (the same Worker)", [
         "GET / only. A separate registrable domain.",
-    ], status="built", tag="BUILT, NOT DEPLOYED: NO DNS YET")
+    ], status="deployed", tag="DEPLOYED: LATEST VERSION ONLY")
 
     # Right column
     d.zone(790, 100, 290, 330, "GITHUB")
@@ -467,17 +468,17 @@ def d1():
     releases = d.box(806, 300, 258, "Releases", [
         "ISO, blunix.raw.zst, netboot",
         "media, SHA256SUMS.",
-    ], status="built", tag="v0.1.0 PUBLISHED")
-    d.zone(790, 470, 290, 175, "OUR SERVERS")
-    builder = d.box(806, 512, 258, "Image builder", [
-        "Privileged Docker scripts.",
-        "No builder host set up yet.",
-    ], status="built", tag="SCRIPTS BUILT")
+    ], status="built", tag="v0.1.0: UNSIGNED TEST")
+    d.zone(790, 470, 290, 175, "BUILD SERVER")
+    builder = d.box(806, 512, 258, "Release builder", [
+        "Signed tags only. No keys.",
+        "Unsigned images to staging.",
+    ], status="deployed", tag="RUNS TODAY")
     d.zone(790, 685, 290, 175, "OFFLINE")
-    signer = d.box(806, 727, 258, "Image signing key", [
-        "Never on the builder or on",
-        "Cloudflare. Nothing is signed.",
-    ], status="designed")
+    signer = d.box(806, 727, 258, "Release signing key", [
+        "Held by the maintainer.",
+        "No signed release yet.",
+    ], status="built", tag="SET UP, NOT USED YET")
 
     # Bottom row
     d.zone(20, 880, 520, 205, "CUSTOMER LAN")
@@ -485,7 +486,7 @@ def d1():
         "publish: encrypts per machine, uploads ciphertext.",
         "serve: relays *.blnx.io, netboot media, boot.ipxe.",
         "keys.txt (mode 0600) stays on this computer.",
-    ], status="built", key=True)
+    ], status="built", tag="BUILT AND TESTED", key=True)
     d.zone(560, 880, 520, 205, "THE MACHINE AT THE CONSOLE", right=True)
     machine = d.box(576, 925, 488, "Installer, or first-boot bootstrap", [
         "Installer: ISO, USB or netboot. Bootstrap: raw",
@@ -521,13 +522,15 @@ def d1():
     d.arrow([(site["r"], 235), (780, 235), (780, 360), (releases["x"], 360)], num=11, num_at=(780, 300))
     # 12 actions -> site (and the portal, same job)
     d.arrow([(repo["x"], 190), (site["r"], 190)], num=12, num_at=(780, 190))
-    # 13 builder -> releases: a person runs gh release upload
-    d.arrow([(1000, builder["y"]), (1000, releases["b"])], num=13, num_at=(1000, 450))
+    # 13 GitHub -> builder: the build server polls for signed tags (pull-only)
+    d.arrow([(1000, releases["b"]), (1000, builder["y"])], num=13, num_at=(1000, 450))
     # 14 machine -> releases: image by release pin, sha256 must match
     d.arrow([(machine["r"], 1000), (1100, 1000), (1100, 360), (releases["r"], 360)], num=14, num_at=(1100, 680))
-    # 15 signing: designed, dashed
-    d.arrow([(1000, signer["y"]), (1000, builder["b"])], kind="designed", num=15, num_at=(1000, 665))
-    legend(d, 20, 1090, 1080)
+    # 15 builder -> maintainer: unsigned images through the staging bucket, signed offline
+    d.arrow([(1000, builder["b"]), (1000, signer["y"])], num=15, num_at=(1000, 665))
+    # 16 maintainer -> releases: publishes the signed release
+    d.arrow([(signer["r"], 790), (1086, 790), (1086, 395), (releases["r"], 395)], num=16, num_at=(1086, 560))
+    legend(d, 20, 1090, 1080, designed=False)
     return d
 
 
@@ -599,8 +602,8 @@ def d2():
     d = Diagram(
         "seq", 1120, 1700,
         "Web bootstrapping: from sign-in to an applied node document",
-        "A sequence diagram across six participants: the operator, the browser running the portal, Authentik at "
-        "adsas.id, the api.blunix.io Worker, the {label}.blnx.io build host, and the machine at the console. "
+        "A sequence diagram across six participants: the operator, the browser running the portal, After Dark "
+        "Systems SSO at adsas.id, the api.blunix.io Worker, the {label}.blnx.io build host, and the machine at the console. "
         "A green bar marks where the key exists: the browser from the moment it is made until the install card "
         "closes, the operator's install card, and the machine from typing until decryption. The server side "
         "never holds it. The numbered walk-through after this figure lists every step.")
@@ -610,7 +613,7 @@ def d2():
     heads = {
         "op": ("Operator", "a person"),
         "br": ("Browser", "portal JS"),
-        "au": ("Authentik", "adsas.id"),
+        "au": ("After Dark SSO", "adsas.id"),
         "api": ("api.blunix.io", "Worker, D1, R2"),
         "bh": ("{label}.blnx.io", "same Worker"),
         "m": ("Machine", "at the console"),
@@ -628,7 +631,7 @@ def d2():
     s.section("IN THE BROWSER, AT BUILD.BLUNIX.IO")
     s.msg("op", "br", "Sign in", room=120)
     s.msg("br", "api", ["GET /v1/auth/login. Stores state, nonce", "and PKCE verifier for 10 minutes."])
-    s.msg("api", "br", "302 to Authentik, code_challenge S256")
+    s.msg("api", "br", "302 to the SSO, code_challenge S256")
     s.msg("br", "au", "Sign in at adsas.id", room=200)
     s.msg("au", "br", ["302 to /v1/auth/callback", "with code and state"], room=200)
     s.msg("br", "api", "GET /v1/auth/callback")
@@ -703,13 +706,15 @@ def d3():
     d = Diagram(
         "pipe", 1120, 2000,
         "Build and release pipeline",
-        "Two build scripts run in privileged Docker. build-test-disk.sh --release turns Debian 13 packages into "
+        "The release build server builds only tags signed by the pinned release key. Two build scripts run in a "
+        "privileged container pinned by digest. build-test-disk.sh --release turns Debian 13 packages into "
         "build/blunix-release.raw through mmdebstrap, a strip step, a GPT disk, a root scan, zerofree and a raw "
         "byte scan. build-installer.sh --release scans that disk again, compresses it, pins its digest, and makes "
-        "the ISO, netboot media and SHA256SUMS. Seven gates stop the build. A person uploads the assets to a GitHub "
-        "release; offline signing is designed, not built. Below, the site and portal deploy through the GitHub "
-        "Actions production environment to Cloudflare Pages, and the API deploys from a laptop script. The "
-        "numbered walk-through after this figure says everything the diagram shows.")
+        "the ISO, netboot media and SHA256SUMS. Seven gates stop the build. The build server uploads the unsigned "
+        "assets to a staging bucket that expires after 30 days. The maintainer verifies them, signs SHA256SUMS "
+        "offline and publishes the GitHub release. Below, the site and portal deploy through the GitHub Actions "
+        "production environment to Cloudflare Pages, and the API deploys from a laptop script. All of these are "
+        "live. The numbered walk-through after this figure says everything the diagram shows.")
     d.text(28, 44, "Build and release pipeline", T_TITLE, True, INK)
     d.text(28, 72, "Octagons are gates: the build stops there and writes no release.", T_LINE, False, MUTED)
 
@@ -754,28 +759,27 @@ def d3():
         dict(title="15. Every asset under 2 GiB", lines=["GitHub's per-file limit."], **GATE),
         dict(title="16. SHA256SUMS, build/release/", lines=[
             "ISO, blunix.raw.zst, vmlinuz, initrd.img,",
-            "blunix.squashfs. The build does not upload."], status="built", tag="BUILT"),
+            "blunix.squashfs. Plus SOURCES.md."], status="built", tag="BUILT"),
     ])
     d.arrow([(a[-1]["r"], a[-1]["cy"]), (560, a[-1]["cy"]), (560, b[0]["cy"]), (b[0]["x"], b[0]["cy"])])
     zb = max(a[-1]["b"], b[-1]["b"]) + 20
-    d.zone(20, 100, 520, zb - 100, "IMAGE/BUILD-TEST-DISK.SH --RELEASE", "Privileged Docker, debian:trixie-slim.")
-    d.zone(580, 100, 520, zb - 100, "IMAGE/BUILD-INSTALLER.SH --RELEASE", "Same Docker. Needs BLUNIX_RELEASE_VERSION.")
+    d.zone(20, 100, 520, zb - 100, "IMAGE/BUILD-TEST-DISK.SH --RELEASE", "Build server, signed tags only. Privileged trixie-slim.")
+    d.zone(580, 100, 520, zb - 100, "IMAGE/BUILD-INSTALLER.SH --RELEASE", "Same container. BLUNIX_RELEASE_VERSION is the tag.")
 
     y = zb + 60
     lane = zb + 30
     d.zone(20, y, 1080, 200, "PUBLISH")
-    sign = d.box(36, y + 50, 330, "17. Sign the digests offline", [
-        "The key never on the builder or", "Cloudflare. Nothing signs today."], status="designed")
-    up = d.box(395, y + 50, 330, "18. A person uploads", [
-        "gh release upload, by hand,", "from build/release/."], status="built", tag="MANUAL STEP")
+    stage = d.box(36, y + 50, 330, "17. Upload to staging", [
+        "Unsigned, to one R2 bucket.", "Objects expire after 30 days."], status="built", tag="BUILT")
+    sign = d.box(395, y + 50, 330, "18. Verify and sign", [
+        "The maintainer signs SHA256SUMS", "with the release key, offline."], status="built",
+        tag="MANUAL STEP, OFFLINE")
     rel = d.box(754, y + 50, 330, "19. GitHub release", [
-        "afterdarksys/blunix. blunix.io lists", "it through /releases.json."], status="built",
-        tag="v0.1.0 PUBLISHED")
-    d.arrow([(b[-1]["cx"], b[-1]["b"]), (b[-1]["cx"], lane), (560, lane), (560, up["y"])])
-    d.arrow([(200, lane), (200, sign["y"])], kind="designed")
-    d.lines.append('<path d="M200 %d L560 %d" stroke="%s" stroke-width="2.5" stroke-dasharray="10 7" fill="none"/>' % (lane, lane, SLATE))
-    d.arrow([(sign["r"], sign["cy"]), (up["x"], sign["cy"])], kind="designed")
-    d.arrow([(up["r"], up["cy"]), (rel["x"], up["cy"])])
+        "The maintainer publishes it.", "blunix.io lists /releases.json."], status="built",
+        tag="v0.1.0: UNSIGNED TEST")
+    d.arrow([(b[-1]["cx"], b[-1]["b"]), (b[-1]["cx"], lane), (200, lane), (200, stage["y"])])
+    d.arrow([(stage["r"], stage["cy"]), (sign["x"], stage["cy"])])
+    d.arrow([(sign["r"], sign["cy"]), (rel["x"], sign["cy"])])
 
     y = y + 240
     s1 = chain(d, 36, y + 76, 488, [
@@ -786,7 +790,7 @@ def d3():
             "site.css equals portal.css; node --test."], **dict(GATE, tag="GATE: STOPS THE DEPLOY")),
         dict(title="22. wrangler pages deploy", lines=[
             "site/ to blunix-io, portal/ to build-blunix-io."], status="deployed",
-             tag="BLUNIX.IO IS LIVE; PORTAL IS NOT"),
+             tag="DEPLOYED: BLUNIX.IO AND THE PORTAL"),
     ], gap=28)
 
     s2 = chain(d, 596, y + 76, 488, [
@@ -796,12 +800,12 @@ def d3():
         dict(title="24. Typecheck and tests", lines=["npm ci, tsc, vitest in the Workers runtime."],
              **dict(GATE, tag="GATE: STOPS THE DEPLOY")),
         dict(title="25. D1 migrations, wrangler deploy", lines=[
-            "api.blunix.io and *.blnx.io."], status="built", tag="SCRIPT BUILT, NOT RUN YET"),
+            "api.blunix.io and *.blnx.io."], status="deployed"),
     ], gap=28)
     zb = max(s1[-1]["b"], s2[-1]["b"]) + 20
     d.zone(20, y, 520, zb - y, "SITE AND PORTAL", "Push to main in site/, portal/ or brand/, or a manual run.")
     d.zone(580, y, 520, zb - y, "API WORKER", "scripts/deploy-api.sh, a laptop only. Refuses in CI.")
-    legend(d, 20, zb + 30, 1080, key=False, gate=True, cipher=False)
+    legend(d, 20, zb + 30, 1080, key=False, gate=True, cipher=False, designed=False)
     d.h = zb + 30 + 96 + 20
     return d
 
@@ -916,13 +920,13 @@ def d5():
         "through serve. Netboot is for trusted LANs only until images are signed. The numbered walk-through "
         "after this figure says everything the diagram shows.")
     d.text(28, 44, "blunix proxy on an install LAN", T_TITLE, True, INK)
-    d.text(28, 72, "All built and tested. The key stays in keys.txt and on the printed card.", T_LINE, False, MUTED)
+    d.text(28, 72, "The proxy is built and tested. The key stays in keys.txt and on the printed card.", T_LINE, False, MUTED)
 
     d.zone(20, 100, 1080, 170, "CLOUDFLARE")
     api = d.box(36, 146, 480, "api.blunix.io", [
-        "POST /v1/hosts reserves; POST .../builds uploads."], status="built")
+        "POST /v1/hosts reserves; POST .../builds uploads."], status="deployed")
     bh = d.box(604, 146, 480, "{label}.blnx.io", [
-        "GET / serves the ciphertext, verified TLS."], status="built")
+        "GET / serves the ciphertext, verified TLS."], status="deployed")
 
     oz_y = 350
     L, LW = 52, 470
@@ -988,8 +992,8 @@ def d5():
         "Decrypted on the machine."], status="built", tag="BUILT", key=True, mark=False)
     warn = d.box(36, max(dns["b"], mach["b"]) + 30, 1048, "Trusted LANs only until images are signed", [
         "Kernel, initrd and squashfs travel as plain http. serve's startup check proves they match the",
-        "SHA256SUMS you trusted, not who built them. iPXE and live-boot verify nothing. Signing is designed.",
-    ], status="designed", tag="SIGNING: DESIGNED, NOT BUILT")
+        "SHA256SUMS you trusted, not who built them. iPXE and live-boot verify nothing. No signed release yet.",
+    ], status="built", tag="SIGNING: SET UP, NO SIGNED RELEASE YET")
 
     pub = col[3]
     # 10: publish -> api (ciphertext + Bearer)
@@ -1030,7 +1034,7 @@ def d6():
     d = Diagram(
         "future", 1120, 2000,
         "The future plane: designed, not built",
-        "Everything on this diagram is designed, not built, except one box: the API already refuses every "
+        "Everything on this diagram is designed, not built, except one box: the live API already refuses every "
         "blx_join_ token with 401. Clients (the web, the laptop CLI, Terraform, Ansible, support) call "
         "api.blunix.io. An enrolled machine runs blunixservice, which dials out only: it enrolls once with a "
         "join token, then signs check-ins with its Ed25519 key and gets back a desired generation, fetches the "
@@ -1058,7 +1062,7 @@ def d6():
         ], status="designed"),
     ]
     today = d.box(600, api[0]["b"] + 22, 484, "Built today: the refusal", [
-        "Any blx_join_ bearer token is a 401 on every route."], status="built", tag="BUILT, NOT DEPLOYED")
+        "Any blx_join_ bearer token is a 401 on every route."], status="deployed", tag="BUILT AND LIVE")
     host = d.box(600, today["b"] + 22, 484, "{label}.blnx.io, visibility enrolled", [
         "Only a bound machine signature fetches the",
         "ciphertext. public keeps the anonymous GET."], status="designed")
@@ -1151,15 +1155,15 @@ WALK = {}
 WALK["01-ecosystem"] = [
     ("h3", "What each zone holds"),
     ("ul", [
-        "**Operator's device.** The operator's browser runs the portal's JavaScript (built). It composes the node document, makes the key, and encrypts with age. The key exists here. The browser sends only ciphertext.",
-        "**adsas.id.** Authentik, the OIDC issuer, runs today. The Blunix client is not set up yet: `OIDC_ISSUER` is empty in `platform/api/wrangler.jsonc`, so sign-in answers 503 until it is.",
+        "**Operator's device.** The operator's browser runs the portal's JavaScript, which is live. It composes the node document, makes the key, and encrypts with age. The key exists here. The browser sends only ciphertext.",
+        "**adsas.id.** After Dark Systems SSO, the OpenID Connect identity provider, runs today, and the Blunix client on it is live. It signs the operator in to the portal.",
         "**Cloudflare** holds records and ciphertext, never a key. The blunix.io website on Pages is deployed. Its function `/releases.json` reads GitHub, and its page asks `api.blunix.io/v1/health` whether the API is up.",
-        "**Cloudflare, continued.** The build.blunix.io portal is a separate Pages project, built and not deployed; today that name answers a placeholder. It is same-site with the API, so the session cookie rides the portal's `fetch` calls.",
-        "**Cloudflare, continued.** The api.blunix.io Worker (`/v1`) is built and not deployed; today that name answers a placeholder. It handles sign-in, labels, builds and API keys. It checks the age header and never decrypts. D1 holds accounts, labels, versions, hashed sessions and hashed API keys, audit rows and rate limits. R2 holds each build at `builds/{label id}/{version}` as the binary age file, and its sha256 is checked before it is served.",
-        "**Cloudflare, continued.** `{label}.blnx.io` is the same Worker: `GET` and `HEAD` on `/` only. blnx.io is a separate registrable domain, so build hosts never share cookies with the site, the portal or the API. Built, not deployed: blnx.io has no DNS yet.",
-        "**GitHub.** The repo `afterdarksys/blunix` is live. Its Actions job, in the `production` environment, deploys `site/` and `portal/`. Releases will hold the ISO, `blunix.raw.zst`, the netboot media and `SHA256SUMS`; none is published yet.",
-        "**Our servers.** The image builder. The build scripts are built and run in privileged Docker. No builder host is set up in the tree yet.",
-        "**Offline.** The image signing key: designed, not built. It is never on the builder and never on Cloudflare. Nothing is signed today.",
+        "**Cloudflare, continued.** The build.blunix.io portal is a separate Pages project, and it is live. It is same-site with the API, so the session cookie rides the portal's `fetch` calls.",
+        "**Cloudflare, continued.** The api.blunix.io Worker (`/v1`) is live. `/v1/health` answers, and the site's portal status line comes from that check. It handles sign-in, labels, builds and API keys. It checks the age header and never decrypts. D1 holds accounts, labels, versions, hashed sessions and hashed API keys, audit rows and rate limits. R2 holds each build at `builds/{label id}/{version}` as the binary age file, and its sha256 is checked before it is served.",
+        "**Cloudflare, continued.** `{label}.blnx.io` is the same Worker: `GET` and `HEAD` on `/` only. blnx.io is a separate registrable domain, so build hosts never share cookies with the site, the portal or the API. Live, with wildcard DNS and TLS. Only the latest version is served for now: pinned version hosts, `v{n}.{label}.blnx.io`, have no certificates yet.",
+        "**GitHub.** The repo `afterdarksys/blunix` is live. Its Actions job, in the `production` environment, deploys `site/` and `portal/`. Releases hold the ISO, `blunix.raw.zst`, the netboot media and `SHA256SUMS`. v0.1.0 is an unsigned test release on Debian 13: its checksums prove the bytes match, not who built them.",
+        "**Release build server.** A separate server, not on Cloudflare. It builds only tags signed by the pinned release key, in a privileged `debian:trixie-slim` container pinned by digest. It is pull-only and holds no signing key. It uploads the images, unsigned, to a staging bucket where objects expire after 30 days.",
+        "**Offline.** The release signing key, an OpenPGP ed25519 key, on the maintainer's machine. It is never on the build server and never on Cloudflare. It is set up; the first signed release is next.",
         "**Customer LAN.** `blunix proxy` on the operator's Linux or Mac, built. `publish` encrypts per machine and uploads ciphertext. `serve` relays `*.blnx.io` and serves netboot media and `boot.ipxe`. The keys are in `keys.txt`, mode 0600, on this computer. The key exists here.",
         "**The machine at the console.** The installer (ISO, USB or netboot) or the first-boot bootstrap (raw image), built and booting in a VM. It asks the hostname, then the key with echo off, fetches, decrypts on the machine, and applies. The key exists here while it is typed.",
     ]),
@@ -1167,8 +1171,8 @@ WALK["01-ecosystem"] = [
     ("ol", [
         "The browser loads the portal page from build.blunix.io.",
         "The browser calls api.blunix.io with the session cookie (`credentials: 'include'`). The build upload on this path is ciphertext only.",
-        "The browser and Authentik: the OIDC sign-in redirects, both ways.",
-        "The Worker and Authentik: the Worker trades the code and the PKCE verifier for an ID token, and fetches the JWKS to check it.",
+        "The browser and After Dark Systems SSO: the sign-in redirects, both ways.",
+        "The Worker and After Dark Systems SSO: the Worker trades the code and the PKCE verifier for an ID token, and fetches the JWKS to check it.",
         "The Worker reads and writes D1 and R2.",
         "The build hosts read D1 and R2.",
         "`{label}.blnx.io` to the machine: HTTPS `GET /` over verified TLS. Ciphertext only.",
@@ -1177,25 +1181,26 @@ WALK["01-ecosystem"] = [
         "The proxy to the Worker: `publish` reserves labels and uploads ciphertext with a `blx_` API key.",
         "The site's `/releases.json` function reads the GitHub Releases API and each release's `SHA256SUMS`.",
         "GitHub Actions deploys the site and the portal to Cloudflare Pages.",
-        "The builder's assets reach Releases only when a person runs `gh release upload`. The build does not upload.",
+        "The release build server polls GitHub every 10 minutes and fetches new tags. It builds a tag only if its signature checks against the pinned release key.",
         "The installer streams the image from a GitHub release when its medium carries only a release pin. The stream's sha256 must match the pin.",
-        "Designed, not built: the offline key signs the builder's digests.",
+        "The build server uploads the unsigned images to the staging bucket. The maintainer pulls them from there, verifies them, and signs `SHA256SUMS` offline.",
+        "The maintainer publishes the signed GitHub release. The build server cannot publish.",
     ]),
 ]
 
 WALK["02-web-bootstrap"] = [
-    ("p", "Six participants: the operator, the browser running the portal, Authentik at adsas.id, the api.blunix.io Worker (with D1 and R2), the `{label}.blnx.io` build host (the same Worker), and the machine at the console. The key exists in three places only: the browser, from step 14 until the install card closes in step 21; the operator's install card, from step 20; and the machine, from step 23 until it decrypts in step 27. It is never on a server."),
+    ("p", "Six participants: the operator, the browser running the portal, After Dark Systems SSO at adsas.id, the api.blunix.io Worker (with D1 and R2), the `{label}.blnx.io` build host (the same Worker), and the machine at the console. The key exists in three places only: the browser, from step 14 until the install card closes in step 21; the operator's install card, from step 20; and the machine, from step 23 until it decrypts in step 27. It is never on a server."),
     ("h3", "In the browser, at build.blunix.io"),
     ("ol", [
         "The operator asks the browser to sign in.",
         "The browser calls `GET /v1/auth/login`. The Worker stores the state, the nonce and the PKCE verifier for 10 minutes.",
-        "The Worker answers 302 to Authentik, with `code_challenge` and method `S256`.",
+        "The Worker answers 302 to After Dark Systems SSO, with `code_challenge` and method `S256`, the state and the nonce. The scopes are `openid email profile`.",
         "The operator signs in at adsas.id.",
-        "Authentik answers 302 to `/v1/auth/callback` with the code and the state.",
+        "After Dark Systems SSO answers 302 to `/v1/auth/callback` with the code and the state.",
         "The browser calls `GET /v1/auth/callback`.",
-        "The Worker sends Authentik the code and the verifier for the ID token, and fetches the JWKS.",
+        "The Worker sends After Dark Systems SSO the code and the verifier for the ID token, and fetches the JWKS.",
         "The Worker checks the ID token: algorithm RS256, ES256 or EdDSA only; `iss`, `aud`, `exp` and `nonce`. It upserts the account by `(iss, sub)`.",
-        "The Worker sets the cookie `__Host-blx_session` (12 hours, `HttpOnly`) and answers 302 to build.blunix.io.",
+        "The Worker sets the cookie `__Host-blx_session` (12 hours, `HttpOnly`, `Secure`, `SameSite=Lax`) and answers 302 to build.blunix.io. The portal shows the signed-in person's name.",
         "The operator fills in the form: a label and the node document fields.",
         "The browser calls `POST /v1/hosts {label}` with `x-blunix-csrf: 1` and the portal's `Origin`.",
         "The Worker answers 201. Or 409 if the label is taken, 400 if it is invalid or reserved, 429 if rate limited.",
@@ -1223,7 +1228,7 @@ WALK["02-web-bootstrap"] = [
 ]
 
 WALK["03-build-release"] = [
-    ("p", "Octagons are gates: the build stops there and writes no release. The first two columns run in privileged Docker (`debian:trixie-slim`)."),
+    ("p", "Octagons are gates: the build stops there and writes no release. The first two columns run on the separate release build server, in a privileged `debian:trixie-slim` container pinned by digest. Before any of it, the server checks the tag. It builds only a tag signed by the pinned release key. An unsigned or lightweight tag is refused. No credential is passed into the container, and a release starts from an empty `build/`."),
     ("h3", "image/build-test-disk.sh --release"),
     ("ol", [
         "Debian 13 packages: official packages, listed in `image/packages.txt`.",
@@ -1235,7 +1240,7 @@ WALK["03-build-release"] = [
         "Gate: `scan-raw.py` reads every byte of the disk for private keys, age secret keys, the fixture's age header and the two test secrets.",
         "The output is `build/blunix-release.raw`, the release disk. It feeds step 9.",
     ]),
-    ("h3", "image/build-installer.sh --release (needs BLUNIX_RELEASE_VERSION)"),
+    ("h3", "image/build-installer.sh --release (BLUNIX_RELEASE_VERSION is the tag)"),
     ("ol_start", 9, [
         "Gate: no version, the word `latest`, or no release disk stops the build.",
         "Gate: the release disk is scanned again. It is mounted read-only for `scan-root.py --release`, then `scan-raw.py` reads the raw file.",
@@ -1244,25 +1249,25 @@ WALK["03-build-release"] = [
         "Gate: `scan-root.py` scans the installer's own filesystem.",
         "The ISO and netboot media: a squashfs, the boot menu with keys 1 to 5, a hybrid ISO with volume label `BLUNIX_INSTALL`, and `vmlinuz`, `initrd.img`, `blunix.squashfs` and `blunix.ipxe`.",
         "Gate: every asset must be under 2 GiB, GitHub's per-file limit.",
-        "`SHA256SUMS` in `build/release/` covers the ISO, `blunix.raw.zst`, `vmlinuz`, `initrd.img` and `blunix.squashfs`. The build does not upload.",
+        "`SHA256SUMS` in `build/release/` covers the ISO, `blunix.raw.zst`, `vmlinuz`, `initrd.img` and `blunix.squashfs`. `image/gpl-sources.py` then writes `SOURCES.md`, the GPL source notice that every release attaches. The build scripts do not upload.",
     ]),
     ("h3", "Publish"),
     ("ol_start", 17, [
-        "Designed, not built: sign the digests offline. The key is never on the builder or Cloudflare. Nothing is signed today. The dashed path runs through this step; the solid path skips it.",
-        "A manual step: a person runs `gh release upload` from `build/release/`.",
-        "The GitHub release on `afterdarksys/blunix`. blunix.io lists it through `/releases.json`. None is published yet.",
+        "The build server uploads the images, unsigned, to a staging bucket on R2. Its only credential can write to that one bucket. Objects expire after 30 days.",
+        "A manual step, offline. The maintainer pulls the images from staging, verifies them, and signs `SHA256SUMS` with the release key on their own machine. `scripts/release-sign.py` pins full key fingerprints. The key is never on the build server or Cloudflare.",
+        "The maintainer publishes the GitHub release on `afterdarksys/blunix`. blunix.io lists it through `/releases.json`. v0.1.0 is an unsigned test release; the first signed release is next.",
     ]),
     ("h3", "Site and portal: push to main in site/, portal/ or brand/, or a manual run"),
     ("ol_start", 20, [
         "GitHub Actions, environment `production` (the workflow is built). The job runs only on `refs/heads/main`. Actions are pinned to commit SHAs, and the token is `contents: read`.",
         "Gate: `site/css/site.css` must equal `portal/css/site.css`, and the node tests must pass.",
-        "`wrangler pages deploy`: `site/` to the Pages project `blunix-io`, `portal/` to `build-blunix-io`. blunix.io is live; the portal is not. `scripts/deploy-site.sh` is the same path from a laptop.",
+        "`wrangler pages deploy`: `site/` to the Pages project `blunix-io`, `portal/` to `build-blunix-io`. Both are live. `scripts/deploy-site.sh` is the same path from a laptop.",
     ]),
     ("h3", "API Worker: scripts/deploy-api.sh, a laptop only, refuses in CI"),
     ("ol_start", 23, [
         "Gate: a production config. A real D1 id, an empty `DEV_ORIGINS`, the OIDC issuer and client id set, and the client secret on the Worker.",
         "Gate: `npm ci`, the typecheck, and the vitest suite in the Workers runtime.",
-        "D1 migrations, then `wrangler deploy` for api.blunix.io and `*.blnx.io`. The script is built and has not run yet.",
+        "D1 migrations, then `wrangler deploy` for api.blunix.io and `*.blnx.io`. Both are live.",
     ]),
 ]
 
@@ -1287,11 +1292,11 @@ WALK["04-installer"] = [
 ]
 
 WALK["05-build-proxy"] = [
-    ("p", "Everything here is built and tested; the signing that would end the trusted-LAN rule is designed, not built. The key stays in `keys.txt` and on the printed card."),
+    ("p", "The proxy is built and tested, and the API and build hosts it talks to are live. Release signing is set up, but no signed release exists yet, so the trusted-LAN rule still holds. The key stays in `keys.txt` and on the printed card."),
     ("h3", "Cloudflare"),
     ("ul", [
-        "api.blunix.io, built and not deployed: `POST /v1/hosts` reserves a label; `POST /v1/hosts/{label}/builds` uploads.",
-        "`{label}.blnx.io`, built and not deployed: `GET /` serves the ciphertext over verified TLS.",
+        "api.blunix.io, live: `POST /v1/hosts` reserves a label; `POST /v1/hosts/{label}/builds` uploads.",
+        "`{label}.blnx.io`, live: `GET /` serves the ciphertext over verified TLS.",
     ]),
     ("h3", "The operator's computer, Linux or macOS (Python stdlib, PyYAML, and age on the PATH)"),
     ("ol", [
@@ -1301,7 +1306,7 @@ WALK["05-build-proxy"] = [
         "`blunix proxy publish` validates every document first, or sends nothing. Then, per machine: reserve the label, render the document with its inline static network, make a 100-bit key, encrypt with `age --passphrase`, write the pending card, upload, and check the returned sha256 and size. `state.json` holds no keys.",
         "`keys.txt`: created with `O_EXCL`, mode 0600, one card per machine. It is never served and is not in the media allowlist. The key exists here. Print the cards, then delete the file.",
         "`blunix proxy dnsmasq` renders a dnsmasq config to stdout. It does not start dnsmasq.",
-        "`blunix proxy serve`: `GET` and `HEAD` only, at most 64 connections, 60 requests per IP refilled at one a second, and no bodies logged. `/v1/build/{host}` relays only `{label}.blnx.io` and `v{n}.{label}.blnx.io` over verified TLS 1.2 or higher, with no redirects, a 256 KiB cap, a 20-second limit and age bodies only, cached 60 seconds for latest and 1 hour for pinned; a TLS failure is a 502. `/media/` serves `vmlinuz`, `initrd.img` and `blunix.squashfs`, hashed against `SHA256SUMS` at startup; a file that changes later is not served. `/v1/boot.ipxe` names the advertise address, never the Host header. Also `/v1/netconfig/{mac}` and `/healthz`.",
+        "`blunix proxy serve`: `GET` and `HEAD` only, at most 64 connections, 60 requests per IP refilled at one a second, and no bodies logged. `/v1/build/{host}` relays only `{label}.blnx.io` and `v{n}.{label}.blnx.io` (pinned hosts are not on yet) over verified TLS 1.2 or higher, with no redirects, a 256 KiB cap, a 20-second limit and age bodies only, cached 60 seconds for latest and 1 hour for pinned; a TLS failure is a 502. `/media/` serves `vmlinuz`, `initrd.img` and `blunix.squashfs`, hashed against `SHA256SUMS` at startup; a file that changes later is not served. `/v1/boot.ipxe` names the advertise address, never the Host header. Also `/v1/netconfig/{mac}` and `/healthz`.",
     ]),
     ("h3", "On the install VLAN"),
     ("ol_start", 8, [
@@ -1318,11 +1323,11 @@ WALK["05-build-proxy"] = [
         "The machines fetch the kernel, initrd and squashfs from `/media/` over plain http.",
         "The installer fetches `/v1/build/{host}` from `serve`: ciphertext only.",
     ]),
-    ("p", "Trusted LANs only until images are signed. The kernel, initrd and squashfs travel as plain http. `serve`'s startup check proves they match the `SHA256SUMS` you trusted, not who built them. iPXE and live-boot verify nothing. Signing is designed, not built."),
+    ("p", "Trusted LANs only until images are signed. The kernel, initrd and squashfs travel as plain http. `serve`'s startup check proves they match the `SHA256SUMS` you trusted, not who built them. iPXE and live-boot verify nothing. Release signing is set up; the first signed release is next."),
 ]
 
 WALK["06-future-plane"] = [
-    ("p", "Everything on this diagram is designed, not built, from `docs/designs/blunix-service.md` and `docs/designs/blunix-platform.md`. One box is the exception: the API already refuses every `blx_join_` bearer token with 401 on every route. That refusal is built, not deployed."),
+    ("p", "Everything on this diagram is designed, not built, from `docs/designs/blunix-service.md` and `docs/designs/blunix-platform.md`. One box is the exception: the API already refuses every `blx_join_` bearer token with 401 on every route. That refusal is built and live."),
     ("h3", "The boxes"),
     ("ul", [
         "**Clients of one API.** The web console, the laptop CLI, Terraform, Ansible and the support desk. There is no second control plane. Keys by scope: `hosts:write`, `machines:read`, `troubleshoot:request`, `log:publish`.",
@@ -1337,8 +1342,8 @@ WALK["06-future-plane"] = [
         "**Troubleshoot collect.** `blunix: troubleshoot requested for lab-3. Say yes to start.` A fixed collector, an allowlisted report of 64 KiB, signed. No journal text and no keys.",
         "**Blunix Log, append-only.** A row holds the version, channel, artifact sha256, signature, predecessor and file names. Withdrawing is a new row. `GET` is public; the site renders it.",
         "**Manifest at `updates.blunix.io/blunix`.** Generated from the current rows, never edited by hand. Mirrors are caches of one digest.",
-        "**Cloud builder.** Runs the build the repo specifies. Its only output is a log row, through `log:publish`.",
-        "**Offline signing key.** Signs images and rows. Never on the builder or on Cloudflare.",
+        "**Cloud builder.** Runs the build the repo specifies. Its only output is a log row, through `log:publish`. Today the separate release build server stages unsigned images instead; the log row is designed.",
+        "**Offline signing key.** Signs images and rows. Never on the builder or on Cloudflare. The release key exists today and will sign `SHA256SUMS`; signing log rows is designed.",
     ]),
     ("h3", "The numbered arrows, all designed"),
     ("ol", [
@@ -1427,10 +1432,10 @@ DISAGREE = [
     "**Pinned URLs.** The contract's hand-off always shows `https://v3.ada.blnx.io/`. The Worker returns `pinnedUrl: null` until `PINNED_HOSTS_TLS` is `on`, and the portal and the card then leave it out. The contract's deploy notes explain why; its hand-off section does not.",
     "**Routes not in the contract.** The Worker answers `GET /v1/health` (public, CORS for blunix.io only), which the site's `js/live.js` calls. An upload with the wrong content type is `415 unsupported media type`, not the contract's `400 refused ciphertext`. Reserving past 20 labels is `403 label limit`.",
     "**Image source.** The contract says the medium's image, \"or updates.blunix.io later\". The code falls back to a GitHub release named by a pin on the medium, over verified TLS, checked against the pinned sha256.",
-    "**The builder.** The contract places the builder on our servers, on a clean host, using mkosi or Docker. The code runs the scripts in privileged Docker from a Mac or a Linux host; no builder host is set up in the tree, and `image/mkosi/` is not used by these scripts. The build never uploads: a person runs `gh release upload`.",
+    "**The builder.** The contract places the builder on our servers, on a clean host, using mkosi or Docker. Release images are now built on a separate release build server, from signed tags only, in a privileged container pinned by digest; `image/mkosi/` is not used by these scripts. The build scripts never upload. The build server stages unsigned images in a bucket that expires after 30 days, and the maintainer signs and publishes the release offline.",
     "**Two apiVersion domains.** Node documents are `apiVersion: blunix.dev/v1`; the offline `InstallBundle` is `apiVersion: blunix.io/v1`. Both match the contract, but the two domains differ.",
     "**The first-boot bootstrap.** The raw image's bootstrap has no proxy and no typed static address. It waits for a DHCP address (18 checks, 5 s apart), then fails closed. Only the live installer has the fallbacks.",
-    "**Deployment, as of 2026-09-30.** blunix.io and `/releases.json` are live (no releases yet). build.blunix.io and api.blunix.io answer placeholders, blnx.io has no DNS, `wrangler.jsonc` still has the all-zero D1 id, and `OIDC_ISSUER` is empty. The contract's status line says BUILDING, which matches.",
+    "**Deployment, as of 2026-10-03.** blunix.io and `/releases.json`, build.blunix.io, api.blunix.io and the `{label}.blnx.io` build hosts are live, with sign-in through After Dark Systems SSO. Pinned version hosts are not on yet, so the Worker returns `pinnedUrl: null`. v0.1.0 is an unsigned test release; release signing is set up and the first signed release is next. If the contract's status line still says BUILDING, it is behind.",
 ]
 
 
@@ -1454,7 +1459,7 @@ def write_doc():
     out = [
         "# Architecture",
         "",
-        "How the Blunix install plane fits together, drawn from the code as it stands on 2026-09-30. "
+        "How the Blunix install plane fits together, drawn from the code and the running services as they stand on 2026-10-03. "
         "The same drawings and walk-throughs are on `site/architecture.html`. The walk-through under each "
         "drawing says everything the drawing says.",
         "",
