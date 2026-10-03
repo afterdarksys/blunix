@@ -51,6 +51,25 @@ Every line must say OK. Nothing is signed yet; the checksum proves the bytes mat
 | `brand/` | The logo, Blubie the mascot, diagrams, and the brand guide. |
 | `docs/` | The architecture walk-through and the design documents. |
 
+## Build and install source packages
+
+`gitbuild` prepares repositories from `straticus1` and `afterdarksys` using
+Python, Go, Rust, Bash, Node, PHP, or explicit mixed-language recipes. Products
+install under `/usr/local/afterdarksys/<product>` with managed relative links in
+`/usr/local`. Builds run as an ordinary user; installation is a separate step.
+
+```
+./apply/gitbuild doctor --system go
+./apply/gitbuild prepare afterdarksys/example --ref <commit> --output build/example
+sudo ./apply/gitbuild install build/example
+./apply/gitbuild verify example
+```
+
+Replace `example` and `<commit>` with the intended repository and revision.
+See [the gitbuild guide](docs/gitbuild.md) for recipes, upgrades, configuration
+preservation, removal, and limitations. The [tooling assessment](docs/tooling-assessment.md)
+tracks the remaining troubleshooting, packaging, and automation work.
+
 ## Tests
 
 ```
