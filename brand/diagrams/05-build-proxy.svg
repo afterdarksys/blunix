@@ -126,10 +126,10 @@
 <text x="594.0" y="1660.0" font-size="16" fill="#c9c3b6">Decrypted on the machine.</text>
 <rect x="36" y="1727" width="1048" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
 <rect x="50.5" y="1744.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="67.0" y="1756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SIGNING: SET UP, NO SIGNED RELEASE YET</text>
-<text x="50.0" y="1782.0" font-size="18" fill="#f3efe6" font-weight="700">Trusted LANs only until images are signed</text>
+<text x="67.0" y="1756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SIGNED; LAN STILL UNVERIFIED</text>
+<text x="50.0" y="1782.0" font-size="18" fill="#f3efe6" font-weight="700">Trusted LANs only: iPXE and live-boot verify nothing</text>
 <text x="50.0" y="1805.0" font-size="16" fill="#c9c3b6">Kernel, initrd and squashfs travel as plain http. serve&#x27;s startup check proves they match the</text>
-<text x="50.0" y="1827.0" font-size="16" fill="#c9c3b6">SHA256SUMS you trusted, not who built them. iPXE and live-boot verify nothing. No signed release yet.</text>
+<text x="50.0" y="1827.0" font-size="16" fill="#c9c3b6">SHA256SUMS you trusted, not who built them. Releases are signed now, but that check still is not.</text>
 <rect x="631.7" y="1167.5" width="76.7" height="25.0" rx="4" fill="#161b20"/>
 <text x="670.0" y="1186.5" font-size="16" fill="#c9c3b6" text-anchor="middle">boot.ipxe</text>
 <rect x="784.4" y="1167.5" width="79.1" height="47.0" rx="4" fill="#161b20"/>

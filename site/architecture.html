@@ -67,7 +67,7 @@
         </li>
         <li>
           <svg class="swatch" viewBox="0 0 56 32" width="56" height="32" aria-hidden="true" focusable="false"><rect x="2" y="2" width="52" height="28" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/><rect x="9" y="11" width="10" height="10" fill="none" stroke="#a9b4c1" stroke-width="2"/></svg>
-          <span><strong>Built and tested in the repo.</strong> A thin solid border and a hollow square. The installer, the first-boot bootstrap, the build scripts and <code>blunix proxy</code> are built; the installer boots in a VM. Release signing is set up: the release key exists and the signing script is built. The first signed release is next.</span>
+          <span><strong>Built and tested in the repo.</strong> A thin solid border and a hollow square. The installer, the first-boot bootstrap, the build scripts and <code>blunix proxy</code> are built; the installer boots in a VM. v0.1.1-rc.2 is the first signed release.</span>
         </li>
         <li>
           <svg class="swatch" viewBox="0 0 56 32" width="56" height="32" aria-hidden="true" focusable="false"><rect x="2" y="2" width="52" height="28" rx="6" fill="#1b2127" stroke="#8e9aa8" stroke-width="2.5" stroke-dasharray="8 5"/><rect x="9" y="11" width="10" height="10" fill="none" stroke="#a9b4c1" stroke-width="2" stroke-dasharray="3 2.5"/></svg>
@@ -113,7 +113,7 @@
 <!-- diagram:01-ecosystem -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 1200" width="1120" height="1200" role="img" aria-labelledby="eco-title eco-desc" font-family="Atkinson, &#x27;Atkinson Hyperlegible&#x27;, &#x27;Helvetica Neue&#x27;, Arial, sans-serif">
 <title id="eco-title">Blunix ecosystem: who talks to whom</title>
-<desc id="eco-desc">Zones for the operator&#x27;s browser, After Dark Systems SSO at adsas.id, Cloudflare, GitHub, the release build server, the offline signing key, the customer LAN and the machine at the console, joined by 16 numbered connections. The website, portal, API, build hosts, sign-in, GitHub repo and release build server run today; the installer and proxy are built and tested; the release signing key is set up, and no signed release exists yet. The numbered walk-through after this figure says everything the diagram shows.</desc>
+<desc id="eco-desc">Zones for the operator&#x27;s browser, After Dark Systems SSO at adsas.id, Cloudflare, GitHub, the release build server, the offline signing key, the customer LAN and the machine at the console, joined by 16 numbered connections. The website, portal, API, build hosts, sign-in, GitHub repo and release build server run today; the installer and proxy are built and tested; the release signing key has signed its first release, v0.1.1-rc.2. The numbered walk-through after this figure says everything the diagram shows.</desc>
 <defs><marker id="eco-head" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
 <defs><marker id="eco-bighead" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="22" markerHeight="22" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L12 6 L0 12 Z" fill="#8e9aa8"/></marker></defs>
 <rect width="1120" height="1200" fill="#12161a"/>
@@ -237,10 +237,10 @@
 <text x="820.0" y="612.0" font-size="16" fill="#c9c3b6">Unsigned images to staging.</text>
 <rect x="806" y="727" width="258" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
 <rect x="820.5" y="744.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="837.0" y="756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SET UP, NOT USED YET</text>
+<text x="837.0" y="756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">USED: v0.1.1-rc.2</text>
 <text x="820.0" y="782.0" font-size="18" fill="#f3efe6" font-weight="700">Release signing key</text>
 <text x="820.0" y="805.0" font-size="16" fill="#c9c3b6">Held by the maintainer.</text>
-<text x="820.0" y="827.0" font-size="16" fill="#c9c3b6">No signed release yet.</text>
+<text x="820.0" y="827.0" font-size="16" fill="#c9c3b6">Signed v0.1.1-rc.2.</text>
 <rect x="36" y="925" width="488" height="137" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
 <rect x="50.5" y="942.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
 <rect x="408.9" y="935.0" width="105.1" height="26" rx="13" fill="#12161a" stroke="#d2ee9a" stroke-width="2.5"/>
@@ -323,7 +323,7 @@
   <li><strong>Cloudflare, continued.</strong> <code>{label}.blnx.io</code> is the same Worker: <code>GET</code> and <code>HEAD</code> on <code>/</code> only. blnx.io is a separate registrable domain, so build hosts never share cookies with the site, the portal or the API. Live, with wildcard DNS and TLS. Only the latest version is served for now: pinned version hosts, <code>v{n}.{label}.blnx.io</code>, have no certificates yet.</li>
   <li><strong>GitHub.</strong> The repo <code>afterdarksys/blunix</code> is live. Its Actions job, in the <code>production</code> environment, deploys <code>site/</code> and <code>portal/</code>. Releases hold the ISO, <code>blunix.raw.zst</code>, the netboot media and <code>SHA256SUMS</code>. v0.1.0 is an unsigned test release on Debian 13: its checksums prove the bytes match, not who built them.</li>
   <li><strong>Release build server.</strong> A separate server, not on Cloudflare. It builds only tags signed by the pinned release key, in a privileged <code>debian:trixie-slim</code> container pinned by digest. It is pull-only and holds no signing key. It uploads the images, unsigned, to a staging bucket where objects expire after 30 days.</li>
-  <li><strong>Offline.</strong> The release signing key, an OpenPGP ed25519 key, on the maintainer&#x27;s machine. It is never on the build server and never on Cloudflare. It is set up; the first signed release is next.</li>
+  <li><strong>Offline.</strong> The release signing key, an OpenPGP ed25519 key, on the maintainer&#x27;s machine. It is never on the build server and never on Cloudflare. It signed its first release, v0.1.1-rc.2, on 2026-10-03.</li>
   <li><strong>Customer LAN.</strong> <code>blunix proxy</code> on the operator&#x27;s Linux or Mac, built. <code>publish</code> encrypts per machine and uploads ciphertext. <code>serve</code> relays <code>*.blnx.io</code> and serves netboot media and <code>boot.ipxe</code>. The keys are in <code>keys.txt</code>, mode 0600, on this computer. The key exists here.</li>
   <li><strong>The machine at the console.</strong> The installer (ISO, USB or netboot) or the first-boot bootstrap (raw image), built and booting in a VM. It asks the hostname, then the key with echo off, fetches, decrypts on the machine, and applies. The key exists here while it is typed.</li>
 </ul>
@@ -842,7 +842,7 @@
 <ol start="17">
   <li>The build server uploads the images, unsigned, to a staging bucket on R2. Its only credential can write to that one bucket. Objects expire after 30 days.</li>
   <li>A manual step, offline. The maintainer pulls the images from staging, verifies them, and signs <code>SHA256SUMS</code> with the release key on their own machine. <code>scripts/release-sign.py</code> pins full key fingerprints. The key is never on the build server or Cloudflare.</li>
-  <li>The maintainer publishes the GitHub release on <code>afterdarksys/blunix</code>. blunix.io lists it through <code>/releases.json</code>. v0.1.0 is an unsigned test release; the first signed release is next.</li>
+  <li>The maintainer publishes the GitHub release on <code>afterdarksys/blunix</code>. blunix.io lists it through <code>/releases.json</code>. v0.1.0 is an unsigned test release; v0.1.1-rc.2 is the first signed release.</li>
 </ol>
 <h3>Site and portal: push to main in site/, portal/ or brand/, or a manual run</h3>
 <ol start="20">
@@ -1183,10 +1183,10 @@
 <text x="594.0" y="1660.0" font-size="16" fill="#c9c3b6">Decrypted on the machine.</text>
 <rect x="36" y="1727" width="1048" height="115" rx="8" fill="#1b2127" stroke="#8e9aa8" stroke-width="2"/>
 <rect x="50.5" y="1744.5" width="11" height="11" fill="none" stroke="#a9b4c1" stroke-width="2"/>
-<text x="67.0" y="1756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SIGNING: SET UP, NO SIGNED RELEASE YET</text>
-<text x="50.0" y="1782.0" font-size="18" fill="#f3efe6" font-weight="700">Trusted LANs only until images are signed</text>
+<text x="67.0" y="1756.0" font-size="15" fill="#a9b4c1" font-weight="700" letter-spacing="0.80">SIGNED; LAN STILL UNVERIFIED</text>
+<text x="50.0" y="1782.0" font-size="18" fill="#f3efe6" font-weight="700">Trusted LANs only: iPXE and live-boot verify nothing</text>
 <text x="50.0" y="1805.0" font-size="16" fill="#c9c3b6">Kernel, initrd and squashfs travel as plain http. serve&#x27;s startup check proves they match the</text>
-<text x="50.0" y="1827.0" font-size="16" fill="#c9c3b6">SHA256SUMS you trusted, not who built them. iPXE and live-boot verify nothing. No signed release yet.</text>
+<text x="50.0" y="1827.0" font-size="16" fill="#c9c3b6">SHA256SUMS you trusted, not who built them. Releases are signed now, but that check still is not.</text>
 <rect x="631.7" y="1167.5" width="76.7" height="25.0" rx="4" fill="#161b20"/>
 <text x="670.0" y="1186.5" font-size="16" fill="#c9c3b6" text-anchor="middle">boot.ipxe</text>
 <rect x="784.4" y="1167.5" width="79.1" height="47.0" rx="4" fill="#161b20"/>
@@ -1240,7 +1240,7 @@
       </figure>
       <div class="walk">
 <!-- walk:05-build-proxy -->
-<p>The proxy is built and tested, and the API and build hosts it talks to are live. Release signing is set up, but no signed release exists yet, so the trusted-LAN rule still holds. The key stays in <code>keys.txt</code> and on the printed card.</p>
+<p>The proxy is built and tested, and the API and build hosts it talks to are live. Releases are now signed, but iPXE and live-boot still verify nothing, so the trusted-LAN rule still holds. The key stays in <code>keys.txt</code> and on the printed card.</p>
 <h3>Cloudflare</h3>
 <ul>
   <li>api.blunix.io, live: <code>POST /v1/hosts</code> reserves a label; <code>POST /v1/hosts/{label}/builds</code> uploads.</li>
@@ -1271,7 +1271,7 @@
   <li>The machines fetch the kernel, initrd and squashfs from <code>/media/</code> over plain http.</li>
   <li>The installer fetches <code>/v1/build/{host}</code> from <code>serve</code>: ciphertext only.</li>
 </ol>
-<p>Trusted LANs only until images are signed. The kernel, initrd and squashfs travel as plain http. <code>serve</code>&#x27;s startup check proves they match the <code>SHA256SUMS</code> you trusted, not who built them. iPXE and live-boot verify nothing. Release signing is set up; the first signed release is next.</p>
+<p>Trusted LANs only: iPXE and live-boot verify nothing. The kernel, initrd and squashfs travel as plain http. <code>serve</code>&#x27;s startup check proves they match the <code>SHA256SUMS</code> you trusted, not who built them. Releases are now signed, starting with v0.1.1-rc.2, but that check still is not.</p>
 <!-- /walk:05-build-proxy -->
       </div>
     </section>

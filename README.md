@@ -19,7 +19,7 @@ Website: [blunix.io](https://blunix.io). How the pieces fit: [docs/architecture.
   - The web portal at [build.blunix.io](https://build.blunix.io). It makes your key in the browser and encrypts your build with [age](https://age-encryption.org). Sign in with After Dark Systems SSO.
   - The API at api.blunix.io.
   - Build hosts at `{label}.blnx.io` (latest version only; pinned `v{n}.{label}.blnx.io` hosts come later).
-- **Release builds.** A separate build server builds official images only from tags signed by the release key, and holds no signing key itself. It stages images unsigned; signing happens offline. The release key is [keys/blunix-releases.asc](keys/blunix-releases.asc), fingerprint `62F7 36BE A2AB 2E1F A16D  5138 BCB3 426C 090A DF92`. The first signed release is next.
+- **Release builds.** A separate build server builds official images only from tags signed by the release key, and holds no signing key itself. It stages images unsigned; signing happens offline. The release key is [keys/blunix-releases.asc](keys/blunix-releases.asc), fingerprint `62F7 36BE A2AB 2E1F A16D  5138 BCB3 426C 090A DF92`. The first signed release, [v0.1.1-rc.2](https://github.com/afterdarksys/blunix/releases/tag/v0.1.1-rc.2), is out as a pre-release.
 - **Built and tested.** The `blunix proxy` for static-address and netboot LANs, and the host tools (`blunix doctor`, `security audit`, `integrity check`, `support collect`, `gitbuild`). See [blunix.io/tools](https://blunix.io/tools.html).
 - **Designed, not built.** A/B rollback, enrolled machines, and the troubleshoot collector. The design docs are in [docs/designs/](docs/designs/).
 

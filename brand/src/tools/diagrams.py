@@ -407,8 +407,8 @@ def d1():
         "Zones for the operator's browser, After Dark Systems SSO at adsas.id, Cloudflare, GitHub, the release "
         "build server, the offline signing key, the customer LAN and the machine at the console, joined by 16 "
         "numbered connections. The website, portal, API, build hosts, sign-in, GitHub repo and release build "
-        "server run today; the installer and proxy are built and tested; the release signing key is set up, and "
-        "no signed release exists yet. The numbered walk-through after this figure says everything the diagram "
+        "server run today; the installer and proxy are built and tested; the release signing key has signed its "
+        "first release, v0.1.1-rc.2. The numbered walk-through after this figure says everything the diagram "
         "shows.")
     d.text(28, 44, "Blunix ecosystem: who talks to whom", T_TITLE, True, INK)
     d.text(28, 72, "As it stands on 2026-10-03. Numbers match the walk-through.", T_LINE, False, MUTED)
@@ -477,8 +477,8 @@ def d1():
     d.zone(790, 685, 290, 175, "OFFLINE")
     signer = d.box(806, 727, 258, "Release signing key", [
         "Held by the maintainer.",
-        "No signed release yet.",
-    ], status="built", tag="SET UP, NOT USED YET")
+        "Signed v0.1.1-rc.2.",
+    ], status="built", tag="USED: v0.1.1-rc.2")
 
     # Bottom row
     d.zone(20, 880, 520, 205, "CUSTOMER LAN")
@@ -990,10 +990,10 @@ def d5():
         "blunix.proxy= on its kernel line. The operator",
         "types the hostname, then the key from the card.",
         "Decrypted on the machine."], status="built", tag="BUILT", key=True, mark=False)
-    warn = d.box(36, max(dns["b"], mach["b"]) + 30, 1048, "Trusted LANs only until images are signed", [
+    warn = d.box(36, max(dns["b"], mach["b"]) + 30, 1048, "Trusted LANs only: iPXE and live-boot verify nothing", [
         "Kernel, initrd and squashfs travel as plain http. serve's startup check proves they match the",
-        "SHA256SUMS you trusted, not who built them. iPXE and live-boot verify nothing. No signed release yet.",
-    ], status="built", tag="SIGNING: SET UP, NO SIGNED RELEASE YET")
+        "SHA256SUMS you trusted, not who built them. Releases are signed now, but that check still is not.",
+    ], status="built", tag="SIGNED; LAN STILL UNVERIFIED")
 
     pub = col[3]
     # 10: publish -> api (ciphertext + Bearer)
@@ -1163,7 +1163,7 @@ WALK["01-ecosystem"] = [
         "**Cloudflare, continued.** `{label}.blnx.io` is the same Worker: `GET` and `HEAD` on `/` only. blnx.io is a separate registrable domain, so build hosts never share cookies with the site, the portal or the API. Live, with wildcard DNS and TLS. Only the latest version is served for now: pinned version hosts, `v{n}.{label}.blnx.io`, have no certificates yet.",
         "**GitHub.** The repo `afterdarksys/blunix` is live. Its Actions job, in the `production` environment, deploys `site/` and `portal/`. Releases hold the ISO, `blunix.raw.zst`, the netboot media and `SHA256SUMS`. v0.1.0 is an unsigned test release on Debian 13: its checksums prove the bytes match, not who built them.",
         "**Release build server.** A separate server, not on Cloudflare. It builds only tags signed by the pinned release key, in a privileged `debian:trixie-slim` container pinned by digest. It is pull-only and holds no signing key. It uploads the images, unsigned, to a staging bucket where objects expire after 30 days.",
-        "**Offline.** The release signing key, an OpenPGP ed25519 key, on the maintainer's machine. It is never on the build server and never on Cloudflare. It is set up; the first signed release is next.",
+        "**Offline.** The release signing key, an OpenPGP ed25519 key, on the maintainer's machine. It is never on the build server and never on Cloudflare. It signed its first release, v0.1.1-rc.2, on 2026-10-03.",
         "**Customer LAN.** `blunix proxy` on the operator's Linux or Mac, built. `publish` encrypts per machine and uploads ciphertext. `serve` relays `*.blnx.io` and serves netboot media and `boot.ipxe`. The keys are in `keys.txt`, mode 0600, on this computer. The key exists here.",
         "**The machine at the console.** The installer (ISO, USB or netboot) or the first-boot bootstrap (raw image), built and booting in a VM. It asks the hostname, then the key with echo off, fetches, decrypts on the machine, and applies. The key exists here while it is typed.",
     ]),
@@ -1255,7 +1255,7 @@ WALK["03-build-release"] = [
     ("ol_start", 17, [
         "The build server uploads the images, unsigned, to a staging bucket on R2. Its only credential can write to that one bucket. Objects expire after 30 days.",
         "A manual step, offline. The maintainer pulls the images from staging, verifies them, and signs `SHA256SUMS` with the release key on their own machine. `scripts/release-sign.py` pins full key fingerprints. The key is never on the build server or Cloudflare.",
-        "The maintainer publishes the GitHub release on `afterdarksys/blunix`. blunix.io lists it through `/releases.json`. v0.1.0 is an unsigned test release; the first signed release is next.",
+        "The maintainer publishes the GitHub release on `afterdarksys/blunix`. blunix.io lists it through `/releases.json`. v0.1.0 is an unsigned test release; v0.1.1-rc.2 is the first signed release.",
     ]),
     ("h3", "Site and portal: push to main in site/, portal/ or brand/, or a manual run"),
     ("ol_start", 20, [
@@ -1292,7 +1292,7 @@ WALK["04-installer"] = [
 ]
 
 WALK["05-build-proxy"] = [
-    ("p", "The proxy is built and tested, and the API and build hosts it talks to are live. Release signing is set up, but no signed release exists yet, so the trusted-LAN rule still holds. The key stays in `keys.txt` and on the printed card."),
+    ("p", "The proxy is built and tested, and the API and build hosts it talks to are live. Releases are now signed, but iPXE and live-boot still verify nothing, so the trusted-LAN rule still holds. The key stays in `keys.txt` and on the printed card."),
     ("h3", "Cloudflare"),
     ("ul", [
         "api.blunix.io, live: `POST /v1/hosts` reserves a label; `POST /v1/hosts/{label}/builds` uploads.",
@@ -1323,7 +1323,7 @@ WALK["05-build-proxy"] = [
         "The machines fetch the kernel, initrd and squashfs from `/media/` over plain http.",
         "The installer fetches `/v1/build/{host}` from `serve`: ciphertext only.",
     ]),
-    ("p", "Trusted LANs only until images are signed. The kernel, initrd and squashfs travel as plain http. `serve`'s startup check proves they match the `SHA256SUMS` you trusted, not who built them. iPXE and live-boot verify nothing. Release signing is set up; the first signed release is next."),
+    ("p", "Trusted LANs only: iPXE and live-boot verify nothing. The kernel, initrd and squashfs travel as plain http. `serve`'s startup check proves they match the `SHA256SUMS` you trusted, not who built them. Releases are now signed, starting with v0.1.1-rc.2, but that check still is not."),
 ]
 
 WALK["06-future-plane"] = [
@@ -1435,7 +1435,7 @@ DISAGREE = [
     "**The builder.** The contract places the builder on our servers, on a clean host, using mkosi or Docker. Release images are now built on a separate release build server, from signed tags only, in a privileged container pinned by digest; `image/mkosi/` is not used by these scripts. The build scripts never upload. The build server stages unsigned images in a bucket that expires after 30 days, and the maintainer signs and publishes the release offline.",
     "**Two apiVersion domains.** Node documents are `apiVersion: blunix.dev/v1`; the offline `InstallBundle` is `apiVersion: blunix.io/v1`. Both match the contract, but the two domains differ.",
     "**The first-boot bootstrap.** The raw image's bootstrap has no proxy and no typed static address. It waits for a DHCP address (18 checks, 5 s apart), then fails closed. Only the live installer has the fallbacks.",
-    "**Deployment, as of 2026-10-03.** blunix.io and `/releases.json`, build.blunix.io, api.blunix.io and the `{label}.blnx.io` build hosts are live, with sign-in through After Dark Systems SSO. Pinned version hosts are not on yet, so the Worker returns `pinnedUrl: null`. v0.1.0 is an unsigned test release; release signing is set up and the first signed release is next. If the contract's status line still says BUILDING, it is behind.",
+    "**Deployment, as of 2026-10-03.** blunix.io and `/releases.json`, build.blunix.io, api.blunix.io and the `{label}.blnx.io` build hosts are live, with sign-in through After Dark Systems SSO. Pinned version hosts are not on yet, so the Worker returns `pinnedUrl: null`. v0.1.0 is an unsigned test release; v0.1.1-rc.2 is the first signed release. If the contract's status line still says BUILDING, it is behind.",
 ]
 
 

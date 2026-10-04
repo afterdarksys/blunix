@@ -29,7 +29,7 @@ PNG at 2x: [`brand/diagrams/01-ecosystem.png`](../brand/diagrams/01-ecosystem.pn
 - **Cloudflare, continued.** `{label}.blnx.io` is the same Worker: `GET` and `HEAD` on `/` only. blnx.io is a separate registrable domain, so build hosts never share cookies with the site, the portal or the API. Live, with wildcard DNS and TLS. Only the latest version is served for now: pinned version hosts, `v{n}.{label}.blnx.io`, have no certificates yet.
 - **GitHub.** The repo `afterdarksys/blunix` is live. Its Actions job, in the `production` environment, deploys `site/` and `portal/`. Releases hold the ISO, `blunix.raw.zst`, the netboot media and `SHA256SUMS`. v0.1.0 is an unsigned test release on Debian 13: its checksums prove the bytes match, not who built them.
 - **Release build server.** A separate server, not on Cloudflare. It builds only tags signed by the pinned release key, in a privileged `debian:trixie-slim` container pinned by digest. It is pull-only and holds no signing key. It uploads the images, unsigned, to a staging bucket where objects expire after 30 days.
-- **Offline.** The release signing key, an OpenPGP ed25519 key, on the maintainer's machine. It is never on the build server and never on Cloudflare. It is set up; the first signed release is next.
+- **Offline.** The release signing key, an OpenPGP ed25519 key, on the maintainer's machine. It is never on the build server and never on Cloudflare. It signed its first release, v0.1.1-rc.2, on 2026-10-03.
 - **Customer LAN.** `blunix proxy` on the operator's Linux or Mac, built. `publish` encrypts per machine and uploads ciphertext. `serve` relays `*.blnx.io` and serves netboot media and `boot.ipxe`. The keys are in `keys.txt`, mode 0600, on this computer. The key exists here.
 - **The machine at the console.** The installer (ISO, USB or netboot) or the first-boot bootstrap (raw image), built and booting in a VM. It asks the hostname, then the key with echo off, fetches, decrypts on the machine, and applies. The key exists here while it is typed.
 
@@ -132,7 +132,7 @@ Octagons are gates: the build stops there and writes no release. The first two c
 
 17. The build server uploads the images, unsigned, to a staging bucket on R2. Its only credential can write to that one bucket. Objects expire after 30 days.
 18. A manual step, offline. The maintainer pulls the images from staging, verifies them, and signs `SHA256SUMS` with the release key on their own machine. `scripts/release-sign.py` pins full key fingerprints. The key is never on the build server or Cloudflare.
-19. The maintainer publishes the GitHub release on `afterdarksys/blunix`. blunix.io lists it through `/releases.json`. v0.1.0 is an unsigned test release; the first signed release is next.
+19. The maintainer publishes the GitHub release on `afterdarksys/blunix`. blunix.io lists it through `/releases.json`. v0.1.0 is an unsigned test release; v0.1.1-rc.2 is the first signed release.
 
 #### Site and portal: push to main in site/, portal/ or brand/, or a manual run
 
@@ -178,7 +178,7 @@ Not drawn, but in the code: any answer typed at a second console stops with `blu
 
 PNG at 2x: [`brand/diagrams/05-build-proxy.png`](../brand/diagrams/05-build-proxy.png)
 
-The proxy is built and tested, and the API and build hosts it talks to are live. Release signing is set up, but no signed release exists yet, so the trusted-LAN rule still holds. The key stays in `keys.txt` and on the printed card.
+The proxy is built and tested, and the API and build hosts it talks to are live. Releases are now signed, but iPXE and live-boot still verify nothing, so the trusted-LAN rule still holds. The key stays in `keys.txt` and on the printed card.
 
 #### Cloudflare
 
@@ -210,7 +210,7 @@ The proxy is built and tested, and the API and build hosts it talks to are live.
 15. The machines fetch the kernel, initrd and squashfs from `/media/` over plain http.
 16. The installer fetches `/v1/build/{host}` from `serve`: ciphertext only.
 
-Trusted LANs only until images are signed. The kernel, initrd and squashfs travel as plain http. `serve`'s startup check proves they match the `SHA256SUMS` you trusted, not who built them. iPXE and live-boot verify nothing. Release signing is set up; the first signed release is next.
+Trusted LANs only: iPXE and live-boot verify nothing. The kernel, initrd and squashfs travel as plain http. `serve`'s startup check proves they match the `SHA256SUMS` you trusted, not who built them. Releases are now signed, starting with v0.1.1-rc.2, but that check still is not.
 
 
 ## 6. Later: the future plane (designed, not built)
@@ -266,4 +266,4 @@ The contract is `docs/designs/blunix-install-plane.md`. The drawings follow the 
 10. **The builder.** The contract places the builder on our servers, on a clean host, using mkosi or Docker. Release images are now built on a separate release build server, from signed tags only, in a privileged container pinned by digest; `image/mkosi/` is not used by these scripts. The build scripts never upload. The build server stages unsigned images in a bucket that expires after 30 days, and the maintainer signs and publishes the release offline.
 11. **Two apiVersion domains.** Node documents are `apiVersion: blunix.dev/v1`; the offline `InstallBundle` is `apiVersion: blunix.io/v1`. Both match the contract, but the two domains differ.
 12. **The first-boot bootstrap.** The raw image's bootstrap has no proxy and no typed static address. It waits for a DHCP address (18 checks, 5 s apart), then fails closed. Only the live installer has the fallbacks.
-13. **Deployment, as of 2026-10-03.** blunix.io and `/releases.json`, build.blunix.io, api.blunix.io and the `{label}.blnx.io` build hosts are live, with sign-in through After Dark Systems SSO. Pinned version hosts are not on yet, so the Worker returns `pinnedUrl: null`. v0.1.0 is an unsigned test release; release signing is set up and the first signed release is next. If the contract's status line still says BUILDING, it is behind.
+13. **Deployment, as of 2026-10-03.** blunix.io and `/releases.json`, build.blunix.io, api.blunix.io and the `{label}.blnx.io` build hosts are live, with sign-in through After Dark Systems SSO. Pinned version hosts are not on yet, so the Worker returns `pinnedUrl: null`. v0.1.0 is an unsigned test release; v0.1.1-rc.2 is the first signed release. If the contract's status line still says BUILDING, it is behind.

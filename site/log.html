@@ -70,7 +70,7 @@
       <div id="release-table" aria-live="polite" aria-busy="false">
         <p>The release table loads from GitHub when JavaScript runs. Without it, <a href="https://github.com/afterdarksys/blunix/releases">read the releases on GitHub</a>.</p>
       </div>
-      <p class="note">No release is signed yet. Release signing is set up, and the first signed release is next. Check a download before you use it: put it beside the release's <code>SHA256SUMS</code> and run <code>sha256sum -c --ignore-missing SHA256SUMS</code>. On an unsigned release, that proves the bytes match. It does not prove who built them.</p>
+      <p class="note">v0.1.1-rc.2 is the first signed release. v0.1.0 remains an unsigned test release. Check a download before you use it: put it beside the release's <code>SHA256SUMS</code> and run <code>sha256sum -c --ignore-missing SHA256SUMS</code>. On an unsigned release, that proves the bytes match. It does not prove who built them.</p>
     </section>
 
     <section class="wrap band" aria-labelledby="news-h">
@@ -83,8 +83,12 @@
       </div>
       <ol class="steps">
         <li>
+          <h3><time datetime="2026-10-03">3 October 2026</time>: the first signed release</h3>
+          <p><a href="https://github.com/afterdarksys/blunix/releases/tag/v0.1.1-rc.2">v0.1.1-rc.2</a> is out, as a pre-release on Debian 13. It was built by the release build server from the signed tag <code>v0.1.1-rc.2</code>, then its <code>SHA256SUMS</code> was signed offline with the release key. It also ships <code>build-provenance.json</code> and <code>SOURCES.md</code>. <a href="#verify-h">Read how to verify it</a>.</p>
+        </li>
+        <li>
           <h3><time datetime="2026-10-03">3 October 2026</time>: the portal is live</h3>
-          <p>The portal at <a href="https://build.blunix.io/">build.blunix.io</a> is open. The API at <span class="host">api.blunix.io</span> answers. The build hosts on <span class="host">blnx.io</span> serve the latest document for each label. Pinned version hosts are not on yet. Sign-in is After Dark Systems SSO. A release build server now builds official images from signed tags. The release signing key is published below. The first signed release is next.</p>
+          <p>The portal at <a href="https://build.blunix.io/">build.blunix.io</a> is open. The API at <span class="host">api.blunix.io</span> answers. The build hosts on <span class="host">blnx.io</span> serve the latest document for each label. Pinned version hosts are not on yet. Sign-in is After Dark Systems SSO. A release build server now builds official images from signed tags. The release signing key is published below. v0.1.1-rc.2 is the first signed release.</p>
         </li>
       </ol>
     </section>
@@ -104,7 +108,7 @@
         <li><strong>Step 2.</strong> Check the signature: <code>gpg --verify SHA256SUMS.asc SHA256SUMS</code>. It must say the signature is good and name the fingerprint above. Anything else, stop.</li>
         <li><strong>Step 3.</strong> Check the files: <code>sha256sum -c --ignore-missing SHA256SUMS</code>. Every file you downloaded must say OK.</li>
       </ul>
-      <p class="note">v0.1.0 is an unsigned test release, so it has no <code>SHA256SUMS.asc</code>. For it, only step 3 applies.</p>
+      <p class="note">v0.1.0 is an unsigned test release, so it has no <code>SHA256SUMS.asc</code>. For it, only step 3 applies. v0.1.1-rc.2 and later carry <code>SHA256SUMS.asc</code>.</p>
     </section>
 
     <section class="wrap band" aria-labelledby="built-h">
