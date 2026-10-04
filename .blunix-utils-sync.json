@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_commit": "37b82a21ae7fb0e22dea786db32e9d3c106c4fb0",
+  "source_commit": "dfd71562ebd8980857de729b61f20098a77521f2",
   "files": {
     ".github/workflows/host-tests.yml": {
       "sha256": "12607f04d2edb2a6ab8e9a179e4708510e6857367b7af45f31c949478abb5676",
@@ -139,11 +139,11 @@
       "executable": true
     },
     "image/scan-raw-explain.py": {
-      "sha256": "b1014920eba52f2113424b6c222ba4f988ee77a28139046b6066b9618c0472ad",
+      "sha256": "23b7823171dc22f90af4b9870baf39724b6d16ec4c23c8763079da9204963be8",
       "executable": true
     },
     "image/scan-raw.py": {
-      "sha256": "1b0324ae54d0f84af4ce95bf05b03e205573e9d9711123ff3891a51b68db7dbf",
+      "sha256": "369e084112377d3ffa604881ab27b14bff933883cfb3dfcfd8165c5f6189458f",
       "executable": true
     },
     "image/scan-root.py": {
@@ -371,7 +371,7 @@
       "executable": false
     },
     "tests/test_scan_raw.py": {
-      "sha256": "6498301a386fd6774f6ab7533b9b5cebbdfc91b283133822c3bd9d61bd01765a",
+      "sha256": "ce264aac58638a6c72c4a2c36a6a41047e193256b59557c1376274b972d4a374",
       "executable": false
     },
     "tests/test_scan_raw_explain.py": {
