@@ -370,7 +370,7 @@ sysexts: []</code></pre>
       </div>
       <pre tabindex="0" aria-label="Output of blunix proxy help"><code>usage:
   blunix proxy init [--api URL] [--key-file PATH] [--listen HOST:PORT]
-  blunix proxy plan SITE.yaml [--check]
+  blunix proxy plan SITE.yaml [--check] [--explain]
   blunix proxy publish SITE.yaml [--out DIR]
   blunix proxy serve [--site SITE.yaml] [--media DIR [--sums PATH]] [--listen HOST:PORT] [--advertise HOST:PORT]
   blunix proxy dnsmasq SITE.yaml [--interface IF] [--range START,END] [--proxy HOST:PORT] [--tftp-root DIR]
@@ -378,11 +378,12 @@ All commands take --config PATH (default ~/.config/blunix/proxy.yaml).
 The account key is read from its key file, never from the command line.</code></pre>
       <ul class="props">
         <li><strong>init</strong> saves the API address, the listen address, and the path to your account key file. The key is read from a mode 0600 file or typed at a hidden prompt. Putting it on the command line is refused.</li>
-        <li><strong>plan</strong> reads the site file and says, one sentence per machine, what publish would do. It sends nothing. Add <code>--check</code> to ask the API which labels are already yours.</li>
+        <li><strong>plan</strong> reads the site file and says, one sentence per machine, what publish would do. It sends nothing. Add <code>--check</code> to ask the API which labels are already yours, and <code>--explain</code> to list every setting with where it came from: the machine, the site defaults, a profile, the site's boot section, or the built-in value.</li>
         <li><strong>publish</strong> makes a new key for each machine, encrypts that machine's document with age, and uploads only the ciphertext. Each key is written to <code>keys.txt</code> (mode 0600) before its upload, so a lost answer from the server never loses a key. It stops if a label belongs to another account.</li>
         <li><strong>serve</strong> relays build documents for <code>blnx.io</code> build hosts only, and serves netboot files. It never serves keys. With <code>--media</code> it checks the media against <code>SHA256SUMS</code> first.</li>
         <li><strong>dnsmasq</strong> prints a dnsmasq configuration with one address reservation per machine. It prints to standard output and changes nothing.</li>
       </ul>
+      <p>The site file can name build profiles, set interface patterns, and tune netboot (installer access profile, consoles, extra kernel arguments, lease time, TFTP root) in a <code>boot:</code> section, so you can try configurations before settling on one. The rules are in <code>docs/proxy.md</code>.</p>
       <p class="note">What it does not stop: a person who can read <code>keys.txt</code>. Print the install cards and delete the file. Netboot is for trusted LANs until images are signed.</p>
       <p>Output of <code>plan</code>, captured on the Mac. The site file had two DHCP machines, <span class="host">ada</span> and <span class="host">grace</span>, with example MAC addresses.</p>
       <pre tabindex="0" aria-label="Output of blunix proxy plan"><code>blunix proxy: machine 00:50:56:aa:bb:01 gets label ada (https://ada.blnx.io/), hostname ada-1, network by dhcp, disk metal-luks, access regular.
