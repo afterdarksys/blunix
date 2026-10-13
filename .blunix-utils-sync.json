@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_commit": "ca4ce24f67e72b20bfbc336c20834bbe363080c1",
+  "source_commit": "30771c1c785b6b3fc4beb40975d706de2cb363e8",
   "files": {
     ".github/workflows/host-tests.yml": {
       "sha256": "12607f04d2edb2a6ab8e9a179e4708510e6857367b7af45f31c949478abb5676",
@@ -203,7 +203,7 @@
       "executable": false
     },
     "lib/blunix/cli.py": {
-      "sha256": "2110173f4d55ae0c2e34393eab25fe9905e007e633b3e9b26c381d960f401e21",
+      "sha256": "ba1051cbaafd7a7c0292c78f24ee7dafb82ae7ae0e0b1c58705c66ba6641b65e",
       "executable": false
     },
     "lib/blunix/cmd.py": {
@@ -252,6 +252,10 @@
     },
     "lib/blunix/ops.py": {
       "sha256": "b89f575f780a477547bee4bd705a3477f832c904fcde016ba429d96ad1d3eddb",
+      "executable": false
+    },
+    "lib/blunix/profile.py": {
+      "sha256": "2206890c340824625a973623829e44859354f11c3de7834ccc0ee1484928bd1e",
       "executable": false
     },
     "lib/blunix/proxy.py": {
@@ -330,6 +334,58 @@
       "sha256": "223eb95114f1e523909229d9fb6a90509c4ffd520f37c175f249cafaf30d090c",
       "executable": false
     },
+    "tests/fixtures/profiles/ada-node.json": {
+      "sha256": "bdf0551c0cc8a7b6583d277b17bc5f75aba621e8db1dfc088c2bfcc8d0836af6",
+      "executable": false
+    },
+    "tests/fixtures/profiles/ada-node.yaml": {
+      "sha256": "ec9ccb314ae29675011834b34f6e04242551521d5615b457659983cc8e17b3c6",
+      "executable": false
+    },
+    "tests/fixtures/profiles/bad-channel.yaml": {
+      "sha256": "19ad7be7ca9b7fa92da2279a75931e9740135936947d2c374c7a8246d0968640",
+      "executable": false
+    },
+    "tests/fixtures/profiles/bad-duplicate.json": {
+      "sha256": "b44d6daca5b86788e79671a6e7d10a1fad6b94632d82d5728bb6c072e4f3e7af",
+      "executable": false
+    },
+    "tests/fixtures/profiles/bad-hostname.yaml": {
+      "sha256": "b95e97412640151466ee20331ebaf93a356f6568cac93a5019986002058eb960",
+      "executable": false
+    },
+    "tests/fixtures/profiles/bad-kind.yaml": {
+      "sha256": "a8fb89d183e2b22ec4b4ec7b7604cf27e852f6bcd99773ab4e76b30e8f9bfb61",
+      "executable": false
+    },
+    "tests/fixtures/profiles/bad-nodisk.yaml": {
+      "sha256": "3fc8ea5959a41df566822afc8ccee4d6fad3f31a22694360136faeaf322e0dc8",
+      "executable": false
+    },
+    "tests/fixtures/profiles/bad-rocky.yaml": {
+      "sha256": "c1a8bdbcfc637d8880e1782fbbf5dfedb90298b03ab56cbd11c8099ae7c4d23e",
+      "executable": false
+    },
+    "tests/fixtures/profiles/bad-secret.yaml": {
+      "sha256": "171f3bd38a553075fdbfd2a6942ef98908eb71af099fd38100d912d614caa485",
+      "executable": false
+    },
+    "tests/fixtures/profiles/bad-unknown-disk.yaml": {
+      "sha256": "d7f40603c2b810091a72bca4316cf8e0b72ec366b6ddb3ff15115d4ea8fdc581",
+      "executable": false
+    },
+    "tests/fixtures/profiles/cases.json": {
+      "sha256": "f379fe570ec99cf229b37885f286943e68511789a14d1ca6cc11d23d8e3712ee",
+      "executable": false
+    },
+    "tests/fixtures/profiles/lab-speech.json": {
+      "sha256": "c92165345caab28cd041a1cd014d7bfb05394851dc73d46b8403661f88b1c3e1",
+      "executable": false
+    },
+    "tests/fixtures/profiles/lab-speech.yaml": {
+      "sha256": "f019a1c9cf6d01d9243e633d29881c558bdfe3b068aaea739f85b4b6d52e4f4d",
+      "executable": false
+    },
     "tests/test_blunix.py": {
       "sha256": "a6e433dce935fa57bd10b5d5476715d15406050f568c0c1c2d4ac043aba8d9f9",
       "executable": false
@@ -360,6 +416,10 @@
     },
     "tests/test_ops.py": {
       "sha256": "20fc59cd65e30612d28124a35acc163cef002b1dee5e9a48f30ca3e944050e60",
+      "executable": false
+    },
+    "tests/test_profile.py": {
+      "sha256": "ae34958574a13db476c8a8a8983345181e2b672292eecc7d02ea6ea7650a10b6",
       "executable": false
     },
     "tests/test_proxy.py": {
