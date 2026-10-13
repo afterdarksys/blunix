@@ -17,7 +17,7 @@ Homebrew `age` on macOS).
 
 ```
 blunix proxy init [--api URL] [--key-file PATH] [--listen HOST:PORT]
-blunix proxy plan SITE.yaml [--check]
+blunix proxy plan SITE.yaml [--check] [--explain]
 blunix proxy publish SITE.yaml [--out DIR]
 blunix proxy serve [--site SITE.yaml] [--media DIR [--sums PATH]] [--listen HOST:PORT] [--advertise HOST:PORT]
 blunix proxy dnsmasq SITE.yaml [--interface IF] [--range START,END] [--proxy HOST:PORT] [--tftp-root DIR]
@@ -47,6 +47,7 @@ listen: 0.0.0.0:8750
 Prints one sentence per machine: its label, URL, hostname, network, disk and access.
 It renders and validates every node document, and makes no network call.
 With `--check` it also calls `GET /v1/hosts` to say which labels are already yours.
+With `--explain` it first prints every setting each machine and the boot section end up with, and where each value came from: `machine`, `defaults`, `profile PATH`, `site boot`, or `built-in`. Use it to compare lab configurations before settling on one.
 
 ### publish
 
@@ -131,7 +132,8 @@ The config's header says netboot is for trusted LANs only until images are signe
 - `dhcp-range`: the `--range START,END` you give. Otherwise, a static range for each subnet the static machines use.
 - PXE for listed MACs only (the `known` tag):
   - iPXE clients get `http://PROXY/v1/boot.ipxe`.
-  - Other clients get `ipxe.efi` (UEFI x86-64) or `undionly.kpxe` (BIOS) over TFTP from `--tftp-root` (default `/srv/tftp`), with `tftp-secure`.
+  - Other clients get `ipxe.efi` (UEFI x86-64) or `undionly.kpxe` (BIOS) over TFTP from `--tftp-root` (default: the site's `boot.tftp_root`, else `/srv/tftp`), with `tftp-secure`.
+- Leases use the site's `boot.lease` (default `12h`).
 
 `PROXY` is `--proxy HOST:PORT`, or the configured listen address if it is a specific address.
 
@@ -141,10 +143,18 @@ See `examples/site.yaml`.
 
 ```yaml
 defaults:            # optional
+  profile: profiles/lab.yaml   # optional Profile file, see below
   disk: metal-luks   # disk model name
   access: regular    # access model name
   channel: stable    # only stable today
   dns: [192.0.2.53]  # used by static machines that give no dns
+  match: [en*]       # interface patterns, en*, eth* or names like ens3
+boot:                # optional netboot settings, see below
+  access: full-speech
+  console: [tty0, ttyS0,115200]
+  args: [quiet]
+  lease: 12h
+  tftp_root: /srv/tftp
 machines:
   - mac: "00:50:56:aa:bb:01"   # quote it
     label: ada                  # owns ada.blnx.io
@@ -156,6 +166,11 @@ machines:
     disk: metal-luks            # optional override
     access: full-speech         # optional override
     target: nvme0n1             # optional: kernel disk name or serial
+    match: [enp1s0]             # optional override
+  - mac: "00:50:56:aa:bb:02"
+    label: grace
+    hostname: grace-1
+    profile: profiles/server.json   # its own profile; it supplies a DHCP network
   - mac: "00:50:56:aa:bb:03"
     label: linus
     hostname: linus-1
@@ -168,7 +183,7 @@ The parser is strict:
 - Quote every MAC. YAML 1.1 reads some unquoted MACs as numbers, and the parser refuses those.
 - Labels follow the contract: `^[a-z][a-z0-9-]{0,30}[a-z0-9]$`, no `--`, not reserved, and not `v` followed by digits.
 - MACs, labels, hostnames and static addresses must each be unique.
-- A machine has exactly one of `network` or `dhcp: true`.
+- A machine has exactly one of `network` or `dhcp: true`, or neither when its profile supplies a DHCP network.
 - A static address needs a prefix. It must not be the network or broadcast address, and the gateway must be inside its subnet.
 - `disk` and `access` must name models that exist.
 
@@ -187,4 +202,30 @@ update: {url: https://updates.blunix.io/blunix, channel: stable}
 sysexts: []
 ```
 
-A `dhcp: true` machine gets `network: dhcp-any`.
+A `dhcp: true` machine gets `network: dhcp-any`, or `{match: [...], dhcp: true}` when a match is set.
+
+### Profiles
+
+A `profile:` names a Profile file (see `blunix profile check`) next to the site file. The path is relative, must stay inside the site file's directory after symlinks resolve, and ends in `.yaml`, `.yml` or `.json`. The profile is checked when the site is loaded; a bad one names itself in the error.
+
+A profile can supply `disk`, `access`, `ai`, `update` and, when its network is `dhcp-any` or an inline DHCP network, the machine's network and match. Precedence for each setting:
+
+1. the machine's own field,
+2. the machine's own `profile:`,
+3. site `defaults`,
+4. the site's `defaults.profile`,
+5. the built-in value.
+
+A static network in a profile cannot stand in for a machine's network, because the address is per machine.
+
+### boot
+
+Netboot settings for `serve`'s `boot.ipxe` and for `dnsmasq`. Every key is optional.
+
+- `access`: the installer's access profile on the kernel line (`blunix.access=`). Default `regular`.
+- `console`: one to four of `ttyN` or `ttySN[,BAUD]`. Default `tty0` and `ttyS0,115200`.
+- `args`: up to 16 extra kernel arguments, `name` or `name=value`. The proxy refuses the ones it sets itself: `boot`, `fetch`, `initrd`, `noeject`, `console`, `blunix.proxy` and `blunix.access`.
+- `lease`: the dnsmasq lease time, `Nm`, `Nh` or `infinite`. Default `12h`.
+- `tftp_root`: an absolute path without `..`. Default `/srv/tftp`. `dnsmasq --tftp-root` overrides it.
+
+None of these values can add a dnsmasq line or a second kernel directive.
