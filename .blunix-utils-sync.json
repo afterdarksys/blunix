@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_commit": "30771c1c785b6b3fc4beb40975d706de2cb363e8",
+  "source_commit": "df0b1d935c16a73127047324adc2eeb8bfe3a05b",
   "files": {
     ".github/workflows/host-tests.yml": {
       "sha256": "12607f04d2edb2a6ab8e9a179e4708510e6857367b7af45f31c949478abb5676",
@@ -259,11 +259,11 @@
       "executable": false
     },
     "lib/blunix/proxy.py": {
-      "sha256": "9b911e704f4204095caafd3639f53b66227688f290e162696347c6fc63fcb642",
+      "sha256": "2b084b2cf9afff80da624b1db1ea73671a4560cc531e700370e39bc110429a50",
       "executable": false
     },
     "lib/blunix/proxy_boot.py": {
-      "sha256": "9e9a98fc5bbcf27c55df7e53faca225529beb168f09699187bbeea8dacb1e0e5",
+      "sha256": "6494515fcc276f1ee24a00f6dd279d6db15613a005655fed9648aff035ca161d",
       "executable": false
     },
     "lib/blunix/proxy_config.py": {
@@ -271,11 +271,11 @@
       "executable": false
     },
     "lib/blunix/proxy_serve.py": {
-      "sha256": "584c3643cacf50ee9faca393601f4c7c76a63c9e8caf22ab7f0e4b47b6db3aca",
+      "sha256": "5b73b29a271c206756f38f5541acc4b75cad651ffc12f080c6fc5e861964b3d9",
       "executable": false
     },
     "lib/blunix/proxy_site.py": {
-      "sha256": "f8fb6d2588cafb2f6f6b621d02e9e1d0656cee3f8a72876b90523e09c5631382",
+      "sha256": "151e044b641b9cbee145559c257034c223bbaf6a3966216994849f745856081f",
       "executable": false
     },
     "lib/blunix/schema.py": {
@@ -424,6 +424,10 @@
     },
     "tests/test_proxy.py": {
       "sha256": "83960606ed133de20e6546f41f7250ccddc2109c4be7263c452ae4f92684a824",
+      "executable": false
+    },
+    "tests/test_proxy_config.py": {
+      "sha256": "3142f6a9d9c2e38b6ef8bdcee81231341531207ea52bd42b2d2eec02443b5ea0",
       "executable": false
     },
     "tests/test_redact_serial.py": {
