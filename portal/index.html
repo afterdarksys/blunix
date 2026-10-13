@@ -112,6 +112,13 @@
           </div>
 
           <div class="field">
+            <label for="build-import">Start from a profile (optional)</label>
+            <input id="build-import" name="import" type="file" accept=".json,application/json" aria-describedby="build-import-hint build-import-problem">
+            <p id="build-import-hint" class="hint">A Profile or Node document in JSON fills in the choices below. It is read in this browser and not uploaded. For YAML, run <code>blunix profile render --format json</code> first.</p>
+            <p id="build-import-problem" class="problem" hidden></p>
+          </div>
+
+          <div class="field">
             <label for="build-hostname">Machine hostname, written to /etc/hostname</label>
             <input id="build-hostname" name="hostname" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="63" aria-describedby="build-hostname-hint build-hostname-problem">
             <p id="build-hostname-hint" class="hint">Empty means the label.</p>

@@ -16,6 +16,10 @@ The portal, served at the root of `https://build.blunix.io/` as its own Cloudfla
 
 The key lives in one variable while the install card is open. It is not written to storage, a URL, the console, or a request. Closing the card, signing out, starting the next build, or leaving the page drops it. The two downloads are made from a `Blob` in this page. The copy button puts the key on the system clipboard, which other apps can read; the page says so under the button.
 
+## Profile import
+
+The build form takes a JSON Profile or Node file (`lib.js` `importProfile`). It is read in the browser and fills the form; nothing is uploaded until the normal publish. The refusal messages match the CLI, and `tests/site/profile.test.mjs` runs the shared cases in `tests/fixtures/profiles/cases.json` (synced from blunix-utils) against it. Fields the form cannot show, such as another AI model, update URL, sysexts or a disk target, are refused rather than dropped. YAML is not parsed here: a browser YAML parser that cannot refuse aliases would be weaker than the CLI loader, so `blunix profile render --format json` converts it.
+
 ## Run it locally
 
 ```sh
