@@ -50,6 +50,46 @@ publishing the manifest and signature, keep the artifacts and regenerate in a
 fresh directory. Existing image builds that already produce `SHA256SUMS` can
 use `sign blunix-releases build/release/SHA256SUMS` instead.
 
+## Publish a release staged by builder1
+
+After `scripts/release-tag.sh` pushes a tag, builder1 builds it and stages the
+files, unsigned, in R2 `blunix-release-staging/<tag>/`. When builder1 has
+recorded the build, read its provenance hash over the vpscfgfarm door. This is
+the one input that does not come from R2, and it is what stops anyone who can
+write the bucket from getting a forged release signed:
+
+```sh
+vpsexec builder1 'cat /var/lib/blunix-builder/built/v0.1.1-rc.3.json'   # provenance_sha256
+```
+
+Then, in your own terminal (gpg asks for the passphrase):
+
+```sh
+python3 scripts/release-publish.py v0.1.1-rc.3 --dry-run --provenance-sha256 HEX
+python3 scripts/release-publish.py v0.1.1-rc.3 --provenance-sha256 HEX
+```
+
+It needs `wrangler` (logged in to the account that holds the staging bucket),
+`gh` and the release key in this keyring. It downloads into a fresh
+`~/blunix-releases/<tag>` (or `--dir`), and refuses unless:
+
+- the tag, fetched from GitHub by URL, is signed by the release key;
+- the provenance is the one builder1 recorded and names this tag, tag object,
+  commit, signer and repository;
+- its artifact list matches `SHA256SUMS` exactly;
+- every file matches its hash.
+
+It then signs the builder's `SHA256SUMS`, checks the signature is by the
+pinned key, and runs `verify-release`. It creates the GitHub release as a
+draft (a prerelease for `-alpha`, `-beta` and `-rc` tags) with the staged
+`RELEASE-NOTES.md`. It makes the release public only after every uploaded
+asset's sha256 matches and the GitHub tag still points at the verified tag.
+
+It refuses if the GitHub release already exists. `--dry-run` still runs then,
+to re-check a published tag. If a publish stops after the draft exists,
+inspect it and `gh release delete <tag> --repo afterdarksys/blunix` before
+running again.
+
 Distribute the public key and its fingerprint through a trusted channel;
 downloading a key alongside a release does not establish trust by itself.
 
