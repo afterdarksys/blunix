@@ -87,7 +87,11 @@ cd blunix-utils
   gitbuild --help                     source builds and installed product checks
   disk check|render, net render, access boot|render, ai apply, gui apply,
   tools apply, node apply|boot        image and installer steps (see blunix.io/tools)
+  profile check --file FILE           check a Profile or Node document (YAML or JSON)
+  profile render --file FILE --label LABEL --hostname NAME [--target DISK] [--format yaml|json]
+                                      print the Node document for one machine
 With no command, blunix runs the installer bootstrap.</code></pre>
+      <p>The two <code>profile</code> lines were added after that capture and were captured on the Mac.</p>
 
       <h3>Install as a package with Gitbuild</h3>
       <p>The repository carries its own Gitbuild recipe. Gitbuild builds one explicit ref and records the commit it resolved. It installs under <code>/usr/local/afterdarksys/blunix-utils</code> and links the commands into <code>/usr/local/bin</code>. The repository has no release tags yet, so name a full commit.</p>
@@ -327,6 +331,36 @@ gitbuild: product is not installed</code></pre>
   "missing": [],
   "note": "Checks executable availability; recipes may need additional headers and tools."
 }</code></pre>
+    </section>
+
+    <section class="wrap band" aria-labelledby="h-profiles">
+      <div class="band-head">
+        <h2 id="h-profiles">Build profiles</h2>
+        <p>A profile is a node document without a hostname, a label, or a disk target, so one profile serves many machines. It is YAML or JSON with <code>kind: Profile</code>. <code>distribution</code> is optional and only <code>debian</code> is accepted today.</p>
+      </div>
+      <ul class="props">
+        <li><strong>profile check</strong> reads a Profile or a Node and checks every model it names. It writes nothing.</li>
+        <li><strong>profile render</strong> adds a label and a hostname and prints the Node document for one machine, in YAML or with <code>--format json</code>. The result is checked like any node document before it is printed.</li>
+        <li>The <a href="https://build.blunix.io/">portal</a> imports a JSON Profile or Node into its build form. For a YAML profile, render it with <code>--format json</code> first.</li>
+      </ul>
+      <p>Output, captured on the Mac, for a profile named lab-speech:</p>
+      <pre tabindex="0" aria-label="Output of blunix profile check and render"><code>$ blunix profile check --file lab-speech.yaml
+blunix: profile lab-speech accepted
+$ blunix profile render --file lab-speech.yaml --label ada --hostname ada-1
+apiVersion: blunix.dev/v1
+kind: Node
+name: ada
+hostname: ada-1
+disk: metal-luks
+network: dhcp-any
+access: full-speech
+ai: default
+update:
+  url: https://updates.blunix.io/blunix
+  channel: stable
+sysexts: []</code></pre>
+      <p>A profile that names another distribution is refused:</p>
+      <pre tabindex="0" aria-label="Output when a profile names another distribution"><code>blunix: refused distribution</code></pre>
     </section>
 
     <section class="wrap band" aria-labelledby="h-proxy">

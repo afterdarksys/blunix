@@ -77,6 +77,7 @@ label.choice input {
 }
 
 input[type="text"],
+input[type="file"],
 select {
   width: 100%;
   font: inherit;

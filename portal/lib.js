@@ -270,6 +270,151 @@ export function buildNode(input) {
   return { yaml };
 }
 
+// ---- Profile import --------------------------------------------------------
+//
+// Reads a Profile or Node document as JSON and returns form values. The refusal
+// messages match the blunix CLI (lib/blunix/profile.py), and
+// tests/fixtures/profiles/cases.json holds the outcomes both must give.
+// YAML is converted with `blunix profile render --format json`; this page has no
+// YAML parser, and one that cannot refuse aliases would weaken the CLI's rules.
+
+const BANNED = ["private_key", "psk", "password", "token", "api_key", "passphrase",
+  "recovery_token", "key_file", "secret", "wifi_psk"];
+const PROFILE_KEYS = ["apiVersion", "kind", "name", "distribution", "disk", "network",
+  "access", "ai", "update", "sysexts"];
+const NODE_KEYS = ["apiVersion", "kind", "name", "hostname", "disk", "network", "access",
+  "ai", "update", "sysexts", "target"];
+const INLINE_NET_KEYS = ["match", "dhcp", "address", "gateway", "dns"];
+
+class Refused extends Error {}
+
+// JSON.parse keeps the last of two equal keys without a word. This walks the
+// text once and refuses a repeated key in any object, as the CLI loader does.
+function refuseDuplicateKeys(text) {
+  const stack = [];
+  let i = 0;
+  let expectKey = false;
+  while (i < text.length) {
+    const ch = text[i];
+    if (ch === '"') {
+      let j = i + 1;
+      while (j < text.length && text[j] !== '"') j += text[j] === "\\" ? 2 : 1;
+      if (expectKey && stack.length && stack[stack.length - 1]) {
+        const key = JSON.parse(text.slice(i, j + 1));
+        const seen = stack[stack.length - 1];
+        if (seen.has(key)) throw new Refused("duplicate key");
+        seen.add(key);
+      }
+      expectKey = false;
+      i = j + 1;
+      continue;
+    }
+    if (ch === "{") { stack.push(new Set()); expectKey = true; }
+    else if (ch === "[") { stack.push(null); }
+    else if (ch === "}" || ch === "]") { stack.pop(); }
+    else if (ch === ",") { expectKey = Boolean(stack.length && stack[stack.length - 1]); }
+    i += 1;
+  }
+}
+
+function isBanned(key) {
+  const norm = String(key).trim().toLowerCase().replace(/-/g, "_");
+  return BANNED.some((w) => new RegExp("(^|_)" + w + "($|_)").test(norm));
+}
+
+function refuseBanned(value) {
+  if (Array.isArray(value)) value.forEach(refuseBanned);
+  else if (value && typeof value === "object") {
+    for (const [k, v] of Object.entries(value)) {
+      if (isBanned(k)) throw new Refused("refused field");
+      refuseBanned(v);
+    }
+  }
+}
+
+function onlyKeys(obj, allowed) {
+  if (Object.keys(obj).some((k) => !allowed.includes(k))) throw new Refused("unknown field");
+}
+
+function modelName(value, what, known) {
+  if (typeof value !== "string" || !NAME_RE.test(value)) throw new Refused("refused " + what);
+  if (!known.includes(value)) throw new Refused("model not found");
+  return value;
+}
+
+function importNetwork(value) {
+  if (value === "dhcp-any") return { mode: "dhcp", match: "en*, eth*", address: "", gateway: "", dns: "" };
+  if (typeof value === "string") {
+    if (!NAME_RE.test(value)) throw new Refused("refused network");
+    throw new Refused("network model not available in the portal");
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Refused("refused network");
+  onlyKeys(value, INLINE_NET_KEYS);
+  const list = (v) => (Array.isArray(v) && v.every((x) => typeof x === "string") ? v.join(", ") : null);
+  const match = list(value.match);
+  if (match === null) throw new Refused("refused network");
+  if (value.dhcp === true) return { mode: "dhcp", match, address: "", gateway: "", dns: "" };
+  const dns = list(value.dns);
+  if (typeof value.address !== "string" || typeof value.gateway !== "string" || dns === null) {
+    throw new Refused("refused network");
+  }
+  return { mode: "static", match, address: value.address, gateway: value.gateway, dns };
+}
+
+// Returns {kind, values: {hostname, disk, access, network}} or {error}.
+// Fields the form cannot show (another AI model, update URL or channel,
+// sysexts, a disk target) are refused rather than dropped.
+export function importProfile(text, fileName = "") {
+  try {
+    if (/\.ya?ml$/i.test(fileName)) {
+      throw new Refused("YAML is not read here. Convert it with blunix profile render --format json.");
+    }
+    if (typeof text !== "string" || new TextEncoder().encode(text).length > MAX_DOCUMENT) {
+      throw new Refused("document too large");
+    }
+    let doc;
+    try {
+      doc = JSON.parse(text);
+    } catch {
+      throw new Refused("rejected plaintext");
+    }
+    if (!doc || typeof doc !== "object" || Array.isArray(doc)) throw new Refused("rejected plaintext");
+    refuseDuplicateKeys(text);
+    refuseBanned(doc);
+    const kind = doc.kind;
+    onlyKeys(doc, kind === "Node" ? NODE_KEYS : PROFILE_KEYS);
+    if (doc.apiVersion !== API_VERSION) throw new Refused("refused apiVersion");
+    if (kind !== "Profile" && kind !== "Node") throw new Refused("refused kind");
+    if (typeof doc.name !== "string" || !NAME_RE.test(doc.name)) throw new Refused("refused name");
+    if (kind === "Profile" && "distribution" in doc && doc.distribution !== "debian") {
+      throw new Refused("refused distribution");
+    }
+    for (const key of ["disk", "network", "access", "ai", "update", "sysexts"]) {
+      if (!(key in doc)) throw new Refused("refused " + key);
+    }
+    let hostname = "";
+    if (kind === "Node") {
+      if (typeof doc.hostname !== "string" || !NAME_RE.test(doc.hostname)) throw new Refused("refused hostname");
+      if ("target" in doc && doc.target !== null) throw new Refused("refused target");
+      hostname = doc.hostname;
+    }
+    const disk = modelName(doc.disk, "disk", DISKS);
+    const network = importNetwork(doc.network);
+    const access = modelName(doc.access, "access", ACCESS);
+    modelName(doc.ai, "ai", ["default"]);
+    const up = doc.update;
+    if (!up || typeof up !== "object" || Array.isArray(up)) throw new Refused("refused update");
+    onlyKeys(up, ["url", "channel"]);
+    if (up.channel !== "stable") throw new Refused("refused channel");
+    if (up.url !== UPDATE_URL) throw new Refused("refused update");
+    if (!Array.isArray(doc.sysexts) || doc.sysexts.length !== 0) throw new Refused("refused sysexts");
+    return { kind, name: doc.name, values: { hostname, disk, access, network } };
+  } catch (err) {
+    if (err instanceof Refused) return { error: err.message };
+    throw err;
+  }
+}
+
 // ---- Install package -------------------------------------------------------
 
 export function latestUrl(label) {

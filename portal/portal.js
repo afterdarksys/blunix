@@ -9,7 +9,7 @@
 
 import { Encrypter, armor } from "./vendor/age-encryption.js";
 import {
-  buildNode, displayKey, generateKey, hex, installBundle, installCardText,
+  buildNode, displayKey, generateKey, hex, importProfile, installBundle, installCardText,
   keyGroups, labelProblem, latestUrl, MAX_CIPHER, pinnedUrl, spellGroup, validVersion,
 } from "./lib.js";
 
@@ -397,6 +397,40 @@ function renderPreview() {
   return out;
 }
 
+// Fill the build form from a Profile or Node file. Nothing leaves the browser;
+// the normal checks and preview run on the filled form.
+async function onImport(ev) {
+  setProblem("build-import", null);
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  if (file.size > 64 * 1024) {
+    setProblem("build-import", "That file is larger than 64 KiB.");
+    ev.target.value = "";
+    return;
+  }
+  const out = importProfile(await file.text(), file.name);
+  ev.target.value = "";
+  if (out.error) {
+    setProblem("build-import", "Not imported: " + out.error + ".");
+    say("blunix: profile not imported: " + out.error + ".");
+    return;
+  }
+  const v = out.values;
+  const f = $("build");
+  if (v.hostname) $("build-hostname").value = v.hostname;
+  const disk = f.querySelector('input[name="disk"][value="' + v.disk + '"]');
+  if (disk) disk.checked = true;
+  const mode = f.querySelector('input[name="netmode"][value="' + v.network.mode + '"]');
+  if (mode) mode.checked = true;
+  $("build-match").value = v.network.match;
+  $("build-address").value = v.network.address;
+  $("build-gateway").value = v.network.gateway;
+  $("build-dns").value = v.network.dns;
+  $("build-access").value = v.access;
+  renderPreview();
+  say("blunix: " + out.kind.toLowerCase() + " " + out.name + " imported. Check the choices, then publish.");
+}
+
 const ERROR_FIELD = {
   label: "build-label", hostname: "build-hostname", disk: "build-disk", network: "build-network",
   match: "build-match", address: "build-address", gateway: "build-gateway", dns: "build-dns",
@@ -658,6 +692,7 @@ async function onLogout() {
 function wire() {
   $("reserve-label").addEventListener("input", onReserveInput);
   $("reserve").addEventListener("submit", (e) => guarded(() => onReserve(e)));
+  $("build-import").addEventListener("change", (e) => guarded(() => onImport(e)));
   $("build").addEventListener("input", renderPreview);
   $("build").addEventListener("change", renderPreview);
   $("build").addEventListener("submit", (e) => guarded(() => onBuild(e)));
