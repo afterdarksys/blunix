@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_commit": "6c9fee263ccd6a3f21ddcb7d49e0cee57790110b",
+  "source_commit": "d565bfdb559b42ff14198164abe471c2cda9b901",
   "files": {
     ".github/workflows/host-tests.yml": {
       "sha256": "12607f04d2edb2a6ab8e9a179e4708510e6857367b7af45f31c949478abb5676",
@@ -350,12 +350,24 @@
       "sha256": "ec9ccb314ae29675011834b34f6e04242551521d5615b457659983cc8e17b3c6",
       "executable": false
     },
+    "tests/fixtures/profiles/bad-admin-options.json": {
+      "sha256": "de352fb5f586f5c63ab57536d1c730fd23ce96ef96b7989030c6c79455a10da4",
+      "executable": false
+    },
     "tests/fixtures/profiles/bad-admin-options.yaml": {
       "sha256": "f46993260c1ed08a745d5192c79f668abe5ea8b8f28b53a00c16df48d0e3c153",
       "executable": false
     },
+    "tests/fixtures/profiles/bad-admin-root.json": {
+      "sha256": "4758564d9efbadf77ec046d2ab7ae3708572cb42ae1f7408d16a7c86ab8f0276",
+      "executable": false
+    },
     "tests/fixtures/profiles/bad-admin-root.yaml": {
       "sha256": "31fcb7b68d165199337ec6524ce0e41350def9e6e0ada1990127323fce619503",
+      "executable": false
+    },
+    "tests/fixtures/profiles/bad-admin-rsa.json": {
+      "sha256": "b75168c8887a004c04862254c0bf2a11a088267deac883657ec5eb69b6c34c69",
       "executable": false
     },
     "tests/fixtures/profiles/bad-admin-rsa.yaml": {
@@ -374,8 +386,16 @@
       "sha256": "b95e97412640151466ee20331ebaf93a356f6568cac93a5019986002058eb960",
       "executable": false
     },
+    "tests/fixtures/profiles/bad-install-no-erase.json": {
+      "sha256": "2d8ac6b98f52ced44557e9dadb97b3b7f397aac3e0f02fcea08e89ac17f2d44c",
+      "executable": false
+    },
     "tests/fixtures/profiles/bad-install-no-erase.yaml": {
       "sha256": "9c5ce0d1c58f9a89ceb5254d4527432139aceb33939146a08a82804857605c5a",
+      "executable": false
+    },
+    "tests/fixtures/profiles/bad-install-no-target.json": {
+      "sha256": "d42061c548727f22a75abd594f1e01041457d587c5283b12217a39f73036216c",
       "executable": false
     },
     "tests/fixtures/profiles/bad-install-no-target.yaml": {
@@ -390,12 +410,20 @@
       "sha256": "3fc8ea5959a41df566822afc8ccee4d6fad3f31a22694360136faeaf322e0dc8",
       "executable": false
     },
+    "tests/fixtures/profiles/bad-packages-option.json": {
+      "sha256": "f0f46778978e57e1e8ba3ae40a4ea5b7cbcc3f18fc0f6c11da73acabb6b136ce",
+      "executable": false
+    },
     "tests/fixtures/profiles/bad-packages-option.yaml": {
       "sha256": "ce6ef9eec11c39bf4bf9db4d291e45734a960af554caaed2e7db79a1ca6b3b36",
       "executable": false
     },
     "tests/fixtures/profiles/bad-packages-unknown.yaml": {
       "sha256": "aadcb4a237cda5b1e7907fae8d543f90b75425a2bbf8ec74d640741cfbb794ee",
+      "executable": false
+    },
+    "tests/fixtures/profiles/bad-profile-admin.json": {
+      "sha256": "62134fdbdc9c82e6a5932c69868a2dd78430658634fdbcdc61612686862b8822",
       "executable": false
     },
     "tests/fixtures/profiles/bad-profile-admin.yaml": {
@@ -415,7 +443,7 @@
       "executable": false
     },
     "tests/fixtures/profiles/cases.json": {
-      "sha256": "f302235dcd8feb648471e3ff12ad1a418fe274f1d8b6499211fcda6dea8316f6",
+      "sha256": "eb5f4f1ff5a6ffbb08031c72db02478d906b10886b7a07d13d13bf68f106fe81",
       "executable": false
     },
     "tests/fixtures/profiles/lab-speech.json": {
@@ -426,8 +454,16 @@
       "sha256": "f019a1c9cf6d01d9243e633d29881c558bdfe3b068aaea739f85b4b6d52e4f4d",
       "executable": false
     },
+    "tests/fixtures/profiles/personal-node.json": {
+      "sha256": "c9d2674a2118706912f1e2748bb9bf4b1b8d7d08d60be803dd55839daf20554b",
+      "executable": false
+    },
     "tests/fixtures/profiles/personal-node.yaml": {
       "sha256": "135b3be240bf551a4b6956f5016a728829b23c112eb2bd005a863f463bee6bde",
+      "executable": false
+    },
+    "tests/fixtures/profiles/profile-packages.json": {
+      "sha256": "f290ffee5b49a25592a3816066a3cc68ef69b37461c6f661e2d283bc9e3690ef",
       "executable": false
     },
     "tests/fixtures/profiles/profile-packages.yaml": {
