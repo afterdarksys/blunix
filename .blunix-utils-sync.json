@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_commit": "1fd6439594fbaff86c1719881c307e9a2a93a852",
+  "source_commit": "5d25173578d8a11fb6587c71c49154955a5c9f56",
   "files": {
     ".github/workflows/host-tests.yml": {
       "sha256": "12607f04d2edb2a6ab8e9a179e4708510e6857367b7af45f31c949478abb5676",
@@ -163,7 +163,7 @@
       "executable": true
     },
     "image/test-netboot-qemu.sh": {
-      "sha256": "354f90a165fc9d6efa1ff21d8acea95c0a0447d192217d59b74a56363868db16",
+      "sha256": "63ce655e6f435e17ec3070f3205cb563cdf57b25088eae453b7759ed5f3bc50b",
       "executable": true
     },
     "image/test-personal-provision.sh": {
@@ -251,7 +251,7 @@
       "executable": false
     },
     "lib/blunix/installer.py": {
-      "sha256": "9070f3e32a2d40deeb209e95e2ddf5011eabf5dbc89ffb528b1ec9a79a617c94",
+      "sha256": "25caca90dc4b48b1d108caa9b94cfd8b29b5a94a09d8d7357a307e0e1ab790d5",
       "executable": false
     },
     "lib/blunix/keyfmt.py": {
@@ -283,7 +283,7 @@
       "executable": false
     },
     "lib/blunix/proxy_boot.py": {
-      "sha256": "974660b28c448c7f5988ec9f520e8bf8bf75a1c29c5bd219312d7a24e4de8b35",
+      "sha256": "6e8e97ff9c550d2f8c1d250f1a661f2f244b5affc616cc1c322dc7fbfe86af43",
       "executable": false
     },
     "lib/blunix/proxy_config.py": {
@@ -291,7 +291,7 @@
       "executable": false
     },
     "lib/blunix/proxy_serve.py": {
-      "sha256": "8816012d77446a8a0a71acf9eabf09575399901ed999498cbadfb298a150b188",
+      "sha256": "31d11b9e7e73913503b8b6baa1f395f6aaf9f5137a7c805d21113d13c61739b9",
       "executable": false
     },
     "lib/blunix/proxy_site.py": {
@@ -515,7 +515,7 @@
       "executable": false
     },
     "tests/test_personal.py": {
-      "sha256": "37c50c0e63b0f50f366e2e0d8687e6f34b03510448d79395e8507960df43e8df",
+      "sha256": "be1dfe40ead2e7466af8583510061f6aa1b5be32e1764997de72c6a2113ce9ce",
       "executable": false
     },
     "tests/test_profile.py": {
@@ -523,11 +523,11 @@
       "executable": false
     },
     "tests/test_proxy.py": {
-      "sha256": "083513731030409511d7fb6cd1f8c399a77f12385d37e588065b0aed557f37c1",
+      "sha256": "21b0f390acf0d1915506e779fa49b2b8d2901c99eca431347d8e45a87a91d920",
       "executable": false
     },
     "tests/test_proxy_config.py": {
-      "sha256": "c9660f145b6ad3a418f0c8ad40e8edb99e6a336d510456d069dbc331e996c935",
+      "sha256": "2510f9a3e3dcaac7559ada5a6b6af48d1d49558bc99638c4500c1a43a30588f0",
       "executable": false
     },
     "tests/test_redact_serial.py": {
