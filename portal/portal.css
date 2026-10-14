@@ -78,6 +78,7 @@ label.choice input {
 
 input[type="text"],
 input[type="file"],
+textarea,
 select {
   width: 100%;
   font: inherit;
@@ -94,6 +95,7 @@ input[type="text"]::placeholder {
 }
 
 input[aria-invalid="true"],
+textarea[aria-invalid="true"],
 select[aria-invalid="true"] {
   border-color: var(--ink);
   border-style: dashed;
@@ -280,4 +282,15 @@ h4 {
   .button, .actions { display: none; }
   .key { background: #fff; border-color: #111; }
   .key li, .problem, .status { color: #111; }
+}
+
+textarea {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  resize: vertical;
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.2rem 1rem;
 }

@@ -102,7 +102,7 @@
       <section class="wrap band" aria-labelledby="build-h">
         <div class="band-head">
           <h2 id="build-h">Build</h2>
-          <p>The document names the disk, the network, and the access profile for one machine. It is checked here, then encrypted here. The server cannot read it.</p>
+          <p>The document names the disk, the network, the access profile and, if you want them, packages, an administrator and an unattended install, for one machine. It is checked here, then encrypted here. The server cannot read it.</p>
         </div>
         <form id="build" class="form" novalidate>
           <div class="field">
@@ -176,6 +176,41 @@
             <p id="build-access-problem" class="problem" hidden></p>
           </div>
 
+          <fieldset id="build-packages" class="field" aria-describedby="build-packages-hint build-packages-problem">
+            <legend>Packages (optional)</legend>
+            <p id="build-packages-hint" class="hint">Installed from Debian while the machine installs. The versions are written to /var/lib/blunix/packages.lock on the machine; they are not pinned.</p>
+            <div id="package-list" class="choices"></div>
+            <p id="build-packages-problem" class="problem" hidden></p>
+          </fieldset>
+
+          <fieldset id="build-admin" class="field">
+            <legend>Administrator (optional)</legend>
+            <div class="field">
+              <label for="build-admin-name">Account name</label>
+              <input id="build-admin-name" name="adminName" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="31" aria-describedby="build-admin-name-problem">
+              <p id="build-admin-name-problem" class="problem" hidden></p>
+            </div>
+            <div class="field">
+              <label for="build-admin-key">SSH public key, ssh-ed25519</label>
+              <textarea id="build-admin-key" name="adminKey" rows="3" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="build-admin-key-hint build-admin-key-problem"></textarea>
+              <p id="build-admin-key-hint" class="hint">The public key only, the line from ~/.ssh/id_ed25519.pub without the comment at the end. The account can use sudo. SSH passwords and root sign-in are off.</p>
+              <p id="build-admin-key-problem" class="problem" hidden></p>
+            </div>
+          </fieldset>
+
+          <fieldset id="build-install" class="field">
+            <legend>Unattended install (optional)</legend>
+            <div class="field">
+              <label for="build-target">Disk to install on</label>
+              <input id="build-target" name="target" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="64" aria-describedby="build-target-hint build-target-problem">
+              <p id="build-target-hint" class="hint">A kernel name such as nvme0n1, or the disk's serial. A serial is safer: names can change between boots. Empty means the installer asks.</p>
+              <p id="build-target-problem" class="problem" hidden></p>
+            </div>
+            <label class="choice"><input type="checkbox" id="build-erase" name="erase"> Erase that disk at install time without asking. This permission is encrypted with the build.</label>
+            <label class="choice"><input type="checkbox" id="build-reboot" name="reboot"> Reboot when the install is done.</label>
+            <p class="hint">The installer still asks for the build address and the key, and still says the address back.</p>
+          </fieldset>
+
           <p class="fixed">Update channel: stable. It is the only channel.</p>
 
           <div class="field">
@@ -187,6 +222,25 @@
           <p id="build-form-problem" class="problem" hidden></p>
           <button type="submit" id="build-submit" class="button">Encrypt and publish</button>
         </form>
+      </section>
+
+      <section class="wrap band" aria-labelledby="library-h">
+        <div class="band-head">
+          <h2 id="library-h">Templates</h2>
+          <p>Save the shareable choices on the build form (disk, network by DHCP, access profile, packages) and load them into it later. A template never holds a hostname, a disk, an administrator or the erase permission. Templates are private to your account.</p>
+        </div>
+        <form id="library-save" class="form" novalidate>
+          <div class="field">
+            <label for="library-name">Template name</label>
+            <input id="library-name" name="name" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="63" aria-describedby="library-name-hint library-name-problem">
+            <p id="library-name-hint" class="hint">Lowercase letters, digits and hyphens. Starts with a letter.</p>
+            <p id="library-name-problem" class="problem" hidden></p>
+          </div>
+          <button type="submit" class="button">Save as a new template</button>
+        </form>
+        <h3 id="library-list-h">Your templates</h3>
+        <p id="library-empty">No templates yet.</p>
+        <ul id="library" class="rows" aria-labelledby="library-list-h"></ul>
       </section>
 
       <section id="card" class="wrap band card" aria-labelledby="card-h" hidden>

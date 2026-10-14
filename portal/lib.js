@@ -89,6 +89,56 @@ export const DISKS = ["cloud-vm", "metal-luks"];
 export const ACCESS = ["regular", "full-speech", "console-speech", "large-print", "advanced"];
 export const UPDATE_URL = "https://updates.blunix.io/blunix";
 export const MAX_DOCUMENT = 64 * 1024;
+// Must match lib/blunix/personal.py; tests/site/library-models.test.mjs checks it.
+export const PACKAGES = [
+  "curl", "dnsutils", "git", "htop", "jq", "nginx", "podman", "postgresql-client",
+  "python3", "rsync", "strace", "tcpdump", "tmux", "vim", "wget",
+];
+const ADMIN_RE = /^[a-z][a-z0-9-]{0,30}$/;
+const RESERVED_ADMINS = ["root", "daemon", "bin", "sys", "sync", "games", "man", "lp", "mail", "news", "uucp",
+  "proxy", "www-data", "backup", "list", "irc", "nobody", "systemd-network", "systemd-resolve",
+  "systemd-timesync", "messagebus", "sshd", "_apt", "blunix"];
+const ED25519_RE = /^ssh-ed25519 [A-Za-z0-9+/]{68}$/;
+const ED25519_BLOB = [0, 0, 0, 11, 115, 115, 104, 45, 101, 100, 50, 53, 53, 49, 57, 0, 0, 0, 32];
+const TARGET_RE = /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/;
+
+// ---- Personal build fields (lib/blunix/personal.py) -------------------------
+
+export function adminNameProblem(value) {
+  if (!ADMIN_RE.test(value || "")) {
+    return "An administrator name is lowercase letters, digits and hyphens, starts with a letter, and is at most 31 characters.";
+  }
+  if (RESERVED_ADMINS.includes(value)) return value + " is a system account. Pick another name.";
+  return null;
+}
+
+// An Ed25519 public key in OpenSSH form, nothing before or after it.
+export function sshKeyProblem(value) {
+  const key = String(value || "").trim();
+  if (!ED25519_RE.test(key)) {
+    return "Paste one ssh-ed25519 public key, such as the line in ~/.ssh/id_ed25519.pub, without the comment at the end.";
+  }
+  let blob;
+  try {
+    blob = atob(key.split(" ")[1]);
+  } catch {
+    return "That key is not valid base64.";
+  }
+  if (blob.length !== 51 || ED25519_BLOB.some((b, i) => blob.charCodeAt(i) !== b)) {
+    return "That is not an Ed25519 public key.";
+  }
+  return null;
+}
+
+export function targetProblem(value) {
+  if (!TARGET_RE.test(value || "")) return "A disk is a kernel name such as nvme0n1, or a serial. Not a path.";
+  return null;
+}
+
+function packagesValid(value) {
+  return Array.isArray(value) && value.length <= PACKAGES.length &&
+    value.every((p) => typeof p === "string" && PACKAGES.includes(p)) && new Set(value).size === value.length;
+}
 export const MAX_CIPHER = 256 * 1024;
 
 // Same rule as schema.require_name: /etc/hostname.
@@ -235,6 +285,24 @@ export function buildNode(input) {
   } else if (net.mode !== "dhcp") {
     errors.network = "Pick DHCP or a static address.";
   }
+  const packages = Array.isArray(input.packages) ? [...input.packages].sort() : [];
+  if (!packagesValid(packages)) errors.packages = "Pick packages from the list only.";
+  const admin = input.admin || {};
+  const adminName = String(admin.name || "").trim();
+  const adminKey = String(admin.key || "").trim();
+  if (adminName || adminKey) {
+    const np = adminNameProblem(adminName);
+    if (np) errors.adminName = np;
+    const kp = sshKeyProblem(adminKey);
+    if (kp) errors.adminKey = kp;
+  }
+  const install = input.install || {};
+  const target = String(install.target || "").trim();
+  if (target) {
+    const tp = targetProblem(target);
+    if (tp) errors.target = tp;
+  }
+  if (install.erase && !target) errors.target = "Name the disk to erase, or untick the erase permission.";
   if (Object.keys(errors).length) return { errors };
 
   const lines = [
@@ -263,6 +331,17 @@ export function buildNode(input) {
     "  channel: stable",
     "sysexts: []",
   );
+  if (packages.length) {
+    lines.push("packages:");
+    for (const p of packages) lines.push("  - " + q(p));
+  }
+  if (target) lines.push("target: " + q(target));
+  if (target && install.erase) {
+    lines.push("install:", "  erase: true", "  reboot: " + (install.reboot ? "true" : "false"));
+  }
+  if (adminName) {
+    lines.push("admin:", "  name: " + q(adminName), "  sshPublicKey: " + q(adminKey));
+  }
   const yaml = lines.join("\n") + "\n";
   if (new TextEncoder().encode(yaml).length > MAX_DOCUMENT) {
     return { errors: { form: "The document is larger than 64 KiB." } };
@@ -281,9 +360,9 @@ export function buildNode(input) {
 const BANNED = ["private_key", "psk", "password", "token", "api_key", "passphrase",
   "recovery_token", "key_file", "secret", "wifi_psk"];
 const PROFILE_KEYS = ["apiVersion", "kind", "name", "distribution", "disk", "network",
-  "access", "ai", "update", "sysexts"];
+  "access", "ai", "update", "sysexts", "packages"];
 const NODE_KEYS = ["apiVersion", "kind", "name", "hostname", "disk", "network", "access",
-  "ai", "update", "sysexts", "target"];
+  "ai", "update", "sysexts", "target", "packages", "admin", "install"];
 const INLINE_NET_KEYS = ["match", "dhcp", "address", "gateway", "dns"];
 
 class Refused extends Error {}
@@ -361,9 +440,9 @@ function importNetwork(value) {
   return { mode: "static", match, address: value.address, gateway: value.gateway, dns };
 }
 
-// Returns {kind, values: {hostname, disk, access, network}} or {error}.
-// Fields the form cannot show (another AI model, update URL or channel,
-// sysexts, a disk target) are refused rather than dropped.
+// Returns {kind, values: {hostname, disk, access, network, packages, admin, install}}
+// or {error}. Fields the form cannot show (another AI model, update URL or
+// channel, sysexts) are refused rather than dropped.
 export function importProfile(text, fileName = "") {
   try {
     if (/\.ya?ml$/i.test(fileName)) {
@@ -392,10 +471,10 @@ export function importProfile(text, fileName = "") {
     for (const key of ["disk", "network", "access", "ai", "update", "sysexts"]) {
       if (!(key in doc)) throw new Refused("refused " + key);
     }
+    if (kind === "Profile" && "packages" in doc && !packagesValid(doc.packages)) throw new Refused("refused packages");
     let hostname = "";
     if (kind === "Node") {
       if (typeof doc.hostname !== "string" || !NAME_RE.test(doc.hostname)) throw new Refused("refused hostname");
-      if ("target" in doc && doc.target !== null) throw new Refused("refused target");
       hostname = doc.hostname;
     }
     const disk = modelName(doc.disk, "disk", DISKS);
@@ -408,11 +487,72 @@ export function importProfile(text, fileName = "") {
     if (up.channel !== "stable") throw new Refused("refused channel");
     if (up.url !== UPDATE_URL) throw new Refused("refused update");
     if (!Array.isArray(doc.sysexts) || doc.sysexts.length !== 0) throw new Refused("refused sysexts");
-    return { kind, name: doc.name, values: { hostname, disk, access, network } };
+    // The personal fields, in parse_node's order: target, packages, admin, install.
+    let target = "";
+    if ("target" in doc && doc.target !== null) {
+      if (typeof doc.target !== "string" || targetProblem(doc.target)) throw new Refused("refused target");
+      target = doc.target;
+    }
+    const packages = "packages" in doc && doc.packages !== null ? doc.packages : [];
+    if (!packagesValid(packages)) throw new Refused("refused packages");
+    let admin = { name: "", key: "" };
+    if ("admin" in doc && doc.admin !== null) {
+      const a = doc.admin;
+      if (!a || typeof a !== "object" || Array.isArray(a)) throw new Refused("refused admin");
+      onlyKeys(a, ["name", "sshPublicKey"]);
+      if (typeof a.name !== "string" || adminNameProblem(a.name)) throw new Refused("refused admin");
+      if (typeof a.sshPublicKey !== "string" || a.sshPublicKey !== a.sshPublicKey.trim() || sshKeyProblem(a.sshPublicKey)) {
+        throw new Refused("refused public key");
+      }
+      admin = { name: a.name, key: a.sshPublicKey };
+    }
+    let install = { erase: false, reboot: false };
+    if ("install" in doc && doc.install !== null) {
+      const i = doc.install;
+      if (!i || typeof i !== "object" || Array.isArray(i)) throw new Refused("refused install");
+      onlyKeys(i, ["erase", "reboot"]);
+      if (i.erase !== true || typeof i.reboot !== "boolean" || !target) throw new Refused("refused install");
+      install = { erase: true, reboot: i.reboot };
+    }
+    return {
+      kind,
+      name: doc.name,
+      values: { hostname, disk, access, network, packages: [...packages].sort(), admin, install: { target, ...install } },
+    };
   } catch (err) {
     if (err instanceof Refused) return { error: err.message };
     throw err;
   }
+}
+
+// A Profile for the library from the form's shareable choices: never the
+// hostname, label, disk target, administrator or install permission.
+export function profileFromForm(input, name) {
+  if (typeof name !== "string" || !NAME_RE.test(name)) {
+    return { error: "A template name is lowercase letters, digits and hyphens, and starts with a letter." };
+  }
+  if (!DISKS.includes(input.disk)) return { error: "Pick a disk layout." };
+  if (!ACCESS.includes(input.access)) return { error: "Pick an access profile." };
+  const net = input.network || {};
+  if (net.mode !== "dhcp") return { error: "A template uses DHCP. A static address belongs to one machine." };
+  const match = parseMatch(net.match);
+  if (match.problem) return { error: match.problem };
+  const packages = Array.isArray(input.packages) ? [...input.packages].sort() : [];
+  if (!packagesValid(packages)) return { error: "Pick packages from the list only." };
+  const dhcpAny = match.value.length === 2 && match.value.includes("en*") && match.value.includes("eth*");
+  const profile = {
+    apiVersion: API_VERSION,
+    kind: "Profile",
+    name,
+    disk: input.disk,
+    network: dhcpAny ? "dhcp-any" : { match: match.value, dhcp: true },
+    access: input.access,
+    ai: "default",
+    update: { url: UPDATE_URL, channel: "stable" },
+    sysexts: [],
+  };
+  if (packages.length) profile.packages = packages;
+  return { profile };
 }
 
 // ---- Install package -------------------------------------------------------

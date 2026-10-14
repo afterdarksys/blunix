@@ -20,6 +20,14 @@ The key lives in one variable while the install card is open. It is not written 
 
 The build form takes a JSON Profile or Node file (`lib.js` `importProfile`). It is read in the browser and fills the form; nothing is uploaded until the normal publish. The refusal messages match the CLI, and `tests/site/profile.test.mjs` runs the shared cases in `tests/fixtures/profiles/cases.json` (synced from blunix-utils) against it. Fields the form cannot show, such as another AI model, update URL, sysexts or a disk target, are refused rather than dropped. YAML is not parsed here: a browser YAML parser that cannot refuse aliases would be weaker than the CLI loader, so `blunix profile render --format json` converts it.
 
+## Personal build fields and templates
+
+The build form can add packages (the allowlist in `lib/blunix/personal.py`), an administrator (account name and one `ssh-ed25519` public key), and an unattended install (a target disk, permission to erase it without asking, and whether to reboot). `buildNode` checks them with the same rules as the CLI and writes them into the document before it is encrypted. A target without the erase permission only names the disk; the installer still asks.
+
+The Templates section saves the shareable choices (disk, DHCP network, access profile, packages) to the configuration library as a `kind: Profile` document (`profileFromForm`), and loads one back. Loading a template never touches the hostname, target, administrator or erase permission already on the form. A template with a static address is refused, because an address belongs to one machine. Templates are private; the community side of the library is closed (`COMMUNITY` in `platform/api`).
+
+`tests/site/profile.test.mjs` covers the new fields and runs every JSON case in `tests/fixtures/profiles/cases.json`; `tests/site/library-models.test.mjs` fails if the portal's package list drifts from `lib/blunix/personal.py`.
+
 ## Run it locally
 
 ```sh

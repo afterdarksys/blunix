@@ -48,10 +48,12 @@ describe("profile validator", () => {
     for (const c of json) {
       const res = await createRaw(a.cookie, `{"title":"case","profile":${raw(c.file)}}`);
       const out = (await res.json()) as { error?: string };
+      const isNode = (JSON.parse(raw(c.file)) as { kind?: string }).kind === "Node";
       if (c.ok && c.kind === "Profile") {
         expect(res.status, c.file).toBe(201);
-      } else if (c.ok) {
-        // A Node is personal and never enters the library.
+      } else if (isNode) {
+        // A Node is personal and never enters the library, valid or not. The refusal
+        // can come before the field the CLI would name (often "unknown field").
         expect(res.status, c.file).toBe(400);
         expect(out.error, c.file).toMatch(/^invalid profile: /);
       } else {
