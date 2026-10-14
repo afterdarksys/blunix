@@ -151,6 +151,7 @@ defaults:            # optional
   channel: stable    # only stable today
   dns: [192.0.2.53]  # used by static machines that give no dns
   match: [en*]       # interface patterns, en*, eth* or names like ens3
+  admin: {name: operator, sshPublicKey: "ssh-ed25519 AAAA..."}   # optional
 boot:                # optional netboot settings, see below
   access: full-speech
   console: [tty0, ttyS0,115200]
@@ -170,6 +171,7 @@ machines:
     access: full-speech         # optional override
     target: nvme0n1             # optional: kernel disk name or serial
     match: [enp1s0]             # optional override
+    install: {erase: true, reboot: true}   # optional: erase the target without asking
   - mac: "00:50:56:aa:bb:02"
     label: grace
     hostname: grace-1
@@ -206,6 +208,10 @@ sysexts: []
 ```
 
 A `dhcp: true` machine gets `network: dhcp-any`, or `{match: [...], dhcp: true}` when a match is set.
+
+### Administrator and unattended install
+
+`admin` (in `defaults` or on a machine) adds an administrator: an account name and one `ssh-ed25519` public key, with the same rules as the node document. `install` (on a machine only, and only with its `target`) is the written permission to erase that disk without asking; it is never a default, because it names one disk. `plan --explain` shows the admin account name and whether a machine installs unattended, never the key.
 
 ### Profiles
 
