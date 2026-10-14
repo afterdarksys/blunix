@@ -12,6 +12,9 @@ export interface Env {
   // "on" opens the public configuration library (publish, browse, report). Anything
   // else keeps every template private. Leave it off until someone owns moderation.
   COMMUNITY?: string;
+  // https base URL, ending in "/", where vmlinuz, initrd.img and blunix.squashfs are
+  // published. Empty keeps https://{label}.blnx.io/boot.ipxe off (404).
+  NETBOOT_MEDIA?: string;
 }
 
 export const API_HOST = "api.blunix.io";
