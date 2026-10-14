@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_commit": "5d25173578d8a11fb6587c71c49154955a5c9f56",
+  "source_commit": "d06ff13c6ca87cb3eb3a29a44936a65093e12be8",
   "files": {
     ".github/workflows/host-tests.yml": {
       "sha256": "12607f04d2edb2a6ab8e9a179e4708510e6857367b7af45f31c949478abb5676",
@@ -51,7 +51,7 @@
       "executable": false
     },
     "image/README.md": {
-      "sha256": "28e880e6cc55534c533d1a2471c6434f86b8f6853df75c3e1a52dbaf07543e6c",
+      "sha256": "56e36ef3ddc516cd8b99bda3762e8bcab7b0a48dd625f4e736447d76651776d7",
       "executable": false
     },
     "image/boot-installer-test.sh": {
@@ -163,7 +163,7 @@
       "executable": true
     },
     "image/test-netboot-qemu.sh": {
-      "sha256": "63ce655e6f435e17ec3070f3205cb563cdf57b25088eae453b7759ed5f3bc50b",
+      "sha256": "9cbe8b6196c101f3ffda77e13bd69f9059cc466829e9347594048a7ea9a08f6e",
       "executable": true
     },
     "image/test-personal-provision.sh": {
