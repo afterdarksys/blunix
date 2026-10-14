@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_commit": "d565bfdb559b42ff14198164abe471c2cda9b901",
+  "source_commit": "113d93e5424b8d18358d0fb8da988d88ca737313",
   "files": {
     ".github/workflows/host-tests.yml": {
       "sha256": "12607f04d2edb2a6ab8e9a179e4708510e6857367b7af45f31c949478abb5676",
@@ -51,7 +51,7 @@
       "executable": false
     },
     "image/README.md": {
-      "sha256": "8dee4ff37321d2bb0171283767809887bb1cdd1766a3bd62d2cd108b2b5e61d1",
+      "sha256": "28e880e6cc55534c533d1a2471c6434f86b8f6853df75c3e1a52dbaf07543e6c",
       "executable": false
     },
     "image/boot-installer-test.sh": {
@@ -110,6 +110,14 @@
       "sha256": "1ed0e79c1fdabc4298155090a4ed801a6d24373a49ef0f96b56e34daf6a904d7",
       "executable": false
     },
+    "image/ipxe/build-ipxe.sh": {
+      "sha256": "bcf54ad31a4f862be70da55de0262aacb25189b21633ed64707daee66e903c45",
+      "executable": true
+    },
+    "image/ipxe/embed.ipxe": {
+      "sha256": "478c6a2fa265fef15baa9000b5d3ea2e9dd8dffcf2e48635fa3f9c84bcc263b4",
+      "executable": false
+    },
     "image/mkosi/mkosi.conf": {
       "sha256": "1fd2d20b9120f303d8fcf89bcc4164f5825081c6a6a9ed54505b27fff8186b12",
       "executable": false
@@ -154,8 +162,12 @@
       "sha256": "cb1a8c182bf67e38fe488766fe290c3482f85c59db44a259c0ae53aa60a13013",
       "executable": true
     },
+    "image/test-netboot-qemu.sh": {
+      "sha256": "354f90a165fc9d6efa1ff21d8acea95c0a0447d192217d59b74a56363868db16",
+      "executable": true
+    },
     "image/test-personal-provision.sh": {
-      "sha256": "937f241d18255d196c556c5e2b7cd9b8954680fcc5039d27ca979f5f42bd212b",
+      "sha256": "4cd064e3a32da33930b708f60d65ccdd66ee23420806019953cc4f123e206eba",
       "executable": true
     },
     "image/test/ssh-hostkeys.conf": {
@@ -271,7 +283,7 @@
       "executable": false
     },
     "lib/blunix/proxy_boot.py": {
-      "sha256": "6494515fcc276f1ee24a00f6dd279d6db15613a005655fed9648aff035ca161d",
+      "sha256": "974660b28c448c7f5988ec9f520e8bf8bf75a1c29c5bd219312d7a24e4de8b35",
       "executable": false
     },
     "lib/blunix/proxy_config.py": {
@@ -279,11 +291,11 @@
       "executable": false
     },
     "lib/blunix/proxy_serve.py": {
-      "sha256": "5b73b29a271c206756f38f5541acc4b75cad651ffc12f080c6fc5e861964b3d9",
+      "sha256": "8816012d77446a8a0a71acf9eabf09575399901ed999498cbadfb298a150b188",
       "executable": false
     },
     "lib/blunix/proxy_site.py": {
-      "sha256": "98d15c6372a50b5d9f0fc093cab07315b46caa127a45ada599b5c9bec68516c7",
+      "sha256": "61176f19595c105c97ee4771cf90b51c944f23b9e2cb577b287bcfe2762be35c",
       "executable": false
     },
     "lib/blunix/schema.py": {
@@ -511,7 +523,7 @@
       "executable": false
     },
     "tests/test_proxy.py": {
-      "sha256": "83960606ed133de20e6546f41f7250ccddc2109c4be7263c452ae4f92684a824",
+      "sha256": "083513731030409511d7fb6cd1f8c399a77f12385d37e588065b0aed557f37c1",
       "executable": false
     },
     "tests/test_proxy_config.py": {
