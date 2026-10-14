@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source_commit": "113d93e5424b8d18358d0fb8da988d88ca737313",
+  "source_commit": "1fd6439594fbaff86c1719881c307e9a2a93a852",
   "files": {
     ".github/workflows/host-tests.yml": {
       "sha256": "12607f04d2edb2a6ab8e9a179e4708510e6857367b7af45f31c949478abb5676",
@@ -55,19 +55,19 @@
       "executable": false
     },
     "image/boot-installer-test.sh": {
-      "sha256": "da32f42aa620cc568ee422188571e9b77d92e16610dbd32374a27858311073a3",
+      "sha256": "be5383dc66d1fb5154d4f0a6a79e94cdf2891c2f3d55c3c8782301f4f6ee1536",
       "executable": true
     },
     "image/boot-vmware.sh": {
-      "sha256": "36f4e6511debdc1e6ca5e9ad2d61ab550ce9e90d541f586e0badcd2462431b00",
+      "sha256": "d4a5d890e52370bf4435f054bc09bbd9106467d86a0987be635484de5cc52c83",
       "executable": true
     },
     "image/build-installer.sh": {
-      "sha256": "d6a0dc39fe2abe8847bd954b13ad7a694655321b065e0add31ac3fa399e12655",
+      "sha256": "af83e40a08e167e43ad8f27ebd07eba23c06e93a5ee224796efc10e2c57c6d96",
       "executable": true
     },
     "image/build-test-disk.sh": {
-      "sha256": "b64fc9e233198d554c981ce4d07881ab05c7e00b1c08e9c19df7d8b5a4d580b2",
+      "sha256": "a004406286fe007423722471954366810e81958e3c9245e5bbdfc348d3e2a58f",
       "executable": true
     },
     "image/gpl-sources.py": {
@@ -143,7 +143,7 @@
       "executable": false
     },
     "image/run-unit-tests.sh": {
-      "sha256": "f83ca2dc04d5c96ed8e681cef9f425c837b1f05e05a979989b4b1a188af8a26a",
+      "sha256": "0faa59784dbf815885c5880b37649744819ad1074837cc8d09182087ee585317",
       "executable": true
     },
     "image/scan-raw-explain.py": {
@@ -279,7 +279,7 @@
       "executable": false
     },
     "lib/blunix/proxy.py": {
-      "sha256": "684d6475416c2b951fb8b52fc0c2807e219018b0ec275b91ecb5072bd4f2c8c2",
+      "sha256": "047a7cde6af4e46f34c8e510b4ebed3668f3671c2dfa83cf8d841ca3ad0aeb71",
       "executable": false
     },
     "lib/blunix/proxy_boot.py": {
@@ -295,7 +295,7 @@
       "executable": false
     },
     "lib/blunix/proxy_site.py": {
-      "sha256": "61176f19595c105c97ee4771cf90b51c944f23b9e2cb577b287bcfe2762be35c",
+      "sha256": "6b55bb2c2c72b4564cdf5079ea651f0aef4e7fc6ad839eac5d37c2ae786dfb2f",
       "executable": false
     },
     "lib/blunix/schema.py": {
@@ -527,7 +527,7 @@
       "executable": false
     },
     "tests/test_proxy_config.py": {
-      "sha256": "6952b8587ebb352886a2047999e62dd601f31bf44ed94699e5c078e1d39b5040",
+      "sha256": "c9660f145b6ad3a418f0c8ad40e8edb99e6a336d510456d069dbc331e996c935",
       "executable": false
     },
     "tests/test_redact_serial.py": {
