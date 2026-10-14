@@ -29,7 +29,8 @@
     "DEV_ORIGINS": "",
     // "on" once v{n}.{label}.blnx.io has certificates. Until then the API returns pinnedUrl: null.
     "PINNED_HOSTS_TLS": "",
-    "COMMUNITY": ""
+    "COMMUNITY": "",
+    "NETBOOT_MEDIA": ""
   }
   // Secret, never in the tree: OIDC_CLIENT_SECRET (wrangler secret put OIDC_CLIENT_SECRET).
 }

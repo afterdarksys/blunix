@@ -4,6 +4,7 @@ The install plane Worker. The contract is `docs/designs/blunix-install-plane.md`
 
 - `api.blunix.io/v1`: sign-in, labels, builds, program keys, and the configuration library.
 - `{label}.blnx.io` and `v{n}.{label}.blnx.io`: the ciphertext, GET and HEAD on `/` only.
+- `{label}.blnx.io/boot.ipxe`: an iPXE script that boots the installer from the published netboot media and offers that label's build address. Off (404) until `NETBOOT_MEDIA` is set. Every well-formed, unreserved label gets the same script without a lookup, so it does not say which labels exist; it carries no secret, since the key is still typed at the installer. Latest only; 120 a client IP an hour.
 - `blnx.io` and `www.blnx.io`: 301 to `https://blunix.io/`.
 - Any other host: 404, `This name is not open.`
 
@@ -48,6 +49,7 @@ Tests run in the Workers runtime with a local D1 and R2. The OIDC tests use a fa
 | `PORTAL_ORIGIN` | var | `https://build.blunix.io`. CORS, CSRF and the post-login redirect use it. |
 | `PINNED_HOSTS_TLS` | var | Empty until `v{n}.{label}.blnx.io` has certificates. Only `on` makes the API name pinned URLs; otherwise `pinnedUrl` is `null` and the portal hides it. |
 | `COMMUNITY` | var | Empty keeps every template private. Only `on` opens publishing, the public `/v1/community` reads and reports. Leave it empty until someone owns moderation. |
+| `NETBOOT_MEDIA` | var | Empty keeps `/boot.ipxe` off. An `https://` base URL ending in `/` where `vmlinuz`, `initrd.img` and `blunix.squashfs` are published; anything else keeps it off and logs why. Not proven yet: live-boot fetching the squashfs over https from the initramfs, and iPXE trusting the media host's certificate. |
 | `DEV_ORIGINS` | var | Empty in production. For `wrangler dev`, a comma list such as `http://localhost:8765`. When set, the Worker also answers the API on `localhost`. |
 
 The Authentik app's redirect URI is `https://api.blunix.io/v1/auth/callback`.
