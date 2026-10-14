@@ -1,0 +1,40 @@
+name: api
+
+# The install-plane Worker's tests, typecheck and the profile drift guard.
+# Until now only scripts/deploy-api.sh ran them, right before a deploy.
+#
+# Threats: a compromised third-party action (every action is pinned to a full
+# commit SHA) and a token with more reach than a read (contents: read only).
+
+on:
+  pull_request:
+    paths: ['platform/api/**', 'tests/fixtures/profiles/**', 'lib/blunix/personal.py', 'models/**', '.github/workflows/api-tests.yml']
+  push:
+    branches: [main]
+    paths: ['platform/api/**', 'tests/fixtures/profiles/**', 'lib/blunix/personal.py', 'models/**', '.github/workflows/api-tests.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: platform/api
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install
+        run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Worker tests in the Workers runtime
+        run: npm test
+      - name: Model and package lists match the installer
+        working-directory: .
+        run: node --test tests/site/library-models.test.mjs
