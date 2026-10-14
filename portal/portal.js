@@ -10,6 +10,7 @@
 import { Encrypter, armor } from "./vendor/age-encryption.js";
 import {
   buildNode, displayKey, generateKey, hex, importProfile, installBundle, installCardText,
+  PACKAGES, profileFromForm,
   keyGroups, labelProblem, latestUrl, MAX_CIPHER, pinnedUrl, spellGroup, validVersion,
 } from "./lib.js";
 
@@ -142,6 +143,7 @@ async function start() {
   $("signed-in").hidden = false;
   $("who").textContent = "Signed in as " + accountName(me.data) + ".";
   await loadHosts();
+  await loadLibrary();
   await loadKeys();
   renderPreview();
   say("blunix: signed in. " + countSentence(hosts.length));
@@ -361,7 +363,27 @@ async function onReserve(ev) {
 // ---- build -----------------------------------------------------------------
 
 const BUILD_FIELDS = ["build-label", "build-hostname", "build-disk", "build-network",
-  "build-match", "build-address", "build-gateway", "build-dns", "build-access", "build-form"];
+  "build-match", "build-address", "build-gateway", "build-dns", "build-access", "build-packages",
+  "build-admin-name", "build-admin-key", "build-target", "build-form"];
+
+function renderPackages() {
+  const box = $("package-list");
+  box.replaceChildren();
+  for (const name of PACKAGES) {
+    const label = document.createElement("label");
+    label.className = "choice";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.name = "package";
+    input.value = name;
+    label.append(input, document.createTextNode(" " + name));
+    box.append(label);
+  }
+}
+
+function checkedPackages() {
+  return [...$("build").querySelectorAll('input[name="package"]:checked')].map((i) => i.value);
+}
 
 function readBuild() {
   const f = $("build");
@@ -380,6 +402,9 @@ function readBuild() {
       gateway: $("build-gateway").value,
       dns: $("build-dns").value,
     },
+    packages: checkedPackages(),
+    admin: { name: $("build-admin-name").value, key: $("build-admin-key").value },
+    install: { target: $("build-target").value, erase: $("build-erase").checked, reboot: $("build-reboot").checked },
   };
 }
 
@@ -415,6 +440,13 @@ async function onImport(ev) {
     say("blunix: profile not imported: " + out.error + ".");
     return;
   }
+  fillBuild(out);
+  say("blunix: " + out.kind.toLowerCase() + " " + out.name + " imported. Check the choices, then publish.");
+}
+
+// A Profile fills the shareable choices and leaves the personal ones alone.
+// A Node fills everything it has.
+function fillBuild(out) {
   const v = out.values;
   const f = $("build");
   if (v.hostname) $("build-hostname").value = v.hostname;
@@ -427,14 +459,134 @@ async function onImport(ev) {
   $("build-gateway").value = v.network.gateway;
   $("build-dns").value = v.network.dns;
   $("build-access").value = v.access;
+  for (const box of f.querySelectorAll('input[name="package"]')) box.checked = v.packages.includes(box.value);
+  if (out.kind === "Node") {
+    $("build-admin-name").value = v.admin.name;
+    $("build-admin-key").value = v.admin.key;
+    $("build-target").value = v.install.target;
+    $("build-erase").checked = v.install.erase;
+    $("build-reboot").checked = v.install.reboot;
+  }
   renderPreview();
-  say("blunix: " + out.kind.toLowerCase() + " " + out.name + " imported. Check the choices, then publish.");
+}
+
+// ---- templates -------------------------------------------------------------
+
+let templates = [];
+
+async function loadLibrary() {
+  const r = await api("GET", "/configurations");
+  if (!r.ok) {
+    say("blunix: could not list templates. " + why(r));
+    return;
+  }
+  const list = (r.data && Array.isArray(r.data.configurations)) ? r.data.configurations : [];
+  templates = list.filter((t) => t && typeof t.id === "string" && /^[0-9a-f-]{36}$/.test(t.id) &&
+    typeof t.title === "string" && Number.isInteger(t.revision));
+  renderLibrary();
+}
+
+function renderLibrary() {
+  const ul = $("library");
+  ul.replaceChildren();
+  $("library-empty").hidden = templates.length > 0;
+  for (const t of templates) {
+    const li = document.createElement("li");
+    const head = document.createElement("h3");
+    head.textContent = t.title;
+    const p = document.createElement("p");
+    p.textContent = "Revision " + t.revision + ".";
+    const actions = document.createElement("div");
+    actions.className = "actions";
+    actions.append(
+      button("Load " + t.title, () => guarded(() => loadTemplate(t))),
+      button("Save the form as a new revision of " + t.title, () => guarded(() => reviseTemplate(t)), true),
+      button("Delete " + t.title, () => guarded(() => deleteTemplate(t)), true),
+    );
+    li.append(head, p, actions);
+    ul.append(li);
+  }
+}
+
+function formProfile(name) {
+  const out = profileFromForm(readBuild(), name);
+  if (out.error) {
+    setProblem("library-name", out.error);
+    say("blunix: template not saved. " + out.error);
+    return null;
+  }
+  return out.profile;
+}
+
+async function onSaveTemplate(ev) {
+  ev.preventDefault();
+  setProblem("library-name", null);
+  const name = $("library-name").value.trim();
+  const profile = formProfile(name);
+  if (!profile) return;
+  const r = await api("POST", "/configurations", { json: { title: name, profile } });
+  if (!r.ok) {
+    setProblem("library-name", "Not saved. " + why(r));
+    say("blunix: template not saved. " + why(r));
+    return;
+  }
+  $("library-name").value = "";
+  say("blunix: template " + name + " saved.");
+  await loadLibrary();
+}
+
+async function loadTemplate(t) {
+  const r = await api("GET", "/configurations/" + enc(t.id));
+  const rev = r.ok && r.data && Array.isArray(r.data.revisions) ? r.data.revisions[0] : null;
+  if (!rev || !rev.profile) {
+    say("blunix: could not load " + t.title + ". " + why(r));
+    return;
+  }
+  // The same checks as a file import, so a template the form cannot show is refused.
+  const out = importProfile(JSON.stringify(rev.profile), "template.json");
+  if (out.error) {
+    say("blunix: template " + t.title + " cannot be loaded here: " + out.error + ".");
+    return;
+  }
+  fillBuild(out);
+  say("blunix: template " + t.title + " revision " + rev.revision + " loaded. Your hostname, disk and administrator were kept.");
+}
+
+async function reviseTemplate(t) {
+  const profile = formProfile(t.title);
+  if (!profile) return;
+  const r = await api("POST", "/configurations/" + enc(t.id) + "/revisions", {
+    json: { revision: t.revision, profile, message: "" },
+  });
+  if (r.status === 409) {
+    say("blunix: " + t.title + " changed since this page loaded. The list is reloaded; save again.");
+    await loadLibrary();
+    return;
+  }
+  if (!r.ok) {
+    say("blunix: " + t.title + " not saved. " + why(r));
+    return;
+  }
+  say("blunix: " + t.title + " saved as revision " + (r.data && r.data.revision) + ".");
+  await loadLibrary();
+}
+
+async function deleteTemplate(t) {
+  if (!confirm("Delete the template " + t.title + "? This cannot be undone here.")) return;
+  const r = await api("DELETE", "/configurations/" + enc(t.id));
+  if (!r.ok) {
+    say("blunix: " + t.title + " not deleted. " + why(r));
+    return;
+  }
+  say("blunix: template " + t.title + " deleted.");
+  await loadLibrary();
 }
 
 const ERROR_FIELD = {
   label: "build-label", hostname: "build-hostname", disk: "build-disk", network: "build-network",
   match: "build-match", address: "build-address", gateway: "build-gateway", dns: "build-dns",
-  access: "build-access", form: "build-form",
+  access: "build-access", packages: "build-packages", adminName: "build-admin-name",
+  adminKey: "build-admin-key", target: "build-target", form: "build-form",
 };
 
 let building = false;
@@ -692,7 +844,9 @@ async function onLogout() {
 function wire() {
   $("reserve-label").addEventListener("input", onReserveInput);
   $("reserve").addEventListener("submit", (e) => guarded(() => onReserve(e)));
+  renderPackages();
   $("build-import").addEventListener("change", (e) => guarded(() => onImport(e)));
+  $("library-save").addEventListener("submit", (e) => guarded(() => onSaveTemplate(e)));
   $("build").addEventListener("input", renderPreview);
   $("build").addEventListener("change", renderPreview);
   $("build").addEventListener("submit", (e) => guarded(() => onBuild(e)));

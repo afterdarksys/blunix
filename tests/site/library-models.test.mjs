@@ -36,3 +36,12 @@ test("the package allowlist matches lib/blunix/personal.py", () => {
   const names = [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]).sort();
   assert.deepEqual(tsList("PACKAGES"), names);
 });
+
+test("the portal's package list matches lib/blunix/personal.py", () => {
+  const py = readFileSync(ROOT + "lib/blunix/personal.py", "utf8");
+  const pyNames = [...(/^PACKAGES = \(([^)]*)\)/ms.exec(py)[1]).matchAll(/"([^"]+)"/g)].map((x) => x[1]).sort();
+  const js = readFileSync(ROOT + "portal/lib.js", "utf8");
+  const m = /export const PACKAGES = \[([^\]]*)\]/s.exec(js);
+  assert.ok(m, "no PACKAGES in portal/lib.js");
+  assert.deepEqual([...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]).sort(), pyNames);
+});
