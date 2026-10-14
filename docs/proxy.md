@@ -132,7 +132,9 @@ The config's header says netboot is for trusted LANs only until images are signe
 - `dhcp-range`: the `--range START,END` you give. Otherwise, a static range for each subnet the static machines use.
 - PXE for listed MACs only (the `known` tag):
   - iPXE clients get `http://PROXY/v1/boot.ipxe`.
-  - Other clients get `ipxe.efi` (UEFI x86-64) or `undionly.kpxe` (BIOS) over TFTP from `--tftp-root` (default: the site's `boot.tftp_root`, else `/srv/tftp`), with `tftp-secure`.
+  - UEFI HTTP Boot clients (client arch 16) get `http://PROXY/media/ipxe.efi`, with no TFTP.
+  - Other clients get `ipxe.efi` (UEFI x86-64) or `undionly.kpxe` (BIOS) over TFTP from `--tftp-root` (default: the site's `boot.tftp_root`, else `/srv/tftp`), with `tftp-secure`, unless the site sets `boot.tftp: false`.
+- Build the loaders with `image/ipxe/build-ipxe.sh`; put them in the TFTP root, and list them in the media `SHA256SUMS` for `serve` to offer them over http.
 - Leases use the site's `boot.lease` (default `12h`).
 
 `PROXY` is `--proxy HOST:PORT`, or the configured listen address if it is a specific address.
@@ -155,6 +157,7 @@ boot:                # optional netboot settings, see below
   args: [quiet]
   lease: 12h
   tftp_root: /srv/tftp
+  tftp: true         # false: http only, see below
 machines:
   - mac: "00:50:56:aa:bb:01"   # quote it
     label: ada                  # owns ada.blnx.io
@@ -227,5 +230,6 @@ Netboot settings for `serve`'s `boot.ipxe` and for `dnsmasq`. Every key is optio
 - `args`: up to 16 extra kernel arguments, `name` or `name=value`. The proxy refuses the ones it sets itself: `boot`, `fetch`, `initrd`, `noeject`, `console`, `blunix.proxy` and `blunix.access`.
 - `lease`: the dnsmasq lease time, `Nm`, `Nh` or `infinite`. Default `12h`.
 - `tftp_root`: an absolute path without `..`. Default `/srv/tftp`. `dnsmasq --tftp-root` overrides it.
+- `tftp`: `true` (default) or `false`. BIOS PXE firmware can only fetch its first file over TFTP, so with `true` it gets only the iPXE loader (`undionly.kpxe`) that way and everything else over http. With `false` there is no TFTP: UEFI HTTP Boot machines (offered `ipxe.efi` over http) and machines that already run iPXE still start; BIOS PXE machines cannot, and the config says so.
 
 None of these values can add a dnsmasq line or a second kernel directive.
