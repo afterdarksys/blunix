@@ -208,7 +208,7 @@ A `dhcp: true` machine gets `network: dhcp-any`, or `{match: [...], dhcp: true}`
 
 A `profile:` names a Profile file (see `blunix profile check`) next to the site file. The path is relative, must stay inside the site file's directory after symlinks resolve, and ends in `.yaml`, `.yml` or `.json`. The profile is checked when the site is loaded; a bad one names itself in the error.
 
-A profile can supply `disk`, `access`, `ai`, `update` and, when its network is `dhcp-any` or an inline DHCP network, the machine's network and match. Precedence for each setting:
+A profile can supply `disk`, `access`, `ai`, `update`, `packages` and, when its network is `dhcp-any` or an inline DHCP network, the machine's network and match. Precedence for each setting:
 
 1. the machine's own field,
 2. the machine's own `profile:`,
