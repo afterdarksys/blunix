@@ -28,7 +28,8 @@
     // Extra CORS and CSRF origins for wrangler dev, such as http://localhost:8765. Empty in production.
     "DEV_ORIGINS": "",
     // "on" once v{n}.{label}.blnx.io has certificates. Until then the API returns pinnedUrl: null.
-    "PINNED_HOSTS_TLS": ""
+    "PINNED_HOSTS_TLS": "",
+    "COMMUNITY": ""
   }
   // Secret, never in the tree: OIDC_CLIENT_SECRET (wrangler secret put OIDC_CLIENT_SECRET).
 }

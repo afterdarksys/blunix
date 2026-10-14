@@ -12,6 +12,17 @@ import { authenticate, csrfFailure, type Principal } from "./auth";
 import { API_HOST, BUILD_APEX, BUILD_SUFFIX, devOrigins, trustedOrigin, type Env } from "./env";
 import { list, me, removeBuild, removeHost, reserve, show, upload } from "./hosts";
 import { error, json } from "./http";
+import {
+  communityList,
+  communityShow,
+  createConfiguration,
+  deleteConfiguration,
+  listConfigurations,
+  publishConfiguration,
+  reportConfiguration,
+  reviseConfiguration,
+  showConfiguration,
+} from "./library";
 import { createKey, listKeys, revokeKey } from "./keys";
 import { callback, login, logout } from "./oidc";
 import { serveBuild } from "./serve";
@@ -75,6 +86,32 @@ const routes: Route[] = [
     methods: { DELETE: (_req, env, p, [label, n]) => removeBuild(env, p, label, n) },
   },
   {
+    pattern: /^\/v1\/configurations$/,
+    methods: {
+      GET: (req, env, p) => listConfigurations(req, env, p),
+      POST: (req, env, p) => createConfiguration(req, env, p),
+    },
+  },
+  {
+    pattern: new RegExp(`^/v1/configurations/${SEG}$`),
+    methods: {
+      GET: (_req, env, p, [id]) => showConfiguration(env, p, id),
+      DELETE: (_req, env, p, [id]) => deleteConfiguration(env, p, id),
+    },
+  },
+  {
+    pattern: new RegExp(`^/v1/configurations/${SEG}/revisions$`),
+    methods: { POST: (req, env, p, [id]) => reviseConfiguration(req, env, p, id) },
+  },
+  {
+    pattern: new RegExp(`^/v1/configurations/${SEG}/publication$`),
+    methods: { POST: (req, env, p, [id]) => publishConfiguration(req, env, p, id) },
+  },
+  {
+    pattern: new RegExp(`^/v1/community/${SEG}/reports$`),
+    methods: { POST: (req, env, p, [id]) => reportConfiguration(req, env, p, id) },
+  },
+  {
     pattern: /^\/v1\/keys$/,
     methods: { GET: (_req, env, p) => listKeys(env, p), POST: (req, env, p) => createKey(req, env, p) },
   },
@@ -110,6 +147,14 @@ async function api(req: Request, env: Env): Promise<Response> {
   const url = new URL(req.url);
   if (url.pathname === "/v1/health") return health(req);
   const cors = corsHeaders(req, env);
+  // Public reads of the community library: no auth, no cookie, closed unless COMMUNITY=on.
+  const community = /^\/v1\/community(?:\/([^/]+))?$/.exec(url.pathname);
+  if (community && req.method === "GET") {
+    const res = community[1] === undefined ? await communityList(req, env) : await communityShow(env, community[1]);
+    const out = new Response(res.body, res);
+    for (const [k, v] of Object.entries(cors)) out.headers.set(k, v);
+    return out;
+  }
 
   if (req.method === "OPTIONS") {
     if (!("access-control-allow-origin" in cors)) return error(403, "forbidden");
