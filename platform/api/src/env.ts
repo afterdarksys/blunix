@@ -9,6 +9,9 @@ export interface Env {
   DEV_ORIGINS?: string;
   // "on" once v{n}.{label}.blnx.io has certificates. Anything else hides pinned URLs.
   PINNED_HOSTS_TLS?: string;
+  // "on" opens the public configuration library (publish, browse, report). Anything
+  // else keeps every template private. Leave it off until someone owns moderation.
+  COMMUNITY?: string;
 }
 
 export const API_HOST = "api.blunix.io";

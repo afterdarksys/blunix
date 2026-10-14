@@ -49,7 +49,7 @@ jobs:
         run: cmp site/css/site.css portal/css/site.css
 
       - name: Site and portal tests
-        run: node --test tests/site/releases.test.mjs tests/site/portal.test.mjs tests/site/profile.test.mjs
+        run: node --test tests/site/releases.test.mjs tests/site/portal.test.mjs tests/site/profile.test.mjs tests/site/library-models.test.mjs
 
       # Run from inside site/ so wrangler finds site/functions/.
       - name: Deploy blunix.io
